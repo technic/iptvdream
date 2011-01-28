@@ -1,0 +1,190 @@
+# Copyright (C) 2005 THE tuxbox-enigma'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the tuxbox-enigma package.
+# Automatically generated, 2005.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: tuxbox-enigma 0.0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-01-24 19:44+0200\n"
+"PO-Revision-Date: 2011-01-24 19:58+0300\n"
+"Last-Translator: technic <alexeytech@gmail.com>\n"
+"Language-Team: Russian / enigma(c) Ukraine, Kiev>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-Language: Русский\n"
+"X-Poedit-Country: RUSSIA\n"
+"X-Poedit-SourceCharset: iso-8859-15\n"
+
+msgid "Add"
+msgstr "Добавить"
+
+msgid "All"
+msgstr "Все"
+
+msgid "Apr"
+msgstr "Апрель"
+
+msgid "Archive"
+msgstr "Архив"
+
+msgid "Aug"
+msgstr "Август"
+
+msgid "Buffer size, KB"
+msgstr "Размер буфера, КБ"
+
+msgid "By group"
+msgstr "Группы"
+
+msgid "Cancel"
+msgstr "Отменить"
+
+msgid "Change pin code"
+msgstr ""
+
+msgid "Context menu"
+msgstr "Контекстное меню"
+
+msgid "Delete"
+msgstr "Удалить"
+
+msgid "Enter edit mode"
+msgstr "Войти в режим сортировки"
+
+msgid "Enter the service pin"
+msgstr ""
+
+msgid "Error while getting stream uri"
+msgstr "Ошибка при получении адреса потока"
+
+msgid "Error while getting video uri"
+msgstr "Ошибка при получении адреса видеопотока"
+
+msgid "Exit edit mode"
+msgstr "Выйти из режима сортировки"
+
+msgid "Favourites"
+msgstr "Избранное"
+
+msgid "Feb"
+msgstr "Февраль"
+
+msgid "Fully"
+msgstr "Подробно"
+
+msgid "Generes"
+msgstr "Жанры"
+
+msgid "Groups"
+msgstr "Группы"
+
+msgid "Info"
+msgstr ""
+
+msgid "Jan"
+msgstr "Январь"
+
+msgid "Jul"
+msgstr "Июль"
+
+msgid "Jun"
+msgstr "Июнь"
+
+msgid ""
+"Login or initialization failed!\n"
+"Edit options?"
+msgstr ""
+"Вход не удался!\n"
+"Редактировать настройки?"
+
+msgid "Mar"
+msgstr "Март"
+
+msgid "May"
+msgstr "Май"
+
+msgid "Nov"
+msgstr "Ноябрь"
+
+msgid "OK"
+msgstr "ОК"
+
+msgid "Oct"
+msgstr "Октябрь"
+
+msgid "Play"
+msgstr ""
+
+msgid "Sep"
+msgstr "Сентябрь"
+
+msgid "Show in mainmenu"
+msgstr "Отображать в главном меню"
+
+msgid "Sort by default"
+msgstr "Отсортировать по умолчанию"
+
+msgid "Sort by name"
+msgstr "Отсортировать по имени"
+
+msgid "Timeshift"
+msgstr "Задержка в просмотре (ч)"
+
+msgid "Use servicets instead of Gstreamer"
+msgstr "Использовать servicets вместо Gstreamer"
+
+msgid "You can't run this plugin in KartinaTV mode"
+msgstr "Вы не можете запустить этот плагин в режиме KartinaTV"
+
+msgid "add to parental protection"
+msgstr ""
+
+msgid "all"
+msgstr "Все"
+
+msgid "favourites"
+msgstr "Избранное"
+
+msgid "login"
+msgstr "Абонемент"
+
+msgid "password"
+msgstr "Пароль"
+
+msgid "remove from parental protection"
+msgstr ""
+
+#~ msgid "Channel"
+#~ msgstr "Канал"
+#~ msgid "Channel Selection"
+#~ msgstr "Выбор канала"
+#~ msgid "Details"
+#~ msgstr "Детали"
+#~ msgid "EPG"
+#~ msgstr "EPG"
+#~ msgid "Kartina.TV"
+#~ msgstr "Kartina.TV"
+#~ msgid "Kartina.TV Configuration"
+#~ msgstr "Настройки Kartina.TV"
+#~ msgid "Login"
+#~ msgstr "Логин"
+#~ msgid "Login failed! Edit options?"
+#~ msgstr "Вход не удался! Изменить настройки?"
+#~ msgid "Password"
+#~ msgstr "Пароль"
+#~ msgid "Select channel"
+#~ msgstr "Выбор канала"
+#~ msgid "Style clock of infobar"
+#~ msgstr "Стиль часов на инфопанеле"
+#~ msgid "Use sericets instead of Gstreamer"
+#~ msgstr "Использовать sericets вместо Gstreamer"
+#~ msgid "analog"
+#~ msgstr "стрелочные"
+#~ msgid "by group"
+#~ msgstr "Группы"
+#~ msgid "digital"
+#~ msgstr "цифровые"
+

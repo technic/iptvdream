@@ -1,11 +1,12 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-#  Dreambox Enigma2 KartinaTV player by technic!
+#  Dreambox Enigma2 KartinaTV/RodnoeTV player! (by technic)
 #
-#  Copyright (c) 2011 Alex Maystrenko <alexeytech@gmail.com>
+#  Copyright (c) 2010 Alex Maystrenko <alexeytech@gmail.com>
+#  web: http://techhost.dlinkddns.com/
 #
-# lib for Dreambox Enigma2 Rodnoe.TV player!
-#
+# This is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 2, or (at your option) any later
+# version.
 
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
@@ -15,82 +16,13 @@ try:
 except:
 	from cjson import decode as jdecode
 from md5 import md5
-from utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager
+from utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager, EpgEntry, Channel
 
 site = "http://file-teleport.com/iptv/api/xml"
 
 global Timezone
 Timezone = int(round(tdSec(datetime.datetime.now()-datetime.datetime.utcnow()) / 3600.0)*60)
 print "[KartinaTV] dreambox timezone is", Timezone, "min"
-
-genre_ids = {
-	0: "Все",
-	1: "информационный",
-	2: "развлечения",
-	3: "детский",
-	4: "кино",
-	5: "наука",
-	6: "спорт",
-	7: "музыка",
-	8: "бизнес",
-	9: "культура",
-	10: "для взрослых"
-}
-
-#TODO: GLOBAL: add private! Get values by properties.
-class EpgEntry():
-	def __init__(self, name, t_start, t_end):
-		self.name = name
-		self.tstart = t_start
-		self.tend = t_end
-	
-	def getDuration(self):
-		if self.tend:
-			return tdSec(self.tend - self.tstart)
-		else:
-			print "[KartinaTV]: WARNING Epg.duration() return 0!", self.name, self.tstart
-			return 0
-	duration = property(getDuration)
-	
-	def getTimePass(self, delta):
-		now = syncTime()+secTd(delta)
-		return tdSec(now-self.tstart)
-	
-	def getTimeLeft(self, delta):
-		now = syncTime()+secTd(delta)
-		if self.tend:
-			return tdSec(self.tend-now)
-		else:
-			print "[KartinaTV]: WARNING Epg.timeleft() return 0!", self.name, self.tstart
-			return 0
-
-	def end(self, delta):
-		return self.tend and self.tend < syncTime()+secTd(delta) #or self.tstart > syncTime()+secTd(delta)  
-
-class Channel():
-	def __init__(self, name, group, gid, num, archive=0):
-		self.name = name
-		self.group = group
-		#self.alias = alias
-		self.gid = gid
-		self.num = num
-		self.archive = archive
-		self.is_protected = False
-		#TODO: need stack for EPG.
-		self.epg = None
-		self.nepg = None
-		self.aepg = None
-		self.lepg = {}
-	
-	def haveEpg(self):
-		return self.epg and not self.epg.end(0)
-	
-	def haveAEpg(self, delta):
-		return self.aepg and not self.aepg.end(delta)
-	
-	def haveEpgNext(self):
-		return self.nepg and self.epg.tend and self.epg.tend <= self.nepg.tstart and self.nepg.tstart > syncTime()
-
 	
 class Ktv():
 	
@@ -172,7 +104,7 @@ class Ktv():
 				name = channel.findtext('name').encode('utf-8')
 				num = int(channel.findtext('number').encode('utf-8')) 
 				archive = int(channel.findtext('has_archive').encode('utf-8'))
-				self.channels[id] = Channel(name, groupname, gid, num, archive)
+				self.channels[id] = Channel(name, groupname, num, gid, archive)
 				self.channels[id].is_protected = int(channel.findtext('protected'))
 				if channel.findtext('epg_current_title') and channel.findtext('epg_current_start'):
 					prog = channel.findtext('epg_current_title').encode('utf-8') + '\n'
@@ -233,6 +165,7 @@ class Ktv():
 				t_end = datetime.datetime.fromtimestamp(int(prog.findtext('end').encode('utf-8')))
 				self.channels[id].nepg = EpgEntry(title, t_start, t_end)
 			else:
+				self.channels[id].lastUpdateFailed = True
 			#	print "[KartinaTV] INFO there is no epg for id=%d on ktv-server" % id
 				pass
 	

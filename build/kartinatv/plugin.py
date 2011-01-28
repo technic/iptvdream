@@ -3,12 +3,16 @@
 #  Copyright (c) 2010 Alex Maystrenko <alexeytech@gmail.com>
 #  web: http://techhost.dlinkddns.com/
 #
-
-from Plugins.Plugin import PluginDescriptor
+# This is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 2, or (at your option) any later
+# version.
 
 #using external player by A. Latsch & Dr. Best (c)
 #Hardly improved by technic(c) for KartinaTV/RodnoeTV compatibility and buffering possibility!!!
 import servicewebts
+
+from Plugins.Plugin import PluginDescriptor
 
 def Plugins(path, **kwargs):
 	return [ 
@@ -23,7 +27,6 @@ from Components.ActionMap import ActionMap, NumberActionMap
 from Components.config import config, ConfigSubsection, ConfigText, ConfigInteger, getConfigListEntry, ConfigYesNo, ConfigSubDict
 from Components.ConfigList import ConfigListScreen
 import kartina_api, rodnoe_api
-from Components.Sources.StaticText import StaticText
 from Components.Label import Label
 from Components.Slider import Slider
 from Components.Button import Button
@@ -34,15 +37,26 @@ from Screens.MessageBox import MessageBox
 from Screens.MinuteInput import MinuteInput
 from Screens.ChoiceBox import ChoiceBox
 from Tools.BoundFunction import boundFunction
-from enigma import eServiceReference, iServiceInformation, eListboxPythonMultiContent, RT_HALIGN_LEFT, gFont, eTimer, iPlayableServicePtr, iStreamedServicePtr, getDesktop
+from enigma import eServiceReference, iServiceInformation, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, gFont, eTimer, iPlayableServicePtr, iStreamedServicePtr, getDesktop, eLabel, eSize, ePoint
 from Components.ParentalControl import parentalControl
 #from threading import Thread
 from Tools.LoadPixmap import LoadPixmap
-from Components.Pixmap import Pixmap
+#from Components.Pixmap import Pixmap
+from skin import loadSkin, parseFont, colorNames, SkinError
+def parseColor(str):
+	if str[0] != '#':
+		print colorNames
+		try:
+			return colorNames[str]
+		except:
+			raise SkinError("color '%s' must be #aarrggbb or valid named color" % (str))
+	return int(str[1:], 0x10)
+
+from Tools.Directories import resolveFilename, SCOPE_CURRENT_SKIN
+from Components.GUIComponent import GUIComponent
+from Components.Sources.Boolean import Boolean
 import datetime
 from utils import Bouquet, BouquetManager, tdSec, secTd, syncTime
-import skin_data
-#from Components.ServiceList import ServiceList
 
 #for localized messages
 from . import _
@@ -50,22 +64,58 @@ from . import _
 sz_w = 0
 try:
 	sz_w = getDesktop(0).size().width()
+	if sz_w > 1000:
+		skinHD = True
+	else:
+		skinHD = False
+	print "[KartinaTV] skin width = ", sz_w
 except:
 	skinHD = False
-print "[KartinaTV] skin width = ", sz_w
-if sz_w > 1000:
-	skinHD = True
-else:
-	skinHD = False
+	
+SKIN_PATH = '/usr/share/enigma2/KartinaTV_skin'
+
 if skinHD:
-	ch = skin_data.channels_list_hd
+	loadSkin(SKIN_PATH + '/kartina_skin.xml')
 else:
-	ch = skin_data.channels_list_sd  
+	loadSkin(SKIN_PATH + '/kartina_skinsd.xml')
+
+#text that contain only 0-9 characters..	
+class ConfigNumberText(ConfigText):
+	def __init__(self, default = ""):
+		ConfigText.__init__(self, default, fixed_size = False)
+
+	def handleKey(self, key):
+		if key in KEY_NUMBERS or key == KEY_ASCII:
+			if key == KEY_ASCII:
+				ascii = getPrevAsciiCode()
+				if not (48 <= ascii <= 57):
+					return
+			else:
+				ascii = getKeyNumber(key) + 48
+  			newChar = unichr(ascii)
+			if self.allmarked:
+				self.deleteAllChars()
+				self.allmarked = False
+			self.insertChar(newChar, self.marked_pos, False)
+			self.marked_pos += 1
+		else:
+			ConfigText.handleKey(self, key)
+
+	def onSelect(self, session):
+		self.allmarked = (self.value != "")
+
+	def onDeselect(self, session):
+		self.marked_pos = 0
+		self.offset = 0
+		if not self.last_value == self.value:
+			self.changedFinal()
+			self.last_value = self.value
+	  
 
 #Initialize Configuration #kartinatv
 config.plugins.KartinaTv = ConfigSubsection()
-config.plugins.KartinaTv.login = ConfigText(default="145", visible_width = 50, fixed_size = False)
-config.plugins.KartinaTv.password = ConfigText(default="541", visible_width = 50, fixed_size = False)
+config.plugins.KartinaTv.login = ConfigNumberText(default="145")
+config.plugins.KartinaTv.password = ConfigNumberText(default="541")
 config.plugins.KartinaTv.timeshift = ConfigInteger(0, (0,12) )
 config.plugins.KartinaTv.lastroot = ConfigText(default="[]")
 config.plugins.KartinaTv.lastcid = ConfigInteger(0, (1,1000))
@@ -104,7 +154,7 @@ def menurtv(menuid):
 		return [("Rodnoe.TV", ROpen, "rodnoetv", 8)]
 	return []
 
-def KOpen(session, **kwargs):
+def KOpen(session, **kwargs):	
 	print "[KartinaTV] plugin started"
 	global Ktv, cfg, favouritesList, iName
 	Ktv = kartina_api.Ktv
@@ -116,7 +166,6 @@ def KOpen(session, **kwargs):
 	else:
 		print "[KartinaTV] error: already running!"
 		return
-
 
 def ROpen(session, **kwargs):
 	print "[RodnoeTV] plugin started"
@@ -131,15 +180,16 @@ def ROpen(session, **kwargs):
 		print "[KartinaTV] error: already running!"
 		return
 	
-rec_png = LoadPixmap(cached=True, path='/usr/lib/enigma2/python/Plugins/Extensions/KartinaTV/rec.png')
+rec_png = LoadPixmap(cached=True, path='/usr/share/enigma2/KartinaTV_skin/rec.png')
 EPG_UPDATE_INTERVAL = 60 #Seconds, in channel list.
 PROGRESS_TIMER = 1000*60 #Update progress in infobar.
-PROGRESS_SIZE = 200
+PROGRESS_SIZE = 500
+ARCHIVE_TIME_FIX = 5 #sec. When archive paused, we could miss some video
 	
 def setServ():
 	global SERVICE_KARTINA
 	if cfg.usesrvicets.value:
-		SERVICE_KARTINA = 4112 #ServiceWebTS
+		SERVICE_KARTINA = 4112 #ServiceTS
 	else:
 		SERVICE_KARTINA = 4097 #Gstreamer
 
@@ -216,11 +266,6 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 	ALLOW_SUSPEND = True
 	instance = None
 	
-	if skinHD:
-		skin = skin_data.infobar_hd
-	else:
-		skin = skin_data.infobar_sd
-	
 	def __init__(self, session):
 		KartinaPlayer.instance = self
 		Screen.__init__(self, session)
@@ -234,22 +279,28 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		MyInfoBarShowHide.__init__(self) #Use myInfoBar because image developers modify InfoBarGenerics
 		#InfoBarSeek.__init__(self)
 		
-		self["caption"] = Label("")
-		self["currprg"] = Label("")
-		self["nextprg"] = Label("")
-		self["currtime"] = Label("")
-		self["nexttime"] = Label("")
-		self["currdur"] = Label("")
-		self["nextdur"] = Label("")
-		self["archivedate"] = Label("")
-		self["currentprg_bar"] = Slider(0, PROGRESS_SIZE)
+		self.setTitle(iName)
+		
+		self["channelName"] = Label("")
+		self["currentName"] = Label("")
+		self["nextName"] = Label("")
+		self["currentTime"] = Label("")
+		self["nextTime"] = Label("")
+		self["currentDuration"] = Label("")
+		self["nextDuration"] = Label("")
+		self["progressBar"] = Slider(0, PROGRESS_SIZE)
+		
+		self["archiveDate"] = Label("")
+		self["playPause"] = Label("")
+		self["KartinaInArchive"] = Boolean(False)
 		
 		#FIXME: actionmap add help.
 		#TODO: Create own actionmap
+		#TODO: disable/enabling action map
 		self["actions"] = ActionMap(["OkCancelActions", "ColorActions", "ChannelSelectEPGActions", "InfobarChannelSelection", "TvRadioActions"], 
 		{
-			"cancel": self.exit, #Exit
-			"green" : self.kartinaConfig, #Options
+			"cancel": self.hide,
+			"green" : self.kartinaConfig,
 			"red" :self.archivePvr,
 			"yellow" :self.playpauseArchive,
 			#"blue" :self.doNothing,
@@ -261,10 +312,11 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			"openServiceList" : self.showList,
 			"historyNext" : self.historyNext,
 			"historyBack" : self.historyBack,
-			"showEPGList" :self.showEpg
+			"showEPGList" :self.showEpg,
+			"keyTV" : self.exit 
 		}, -1)
 		
-		self["NumberActions"] = NumberActionMap( [ "NumberActions"],
+		self["NumberActions"] = NumberActionMap([ "NumberActions"],
 			{
 				"1": self.keyNumberGlobal,
 				"2": self.keyNumberGlobal,
@@ -282,9 +334,6 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		
 		self.oldService = self.session.nav.getCurrentlyPlayingServiceReference()
 		
-		self.current = 0
-		self.oldcid = None
-		
 		self.epgTimer = eTimer()
 		self.epgProgressTimer = eTimer()
 		self.epgTimer.callback.append(self.epgEvent)
@@ -297,12 +346,17 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		KartinaPlayer.instance = None
 		print "[KartinaTV] set instance to None"
 	
-	def start(self):
+	def start(self):		
 		if self.start in self.onShown:
 			self.onShown.remove(self.start)		
 		setServ()
-		print "[KartinaTV] Using service:", SERVICE_KARTINA
+		
 		self.archive_pause = 0
+		self.current = 0
+		self.oldcid = None
+		
+		print "[KartinaTV] Using service:", SERVICE_KARTINA
+		
 		global ktv
 		ktv = Ktv(cfg.login.value, cfg.password.value)
 		global bouquet
@@ -311,13 +365,12 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			ktv.start()
 			ktv.setTimeShift(cfg.timeshift.value)
 			ktv.setChannelsList()
-			#ktv.loadEpg() #TODO: Thread for Epg
 		except:
 			print "[KartinaTV] ERROR login/init failed!"
 			self.session.openWithCallback(self.errorCB, MessageBox, _("Login or initialization failed!\nEdit options?"), type = MessageBox.TYPE_YESNO)
 			return
+
 		#init bouquets
-		self.oldsid = None
 		print "[KartinaTV] Favourites ids", favouritesList
 		fav = Bouquet(Bouquet.TYPE_MENU, 'favourites')
 		for x in favouritesList:
@@ -326,6 +379,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		bouquet.appendRoot(ktv.sortByName())
 		bouquet.appendRoot(ktv.sortByGroup())
 		bouquet.appendRoot(fav)
+	
 		#apply parentalControl
 		for x in Ktv.locked_cids: #Ktv.locked_ids:
 			sref = fakeReference(x)
@@ -351,10 +405,8 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		else:
 			self.current = bouquet.goNext()
 			bouquet.historyAppend()
-			self.archiveDisable()  #already has play
-			#self.session.archive = True
-			#self.play()
-	
+			self.switchChannel()
+			
 	def previousChannel(self):
 		if ktv.aTime:
 			self.session.openWithCallback(self.rwdSeekTo, MinuteInput)
@@ -363,8 +415,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		else:
 			self.current = bouquet.goPrev()
 			bouquet.historyAppend()
-			self.archiveDisable()
-			#self.play()
+			self.switchChannel()
 	
 	#FIXME: history and channel zapping forget archive position!   
 	def historyNext(self):
@@ -372,18 +423,14 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			return
 		if bouquet.historyNext():
 			self.current = bouquet.getCurrent()
-			self.archiveDisable()
-			#ktv.aTime = 0
-			#self.play()
+			self.switchChannel()
 	
 	def historyBack(self):
 		if ktv.videomode:
 			pass
 		if bouquet.historyPrev():
 			self.current = bouquet.getCurrent()
-			self.archiveDisable()
-			#ktv.aTime = 0
-			#self.play()
+			self.switchChannel()
 	
 	def fwdSeekTo(self, minutes):
 		print "[KartinaTV] Seek", minutes, "minutes forward"
@@ -398,7 +445,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 	def playpauseArchive(self):
 		if ktv.aTime: #Check if we in archive #TODO: Enable and disable play-pause action map on starting and stoping archive 
 			if self.archive_pause: #do unpause
-				ktv.aTime -= tdSec(syncTime()-self.archive_pause)-5 #manually -5sec TODO: use config or global constant 
+				ktv.aTime -= tdSec(syncTime()-self.archive_pause)-ARCHIVE_TIME_FIX 
 				self.archive_pause = None
 				self.play()
 			else: #do pause
@@ -412,131 +459,122 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 	
 	def play(self): #check parental control		
 		print "[KartinaTV] access channel id=", self.current 
-		if isinstance( self.current, int ):
-			cid = self.current
-			if cid == self.oldcid:
-				self.startPlay() #for archive
-				return
-			self.session.nav.stopService()
-			#Use many hacks, because it's no possibility to change enigma :(
-			#fake reference has no path and used for parental control
-			fakeref = fakeReference(cid) #parentalControl hack.
-			print fakeref.toCompareString()
-			if parentalControl.isServicePlayable(fakeref, boundFunction(self.startPlay)):
-				self.startPlay()
-			else:
-				self["caption"].setText(ktv.channels[cid].name)
-				self.epgEvent()	
-				#self.current = bouquet.getCurrent()
-				#self.play()
+		cid = self.current
+		#if cid not changed (probably we are in  archive)
+		if cid == self.oldcid:
+			self.startPlay() 
+			return
+		self.session.nav.stopService()
+		
+		#Use many hacks, because it's no possibility to change enigma :(
+		#fake reference has no path and used for parental control
+		fakeref = fakeReference(cid)
+		print fakeref.toCompareString()
+		if parentalControl.isServicePlayable(fakeref, boundFunction(self.startPlay)):
+			self.startPlay()
+		else:
+			self["channelName"].setText(ktv.channels[cid].name)
+			self.epgEvent()	
 
 	def startPlay(self, **kwargs):
 		print "[KartinaTV] play channel id=", self.current 
-		if isinstance( self.current, int ):
-			cid = self.current
-			self.oldcid = cid
-			#TODO: mirror getting url and seeking to c++ part
-			#print "[KartinaTV] getting stream uri: dream-time =", datetime.datetime.now().strftime("%s")
-			try:
-				uri = ktv.getStreamUrl(cid)
-			except:
-				print "[KartinaTV] Error: getting stream uri failed!"
-				self.session.open(MessageBox, _("Error while getting stream uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
-				return -1
-			#uri = 'http://192.168.0.2/stream.ts' #XXX: FOR TESTING ONLY COMMENT!!!!!
-			srv = SERVICE_KARTINA
-			if not uri.startswith('http://'):
-				srv = 4097
-			sref = eServiceReference(srv, 0, uri) 
-			#print "[KartinaTV] got stream uri: dream-time =", datetime.datetime.now().strftime("%s")
-			sref.setData(7, int(str(cid), 16) ) #picon hack;)
-			if iName == "RodnoeTV":
-				sref.setData(6,1) #again hack;)	
-			#self.session.nav.stopService() #FIXME: do we need it?? some bugs in servicets?
-			self.session.nav.playService(sref)
-			self["caption"].setText(ktv.channels[cid].name)
-			self.epgEvent()	
+		cid = self.current
+		self.oldcid = cid
+		try:
+			uri = ktv.getStreamUrl(cid)
+		except:
+			print "[KartinaTV] Error: getting stream uri failed!"
+			self.session.open(MessageBox, _("Error while getting stream uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
+			return -1
+		srv = SERVICE_KARTINA
+		if not uri.startswith('http://'):
+			srv = 4097
+		sref = eServiceReference(srv, 0, uri) 
+		sref.setData(7, int(str(cid), 16) ) #picon hack.
+		if iName == "RodnoeTV":
+			sref.setData(6,1) #again hack;)	
+		
+		#self.session.nav.stopService() #FIXME: do we need it?? some bugs in servicets?
+		self.session.nav.playService(sref)
+		self["channelName"].setText(ktv.channels[cid].name)
+		self.epgEvent()	
 
 	
 	def epgEvent(self):
-		self.epgTimer.stop() #first stop timers 
+		#first stop timers
+		self.epgTimer.stop()
 		self.epgProgressTimer.stop()
 		cid = self.current
-		curr = None
-		if ktv.aTime:
-			if not ktv.channels[cid].haveAEpg(ktv.aTime):
-				try:
-					ktv.getGmtEpg(cid)
-				except:
-					print "[KartinaTV] ERROR load archive epg failed! cid =", cid
-			curr =  ktv.channels[cid].aepg		   
-		else:
-			if not ktv.channels[cid].haveEpg():
-				try:
-					ktv.getChannelsEpg([cid])
-				except:
-					print "[KartinaTV] ERROR load epg failed! cid =", cid
-			curr =  ktv.channels[cid].epg
-		print "[KartinaTV]", ktv.aTime
-		#if curr:
-		#	#print "[KartinaTV] curr not None"
-		#	if curr.end(ktv.aTime):
-		#		print "[KartinaTV] epg end"
-		if not (curr and not curr.end(ktv.aTime)):
-			print "[KartinaTV] there is no EPG to show:(", cid
-			self["currprg"].setText('')
-			self["currtime"].setText('')
-			self["nextprg"].setText('')
-			self["nexttime"].setText('')
-			self["currdur"].setText('')
-			self["nextdur"].setText('')
-			self["currentprg_bar"].setValue(0)	
-			self.serviceStarted() #ShowInfoBar
-			return
 		
-		self.currentEpg = curr
-		self["currprg"].setText(curr.name)
-		self["currtime"].setText(curr.tstart.strftime("%H:%M"))
-		self["nexttime"].setText(curr.tend.strftime("%H:%M"))
-		self.epgTimer.start( curr.getTimeLeft(ktv.aTime)*1000 ) #milliseconds
-		self["currdur"].setText("+%d min" % (curr.getTimeLeft(ktv.aTime) / 60) )
-		self["currentprg_bar"].setValue(PROGRESS_SIZE * curr.getTimePass(ktv.aTime) / curr.duration)
-		self.epgProgressTimer.start(1000*60) #1 minute
-		if ktv.aTime: #TODO: new record label
-			self["archivedate"].setText(curr.tstart.strftime("%d.%m.%y"))
-			self["archivedate"].show()
-		else:
-			self["archivedate"].hide()
+		#EPG is valid only if bouth tstart and tend specified!!! Check API.
 		
-		def setEpgNext():
+		def setEpgCurrent():
 			if ktv.aTime:
-				next = None
+				if not ktv.channels[cid].hasAEpg(ktv.aTime): return False
+				curr = ktv.channels[cid].aepg
 			else:
+				if not  ktv.channels[cid].hasEpg(): return False
+				curr = ktv.channels[cid].epg
+			
+			self.currentEpg = curr
+			self["currentName"].setText(curr.name)
+			self["currentTime"].setText(curr.tstart.strftime("%H:%M"))
+			self["nextTime"].setText(curr.tend.strftime("%H:%M"))
+			self.epgTimer.start(curr.getTimeLeft(ktv.aTime)*1000 ) #milliseconds
+			self["currentDuration"].setText("+%d min" % (curr.getTimeLeft(ktv.aTime) / 60) )
+			self["progressBar"].setValue(PROGRESS_SIZE * curr.getTimePass(ktv.aTime) / curr.duration)
+			self.epgProgressTimer.start(PROGRESS_TIMER)
+			if ktv.aTime:
+				self["archiveDate"].setText(curr.tstart.strftime("%d.%m"))
+				self["archiveDate"].show()
+			else:
+				self["archiveDate"].hide()
+			return True
+		
+		if not setEpgCurrent():
+			try:
+				if ktv.aTime:
+					ktv.getGmtEpg(cid)
+				else:
+					ktv.getChannelsEpg([cid])
+			except:
+				print "[KartinaTV] ERROR load epg failed! cid =", cid, bool(ktv.aTime)		
+			if not setEpgCurrent():	
+				self["currentName"].setText('')
+				self["currentTime"].setText('')
+				self["nextTime"].setText('')
+				self["currentDuration"].setText('')
+				self["progressBar"].setValue(0)	
+				
+		def setEpgNext():
+			if ktv.aTime: return False
+			if ktv.channels[cid].hasEpgNext():
 				next = ktv.channels[cid].nepg
-			if next and curr.tend <= next.tstart and next.tstart > syncTime():
-				self['nextprg'].setText(next.name)
-				self['nextdur'].setText("%d min" % (next.duration/ 60))
+				self['nextName'].setText(next.name)
+				self['nextDuration'].setText("%d min" % (next.duration/ 60))
 				return True
 			return False
 		
 		if not setEpgNext():
 			try:
 				ktv.epgNext(cid)
-				setEpgNext()
 			except:
-				pass
+				print "[KartinaTV] load epg next failed!"
+			if not setEpgNext():
+				self["nextName"].setText('')
+				self["nextDuration"].setText('')
 						
 		self.serviceStarted() #ShowInfoBar #FIXME: only if focused
 		
 	def epgUpdateProgress(self):
-		self["currdur"].setText("+%d min" % (self.currentEpg.getTimeLeft(ktv.aTime)/60) )
-		self["currentprg_bar"].setValue(PROGRESS_SIZE * self.currentEpg.getTimePass(ktv.aTime) / self.currentEpg.duration)
-		self.epgProgressTimer.start(1000*60)
+		self["currentDuration"].setText("+%d min" % (self.currentEpg.getTimeLeft(ktv.aTime)/60) )
+		self["progressBar"].setValue(PROGRESS_SIZE * self.currentEpg.getTimePass(ktv.aTime) / self.currentEpg.duration)
+		self.epgProgressTimer.start(PROGRESS_TIMER)
 	
 	
 	def archivePvr(self):
 		if ktv.aTime:
-			self.archiveDisable()
+			self.switchChannel()
 		elif ktv.videomode:
 			ktv.videomode = False
 			if ktv.aTime:
@@ -544,16 +582,16 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			else:
 				self.play()
 		else:
+			return #Videothek disabled now
 			ktv.videomode = True
-			if ktv.videomode: #I'm not idiot:) Api can not allow to set videomode, because it isn't available. 
+			if ktv.videomode: #Api can not allow to set videomode, because it isn't available. 
 				self.showVideoList()
-			#show Pvr Menu
+
 	def showVideoList(self):
 		self.session.openWithCallback(self.showVideoCB, KartinaVideoList)
 	
-	def archiveDisable(self):
-		#hide pixmap
-		#self.session.archive = False
+	def switchChannel(self):
+		self["KartinaInArchive"].setBoolean(False)
 		ktv.aTime = 0
 		self.play()
 	
@@ -570,10 +608,9 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			return
 		elif changed:
 			self.current = bouquet.getCurrent()
-			ktv.aTime = 0
 			bouquet.historyAppend()
-			self.play()
-	
+			self.switchChannel()
+			
 	def errorCB(self, edit = False):
 		if edit:
 			self.kartinaConfig()
@@ -587,7 +624,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		if time:
 			self.current = bouquet.getCurrent()
 			ktv.aTime = tdSec(time-syncTime()) #aTime < 0
-			self.session.archive = True
+			self["KartinaInArchive"].setBoolean(True)
 			self.play()
 	
 	def showVideoCB(self, vid= None):
@@ -605,18 +642,17 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 	def playVideo(self):
 		print "[KartinaTV] play video id=", self.vid 
 		vid = self.vid
-		#TODO: mirror getting url and seeking to c++ part
+		#TODO: getting url and seeking in c++ part
 		try:
 			uri = ktv.getVideoUrl(vid)
 		except:
 			print "[KartinaTV] Error: getting video uri failed!"
 			self.session.open(MessageBox, _("Error while getting video uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
 			return -1
-		#uri = 'http://192.168.0.2/mp4' #XXX: FOR TESTING ONLY COMMENT!!!!!
-		sref = eServiceReference(4097, 0, uri) #TODO: SERVICE_KARTINA 
+		sref = eServiceReference(4097, 0, uri) #TODO: 4112 
 		#self.session.nav.stopService() #FIXME: do we need it?? some bugs in servicets?
 		self.session.nav.playService(sref)
-		#self["caption"].setText(ktv.videos[cid].name)
+		self["channelName"].setText(ktv.videos[vid].name)
 	
 	def kartinaConfig(self):
 		self.session.openWithCallback(self.restart, KartinaConfig)
@@ -642,11 +678,12 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			cfg.sortkey.save()
 			if iName == "KartinaTV":
 				cfg.numsonpage.save()
+		print "[KartinaTV] exiting"
 		self.close()
 	
 	def generate_error(self):
 		print "[KartinaTV] User generate error for debug"
-		raise Exception("User generate error for debug")
+		raise Exception("User generate error to view log")
 	
 	def runPlugin(self, plugin):
 		try:
@@ -667,46 +704,163 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 				bouquet.setIndex(num)
 				bouquet.goIn()
 				self.current = bouquet.getCurrent()
-				ktv.aTime = 0
-				self.play()
+				boquet.historyAppend()
+				self.switchChannel()
 			else:
 				bouquet.current = lastroot
 				
-r1 = ch['chname_rect']
-r2 = ch['chepg_rect']
-
-def kartinaChannelEntry(entry, num):
-	if entry.type == Bouquet.TYPE_MENU:
-		return [
-			(entry.name),
-			(eListboxPythonMultiContent.TYPE_TEXT, 0, 1, 300, 25, 0, RT_HALIGN_LEFT, entry.name)
-		]
-	elif entry.type == Bouquet.TYPE_SERVICE:
-		cid = entry.name
-		if num:
-			x = [(cid),
-				(eListboxPythonMultiContent.TYPE_TEXT, r1.x+20, r1.y, r1.w, r1.h, 0, RT_HALIGN_LEFT, ktv.channels[cid].name),
-				(eListboxPythonMultiContent.TYPE_TEXT, 0, 1, 20, r1.h, 0, RT_HALIGN_LEFT, str(num) ) ]
+#TODO: BouquetManager guiContent. Don't recreate and refill ChannelSelection if possible
+class ChannelList(MenuList):
+	
+	def __init__(self):
+		MenuList.__init__(self, [], content = eListboxPythonMultiContent)
+		self.col = {}
+		
+		self.pixmapProgressBar = None
+		self.pixmapArchive = None
+		self.itemHeight = 28
+		self.l.setFont(0, parseFont("Regular;22", ((1,1),(1,1))) )
+		self.l.setFont(1, parseFont("Regular;18", ((1,1),(1,1))) )
+		self.l.setFont(2, parseFont("Regular;20", ((1,1),(1,1))) )
+		self.num = 0
+		
+		for x in ["colorEventProgressbar", "colorEventProgressbarSelected", "colorEventProgressbarBorder", "colorEventProgressbarBorderSelected", "colorServiceDescription", "colorServiceDescriptionSelected"]:
+			self.col[x] = None
+	
+	def postWidgetCreate(self, instance):
+		MenuList.postWidgetCreate(self, instance)
+		self.showEpgProgress = config.usage.show_event_progress_in_servicelist.value
+		#Can't access eTextPara directly :(
+		self.fontCalc = [eLabel(self.instance), eLabel(self.instance), eLabel(self.instance)]
+		self.fontCalc[0].setFont(parseFont("Regular;22", ((1,1),(1,1))) )
+		self.fontCalc[1].setFont(parseFont("Regular;18", ((1,1),(1,1))) )
+		self.fontCalc[2].setFont(parseFont("Regular;20", ((1,1),(1,1))) )
+		
+		
+	def applySkin(self, desktop, parent):
+		if self.skinAttributes is not None:
+			attribs = [ ]
+			for (attrib, value) in self.skinAttributes:
+#				if attrib == "foregroundColorMarked":
+#					self.col[attrib] = parseColor(value)
+#				elif attrib == "foregroundColorMarkedSelected":
+#					self.col[attrib] = parseColor(value)
+#				elif attrib == "backgroundColorMarked":
+#					self.col[attrib] = parseColor(value)
+#				elif attrib == "backgroundColorMarkedSelected":
+#					self.col[attrib] = parseColor(value)
+#				elif attrib == "foregroundColorServiceNotAvail":
+#					self.col[attrib] = parseColor(value)
+				if attrib == "colorEventProgressbar":
+					self.col[attrib] = parseColor(value)
+				elif attrib == "colorEventProgressbarSelected":
+					self.col[attrib] = parseColor(value)
+				elif attrib == "colorEventProgressbarBorder":
+					self.col[attrib] = parseColor(value)
+				elif attrib == "colorEventProgressbarBorderSelected":
+					self.col[attrib] = parseColor(value)
+				elif attrib == "colorServiceDescription":
+					self.col[attrib] = parseColor(value)
+				elif attrib == "colorServiceDescriptionSelected":
+					self.col[attrib] = parseColor(value)
+				elif attrib == "picServiceEventProgressbar":
+					pic = LoadPixmap(resolveFilename(SCOPE_CURRENT_SKIN, value))
+					if pic:
+						self.pixmapProgressBar = pic
+				elif attrib == "picServiceArchive":
+					pic = LoadPixmap(resolveFilename(SCOPE_CURRENT_SKIN, value))
+					if pic:
+						self.pixmapArchive = pic
+				elif attrib == "serviceItemHeight":
+					self.itemHeight = int(value)
+				elif attrib == "serviceNameFont":
+					self.l.setFont(0, parseFont(value, ((1,1),(1,1))) )
+					self.fontCalc[0].setFont( parseFont(value, ((1,1),(1,1))) )
+				elif attrib == "serviceInfoFont":
+					self.l.setFont(1, parseFont(value, ((1,1),(1,1))) )
+					self.fontCalc[1].setFont( parseFont(value, ((1,1),(1,1))) )
+				elif attrib == "serviceNumberFont":
+					self.l.setFont(2, parseFont(value, ((1,1),(1,1))) )
+					self.fontCalc[2].setFont( parseFont(value, ((1,1),(1,1))) )
+				else:
+					attribs.append((attrib, value))
+					
+		self.skinAttributes = attribs
+		res = GUIComponent.applySkin(self, desktop, parent)
+		
+		self.l.setItemHeight(self.itemHeight)
+		self.itemWidth = self.instance.size().width()
+		for x in self.fontCalc:
+			#resize and move away.			
+			x.resize(eSize(self.itemWidth, self.itemHeight)) #?
+			x.move(ePoint(int(self.instance.size().width()+10), int(self.instance.size().height()+10)))
+			x.setNoWrap(1)
+		return res
+	
+	def setEnumerated(self, enumerated):
+		if enumerated:
+			self.num = 1
 		else:
-			x = [(cid),
-				(eListboxPythonMultiContent.TYPE_TEXT, r1.x, r1.y, r1.w, r1.h, 0, RT_HALIGN_LEFT, ktv.channels[cid].name) ]
-		if ktv.channels[cid].haveEpg():
-			curr = ktv.channels[cid].epg
-			x += [(eListboxPythonMultiContent.TYPE_TEXT, r2.x, r2.y, r2.w, r2.h, 1, RT_HALIGN_LEFT, curr.name)]
-		if ch.has_key('charchive_rect') and ktv.channels[cid].archive:
-			r3 = ch['charchive_rect']
-			x += [(eListboxPythonMultiContent.TYPE_PIXMAP_ALPHATEST, r3.x, r3.y, r3.w, r3.h, rec_png)]
-		if ch.has_key('chprogress_rect') and ktv.channels[cid].haveEpg() and ktv.channels[cid].epg.duration:
-			r4 = ch['chprogress_rect']
-			percent = ktv.channels[cid].epg.getTimePass(ktv.aTime)*100 / ktv.channels[cid].epg.duration
-			if ch.has_key('chprogress_pixmap'):
-				bg = ch['chprogress_pixmap_bg']
-				fg = ch['chprogress_pixmap_fg']
-			#	x += [(eListboxPythonMultiContent.TYPE_PIXMAP_ALPHATEST, r4.x, r4.y, r4.w, r4.h, bg)]
-			#	x += [(eListboxPythonMultiContent.TYPE_PIXMAP_ALPHATEST, r4.x, r4.y, r4.w * ktv.channels[cid].epg.getTimePass() / ktv.channels[cid].epg.duration, r4.h, fg)]					
-			else:
-				x += [(eListboxPythonMultiContent.TYPE_PROGRESS, r4.x, r4.y, r4.w, r4.h, percent)]	
-		return x
+			self.num = 0
+	
+	def setList(self, list):
+		self.l.setList(map(self.buildChannelEntry, list))
+		if self.num:
+			self.num = 1
+	
+	def calculateWidth(self, text, font):
+		self.fontCalc[font].setText(text)
+		return self.fontCalc[font].calculateSize().width()
+	
+	
+	def buildChannelEntry(self, entry):
+		defaultFlag = RT_HALIGN_LEFT | RT_VALIGN_CENTER
+		if entry.type == Bouquet.TYPE_MENU:
+			return [
+				(entry.name),
+				( eListboxPythonMultiContent.TYPE_TEXT, 0, 0, self.itemWidth, self.itemHeight, 0, defaultFlag, entry.name )]
+		
+		#Filling from left to rigth
+		elif entry.type == Bouquet.TYPE_SERVICE:
+			
+			cid = entry.name
+			lst = [(cid)]
+			xoffset = 1
+			
+			if self.num:
+				xoffset += 55
+				text = str(self.num)
+				lst += [(eListboxPythonMultiContent.TYPE_TEXT, 0, 0, xoffset-5, self.itemHeight, 2, RT_HALIGN_RIGHT | RT_VALIGN_CENTER, text )]
+				self.num += 1
+			
+			if self.pixmapArchive: 
+				width = self.pixmapArchive.size().width()
+				height = self.pixmapArchive.size().height()
+				if ktv.channels[cid].archive:
+					lst += [(eListboxPythonMultiContent.TYPE_PIXMAP_ALPHATEST, xoffset, (self.itemHeight-height)/2, width, height, self.pixmapArchive)]  	
+				xoffset += width+5
+				
+			if self.showEpgProgress: 
+				width = 52
+				height = 6
+				if ktv.channels[cid].hasEpg():
+					percent = 100*ktv.channels[cid].epg.getTimePass(0) / ktv.channels[cid].epg.duration
+					lst += [(eListboxPythonMultiContent.TYPE_PROGRESS, xoffset+1, (self.itemHeight-height)/2, width, height, percent, 0, self.col['colorEventProgressbar'], self.col['colorEventProgressbarSelected'] ),
+							(eListboxPythonMultiContent.TYPE_PROGRESS, xoffset, (self.itemHeight-height)/2 -1, width+2, height+2, 0, 1, self.col['colorEventProgressbarBorder'], self.col['colorEventProgressbarBorderSelected'] )]	
+				xoffset += width+7
+			
+			#skin_local colors...
+			text = str(ktv.channels[cid].name)
+			width = self.calculateWidth(text, 0)
+			lst += [(eListboxPythonMultiContent.TYPE_TEXT, xoffset, 0, width, self.itemHeight, 0, defaultFlag, text )]
+			xoffset += width+10
+			
+			if ktv.channels[cid].hasEpg():
+				text = '(%s)' % ktv.channels[cid].epg.progName #sholdn't contain \n
+				#width = self.calculateWidth(text, 1)
+				lst += [(eListboxPythonMultiContent.TYPE_TEXT, xoffset, 0, self.itemWidth, self.itemHeight, 1, defaultFlag, text, self.col['colorServiceDescription'], self.col['colorServiceDescriptionSelected'] )]
+			
+			return lst
 
 def kartinaVideoEntry(entry):
 	res = [
@@ -716,12 +870,7 @@ def kartinaVideoEntry(entry):
 	return res
 		
 class KartinaChannelSelection(Screen):
-	
-	if skinHD:
-		skin = skin_data.channels_hd
-	else:
-		skin = skin_data.channels_sd
-	
+
 	def __init__(self, session):
 		Screen.__init__(self, session)
 		
@@ -729,19 +878,18 @@ class KartinaChannelSelection(Screen):
 		self["key_green"] = Button(_("Groups"))
 		self["key_yellow"] = Button(_("Add"))
 		self["key_blue"] = Button(_("Favourites"))
-		self.list = MenuList([], enableWrapAround=True, content = eListboxPythonMultiContent)
-		self.list.l.setFont(0, gFont("Regular", ch['chname_font']))
-		self.list.l.setFont(1, gFont("Regular", ch['chepg_font']))
-		self.list.l.setItemHeight(ch['item_height'])
-		self["list"] = self.list
 		
-		self["epgname"]=Label()
-		self["epgtime"]=Label()
-		self["epgchannel"]=Label()
-		self["epgprogress"]=Slider(0, 100)
-		self["epgnexttime"]=Label()
-		self["epgnextname"]=Label()
-		self["epgnextname"]=Label()
+		self["list"] = ChannelList()
+		self.list = self["list"]
+		
+		self["epgName"]=Label("")
+		self["epgTime"]=Label("")
+		self["epgDiscription"] = Label("")
+		self["channelName"]=Label()
+		self["epgProgress"]=Slider(0, 100)
+		self["epgNextTime"]=Label()
+		self["epgNextName"]=Label()
+		self["epgNextDiscription"]=Label()	
 		
 		self["actions"] = ActionMap(["OkCancelActions", "ChannelSelectBaseActions", "DirectionActions", "ChannelSelectEditActions", "ChannelSelectEPGActions"], 
 		{
@@ -757,7 +905,9 @@ class KartinaChannelSelection(Screen):
 			"prevBouquet" : self.prevBouquet
 		}, -1)
 		
-		self.list.onSelectionChanged.append(self.updateEpgInfo)
+		self.list.onSelectionChanged.append(self.selectionChanged)
+		self.execingTimer = eTimer()
+		self.execingTimer.callback.append(self.updateEpgInfo())
 		self.lastroot = bouquet.current
 		self.editMode = False
 		self.editMoving = False
@@ -765,6 +915,7 @@ class KartinaChannelSelection(Screen):
 		#need to create GUI first for changing it's parameters later
 		#for example list.moveToIndex don't work otherwise		  
 		self.onLayoutFinish.append(self.start)
+		
 		
 	def start(self):
 		if bouquet.root == bouquet.current:
@@ -802,11 +953,12 @@ class KartinaChannelSelection(Screen):
 	def fillList(self):
 		#FIXME: optimizations? Autoupdate.
 		uplist = []
-		if not self.lastEpgUpdate or syncTime() - self.lastEpgUpdate > secTd(EPG_UPDATE_INTERVAL):
-			for x in bouquet.getList():
-				if isinstance(x.name, int):
-					if not ktv.channels[x.name].haveEpg():
-						uplist += [x.name]
+		
+		timeout = not self.lastEpgUpdate or syncTime() - self.lastEpgUpdate > secTd(EPG_UPDATE_INTERVAL)
+		for x in ktv.channels.keys():
+			if isinstance(x, int):
+				if (not ktv.channels[x].hasEpg()) and (not ktv.channels[x].lastUpdateFailed or timeout):
+					uplist += [x]
 		if uplist: 
 			try:
 				ktv.getChannelsEpg(uplist)
@@ -814,12 +966,13 @@ class KartinaChannelSelection(Screen):
 			except:
 				print "[KartinaTV] failed to get epg for uplist"
 		
-		self.setTitle(_("Channel Selection")+" / "+" / ".join(map(_, bouquet.getPathName())) )
+		self.setTitle(iName+" / "+" / ".join(map(_, bouquet.getPathName())) )
 	
 		self.fillingList = True #simple hack
 		if bouquet.current.name == 'favourites':
 			self["key_yellow"].setText(_("Delete"))
-			self.list.setList(map(kartinaChannelEntry, bouquet.getList(), range(1, len(bouquet.current.content)+1) ))
+			self.list.setEnumerated(1)
+			self.list.setList(bouquet.getList())
 		else:
 			self["key_yellow"].setText(_("Add"))
 			n = bouquet.current.name
@@ -827,10 +980,11 @@ class KartinaChannelSelection(Screen):
 				bouquet.current.sortByKey(cfg.sortkey[n].value)
 			else:
 				bouquet.current.sortByKey(cfg.sortkey['in group'].value)
-			self.list.setList(map(kartinaChannelEntry, bouquet.getList(), []) )
+			self.list.setEnumerated(0)
+			self.list.setList(bouquet.getList())
 		self.list.moveToIndex(bouquet.current.index)
 		self.fillingList = False
-		self.updateEpgInfo() #previous line already calls this
+		self.selectionChanged()
 		
 	def showByGroup(self):
 		if self.editMode: return
@@ -883,7 +1037,7 @@ class KartinaChannelSelection(Screen):
 					bouquet.root.content[2].append(Bouquet(Bouquet.TYPE_SERVICE, cid))
 			print "[KartinaTV] Now favouritesList is:", favouritesList
 		
-	def updateEpgInfo(self):
+	def selectionChanged(self):
 		if self.fillingList: return			#simple hack
 		idx = self.list.getSelectionIndex()
 		if self.editMoving and self.lastIndex != idx:
@@ -893,48 +1047,62 @@ class KartinaChannelSelection(Screen):
 			else:
 				bouquet.current.moveOneDown()
 			self.lastIndex = idx
-			self.fillList()
+			self.fillList() #TODO: optimize!!!
 		bouquet.setIndex(self.list.getSelectionIndex())
+		
+		self.updateEpgInfo()
+#		if self.execing:
+#			#Don't fill epg labels while moving in the list. Do it later.
+#		
+#			self.execingTimer.start(100, True)
+		
+	def updateEpgInfo(self):		
 		print "[KartinaTV]", bouquet.current.index, bouquet.current.name
 		curr = bouquet.getCurrentSel()
 		type = None
 		if curr:
 			(cid, type) = curr
 		if type == Bouquet.TYPE_SERVICE:
-			self["epgchannel"].setText(ktv.channels[cid].name)
-			self["epgchannel"].show()
-			text = ""
-			if ktv.channels[cid].haveEpg(): #Not ktv.aTime but zero
+			self["channelName"].setText(ktv.channels[cid].name)
+			self["channelName"].show()
+			if ktv.channels[cid].hasEpg():
 				curr = ktv.channels[cid].epg
-				text += "%s - %s\n" % (curr.tstart.strftime("%H:%M"), curr.tend.strftime("%H:%M"))
-				text += curr.name
-				self["epgname"].show()
-				self["epgtime"].show()
-				self["epgprogress"].setValue(100*curr.getTimePass(0) / curr.duration) #Not ktv.aTime but zero
-				self["epgprogress"].show()
+				self["epgTime"].setText("%s - %s" % (curr.tstart.strftime("%H:%M"), curr.tend.strftime("%H:%M")))
+				self["epgName"].setText(curr.progName)
+				self["epgName"].show()
+				self["epgTime"].show()
+				self["epgProgress"].setValue(100*curr.getTimePass(0) / curr.duration) #Not ktv.aTime but zero
+				self["epgProgress"].show()
+				self["epgDiscription"].setText(curr.progDescr)
+				self["epgDiscription"].show()
 			else:
 				self.hideEpgLabels()
-			if ktv.channels[cid].haveEpgNext():
-				text += '\n'
+			if ktv.channels[cid].hasEpgNext():
 				curr = ktv.channels[cid].nepg
-				text += "%s - %s\n" % (curr.tstart.strftime("%H:%M"), curr.tend.strftime("%H:%M"))
-				text += curr.name
-			#else:
-			#	self.hideEpgNextLabels()
-			self["epgname"].setText(text)
+				self["epgNextTime"].setText("%s - %s" % (curr.tstart.strftime("%H:%M"), curr.tend.strftime("%H:%M")))
+				self["epgNextName"].setText(curr.progName)
+				self["epgDiscription"].setText(curr.progDescr)
+				self["epgNextName"].show()
+				self["epgNextTime"].show()
+				self["epgDiscription"].show()
+			else:
+				self.hideEpgNextLabels()
+			
 		else:
-			self["epgchannel"].setText("")
+			self["channelName"].setText("")
 			self.hideEpgLabels()
+			self.hideEpgNextLabels()
 	
 	def hideEpgLabels(self):
-		self["epgname"].hide()
-		self["epgtime"].hide()
-		#self["epgchannel"].hide()
-		self["epgprogress"].hide()
+		self["epgName"].hide()
+		self["epgTime"].hide()
+		#self["channelName"].hide()
+		self["epgProgress"].hide()
+		self["epgDiscription"].hide()
 	
-#	def hideEpgNextLabels(self):
-#		self["epgnextname"].hide()
-#		self["epgnexttime"].hide()
+	def hideEpgNextLabels(self):
+		self["epgNextName"].hide()
+		self["epgNextTime"].hide()	
 	
 	def showMenu(self):
 		lst = []
@@ -949,10 +1117,6 @@ class KartinaChannelSelection(Screen):
 			else:
 				lst += [( _("remove from parental protection"), 'rm')]
 		if bouquet.current.name == 'favourites':
-			if bouquet.current.canMoveOneUp():
-				lst += [( _("Move one position up"), 'move_up')]		
-			if bouquet.current.canMoveOneDown():
-				lst += [( _("Move one position down"), 'move_down')]
 			if not self.editMode:
 				lst += [( _("Enter edit mode"), 'start_edit')]
 			else:
@@ -984,16 +1148,6 @@ class KartinaChannelSelection(Screen):
 			  boundFunction(self.pinEntered, service.toCompareString()), PinInput, pinList =
 			  [config.ParentalControl.servicepin[0].value], triesEntry = config.ParentalControl.retries.servicepin, title = _("Enter the service pin"),
 			  windowTitle = _("Change pin code"))
-		elif entry == 'move_to':
-			pass
-		elif entry == 'move_up':
-			bouquet.current.moveOneUp()
-			favouritesList = [x.name for x in bouquet.getList()]
-			self.fillList()
-		elif entry == 'move_down':
-			bouquet.current.moveOneDown()
-			favouritesList = [x.name for x in bouquet.getList()]
-			self.fillList()
 		elif entry == 'start_edit':
 			self.editMode = True
 		elif entry == 'stop_edit':
@@ -1017,11 +1171,7 @@ class KartinaChannelSelection(Screen):
 	 
 		
 class KartinaEpgList(Screen):
-	
-	if skinHD:
-		skin = skin_data.epg_hd
-	else:
-		skin = skin_data.epg_sd
+
 		
 	def __init__(self, session, current):
 		Screen.__init__(self, session)
@@ -1063,9 +1213,9 @@ class KartinaEpgList(Screen):
 	def kartinaEpgEntry(self, entry):
 		res = [
 			(entry),
-			(eListboxPythonMultiContent.TYPE_TEXT, 18, 2, 30, 22, 0, RT_HALIGN_LEFT, _(entry[0].strftime('%a')) ), #TODO: different colors for next and prev
-			(eListboxPythonMultiContent.TYPE_TEXT, 50, 2, 90, 22, 0, RT_HALIGN_LEFT, entry[0].strftime('%H:%M')), #or some record label + now playing label
-			(eListboxPythonMultiContent.TYPE_TEXT, 145, 2, 580, 24, 1, RT_HALIGN_LEFT, entry[1])]
+			(eListboxPythonMultiContent.TYPE_TEXT, 18, 2, 30, 22, 0, RT_HALIGN_LEFT, _(entry[0].strftime('%a')) ), 
+			(eListboxPythonMultiContent.TYPE_TEXT, 50, 2, 90, 22, 0, RT_HALIGN_LEFT, entry[0].strftime('%H:%M')),
+			(eListboxPythonMultiContent.TYPE_TEXT, 130, 2, 595, 24, 1, RT_HALIGN_LEFT, entry[1])]
 		if ktv.channels[self.current].archive and entry[0] < syncTime():
 			res += [(eListboxPythonMultiContent.TYPE_PIXMAP_ALPHATEST, 0, 5, 16, 16, rec_png)]
 		return res
@@ -1162,11 +1312,6 @@ class KartinaEpgList(Screen):
 		self.fillList()
 
 class KartinaVideoList(Screen):
-	
-	if skinHD:
-		skin = skin_data.epg_hd
-	else:
-		skin = skin_data.epg_sd
 
 	def __init__(self, session):
 		Screen.__init__(self, session)
@@ -1176,8 +1321,8 @@ class KartinaVideoList(Screen):
 		self["key_yellow"] = Button(_("Generes"))
 		self["key_blue"] = Button(_("Favourites"))
 		self.list = MenuList([], enableWrapAround=True, content = eListboxPythonMultiContent)
-		self.list.l.setFont(0, gFont("Regular", ch['chname_font']))
-		self.list.l.setItemHeight(ch['item_height'])
+		self.list.l.setFont(0, gFont("Regular", 20))
+		self.list.l.setItemHeight(28)
 		self["list"] = self.list
 		
 		#tmp

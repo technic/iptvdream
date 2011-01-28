@@ -1,10 +1,12 @@
-#!/usr/bin/python
-#  Dreambox Enigma2 KartinaTV player!
+#  Dreambox Enigma2 KartinaTV/RodnoeTV player! (by technic)
 #
 #  Copyright (c) 2010 Alex Maystrenko <alexeytech@gmail.com>
+#  web: http://techhost.dlinkddns.com/
 #
-# lib for Dreambox Enigma2 Kartina.TV player!
-#
+# This is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 2, or (at your option) any later
+# version.
 
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
@@ -13,8 +15,8 @@ try:
 except:
 	print "[KartinaTV] using cjson"
 	from cjson import decode as jdecode
-from datetime import datetime
-from utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager
+import datetime
+from utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager, EpgEntry, Channel
 
 site = "http://iptv.kartina.tv"
 
@@ -24,66 +26,7 @@ global Timezone
 import time
 Timezone = -time.timezone / 3600
 print "[KartinaTV] dreambox timezone is GMT", Timezone
-
-class EpgEntry():
-	def __init__(self, name, t_start, t_end):
-		self.name = name
-		self.tstart = t_start
-		self.tend = t_end
-	
-	def getDuration(self):
-		if self.tend:
-			return tdSec(self.tend - self.tstart)
-		else:
-			print "[KartinaTV]: WARNING Epg.duration() return 0!", self.name, self.tstart
-			return 0
-	duration = property(getDuration)
-	
-	def getTimePass(self, delta):
-		now = syncTime()+secTd(delta)
-		return tdSec(now-self.tstart)
-	
-	def getTimeLeft(self, delta):
-		now = syncTime()+secTd(delta)
-		if self.tend:
-			return tdSec(self.tend-now)
-		else:
-			print "[KartinaTV]: WARNING Epg.timeleft() return 0!", self.name, self.tstart
-			return 0
-	
-	def isNow(self, delta): #programm is now and tstart and tend defined 
-		#print "[KartinaTV] epg end =", self.tend
-		return self.tend and self.tstart and self.tend > syncTime()+secTd(delta) and self.tstart < syncTime()+secTd(delta)  
-	
-	def inFuture(self, delta): #program is in future and tstart defined
-		pass
-			
-	def end(self, delta):
-		#print "[KartinaTV] epg end =", self.tend
-		return self.tend and self.tend < syncTime()+secTd(delta) or self.tstart > syncTime()+secTd(delta)  
-
-class Channel():
-	def __init__(self, name, group, num, gid):
-		self.name = name
-		self.gid = gid
-		self.num = num
-		self.group = group
-		self.archive = False
-		#TODO: need stack for EPG.or thread and cache... oh dreams:)
-		self.epg = None #epg for current program
-		self.aepg = None #epg of archive
-		self.nepg = None #epg for next program
-		self.lepg = {}
-	
-	def haveEpg(self):
-		return self.epg and not self.epg.end(0)
-	
-	def haveAEpg(self, delta):
-		return self.aepg and not self.aepg.end(delta)
-	
-	def haveEpgNext(self):
-		return self.nepg and self.epg.tend and self.epg.tend <= self.nepg.tstart and self.nepg.tstart > syncTime()
-	
+				
 class Ktv():
 
 	locked_cids = [155, 159, 161, 257]
@@ -145,61 +88,43 @@ class Ktv():
 	def setChannelsList(self):
 		root = fromstring(self.getChannelsList())
 		lst = []
-		t_str = root.attrib.get("clienttime").encode("utf-8")
-		t_cur = datetime.datetime.strptime(t_str, "%b %d, %Y %H:%M:%S")
+		t_str = root.findtext("servertime").encode("utf-8")
+		t_cur = datetime.datetime.fromtimestamp(int(t_str))
 		setSyncTime(t_cur)
-		gid = -1
 		num = -1
-		for group in root.findall("channelgroup"):
-			title = group.attrib.get("title").encode("utf-8")
-			gid += 1
-			for channel in group:
+		for group in root.find("groups"):
+			title = group.findtext("name").encode("utf-8")
+			gid = int(group.findtext("id"))
+			for channel in group.find("channels"):
 				num += 1
-				name = channel.attrib.get("title").encode("utf-8")
-				id = int(channel.attrib.get("id").encode("utf-8"))
-				self.channels[id] = Channel(name, title, num, gid)
-				prog = channel.attrib.get("programm")
-				if prog:
-					prog = prog.encode("utf-8")
-					t_str = channel.attrib.get("sprog").encode("utf-8")
-					t_start = datetime.datetime.strptime(t_str, "%b %d, %Y %H:%M:%S")
-					t_str = channel.attrib.get("eprog") and channel.attrib.get("eprog").encode("utf-8")
-					t_end = datetime.datetime.strptime(t_str, "%b %d, %Y %H:%M:%S")
+				name = channel.findtext("name").encode("utf-8")
+				id = int(channel.findtext("id").encode("utf-8"))
+				archive = channel.findtext("have_archive") or 0
+				self.channels[id] = Channel(name, title, num, gid, archive)
+				if channel.findtext("epg_progname") and channel.findtext("epg_end"):
+					prog = channel.findtext("epg_progname").encode("utf-8")
+					t_str = channel.findtext("epg_start").encode("utf-8")
+					t_start = datetime.datetime.fromtimestamp(int(t_str))
+					t_str = channel.findtext("epg_end").encode("utf-8")
+					t_end = datetime.datetime.fromtimestamp(int(t_str))
 					#print "[KartinaTV] updating epg for cid = ", id
 					self.channels[id].epg = EpgEntry(prog, t_start, t_end)
 				else:
 					#print "[KartinaTV] there is no epg for id=%d on ktv-server" % id
 					pass
 	
-	def epgFromChannelsList(self):
-		root = fromstring(self.getChannelsList())
-		lst = []
-		for group in root.findall("channelgroup"):
-			for channel in group:
-				cid = int(channel.attrib.get("id").encode("utf-8"))
-				prog = channel.attrib.get("programm")
-				if prog:
-					prog = prog.encode("utf-8")
-					t_str = channel.attrib.get("sprog").encode("utf-8")
-					t_start = datetime.datetime.strptime(t_str, "%b %d, %Y %H:%M:%S")
-					t_str = channel.attrib.get("eprog") and channel.attrib.get("eprog").encode("utf-8")
-					t_end = datetime.datetime.strptime(t_str, "%b %d, %Y %H:%M:%S")
-					self.channels[cid].epg = EpgEntry(prog, t_start, t_end)
-				else:
-					#print "[KartinaTV] INFO there is no epg for id=%d on ktv-server" % id
-					pass
-	
 	def setTimeShift(self, timeShift):
-		pass
 		params = {"act" : "x_set_timeshift",
 				  "m" : "clients",
 				  "ts" : timeShift}
-		return self.getData(site+"/?"+urllib.urlencode(params), "(setting) time shift %s" % timeShift)
+		self.getData(site+"/?"+urllib.urlencode(params), "(setting) time shift %s" % timeShift)
+		params = {"var" : "timeshift",
+				  "val" : timeShift}
+		self.getData(site+"/api/xml/settings_set?"+urllib.urlencode(params), "time shift new api %s" % timeShift) 
 
 	def getChannelsList(self):
-		params = {"m" : "channels", 
-				  "act" : "get_list_xml"}
-		xmlstream = self.getData(site+"/?"+urllib.urlencode(params), "channels list") 
+		params = { }
+		xmlstream = self.getData(site+"/api/xml/channel_list?"+urllib.urlencode(params), "channels list") 
 		return xmlstream
 	
 	def getStreamUrl(self, id):
@@ -208,8 +133,7 @@ class Ktv():
 				  "cid" : id}
 		if self.aTime:
 			params["gmt"] = (syncTime() + secTd(self.aTime)).strftime("%s")
-		if (ALLOW_EROTIC):
-			params["protect_code"] = self.password
+		params["protect_code"] = self.password
 		xmlstream = self.getData(site+"/?"+urllib.urlencode(params), "URL of stream %s" % id)
 		root = fromstring(xmlstream)
 		if self.aTime:
@@ -223,7 +147,7 @@ class Ktv():
 	
 	def getChannelsEpg(self, cids):
 		if len(cids) == 1:
-			self.epgNext(cids[0])
+			return self.epgNext(cids[0])
 		params = {"m" : "channels",
 				  "act" : "get_info_xml",
 				  "cids" : str(cids).replace(" ","")[1:-1]}
@@ -241,6 +165,7 @@ class Ktv():
 				self.channels[id].epg = EpgEntry(prog, t_start, t_end)
 			else:
 				#print "[KartinaTV] INFO there is no epg for id=%d on ktv-server" % id
+				self.channels[id].lastUpdateFailed = True
 				pass 
 	
 	def getGmtEpg(self, id):
@@ -288,37 +213,10 @@ class Ktv():
 			title = epg.findtext('progname').encode('utf-8')
 			return (tstart, title)
 		if len(lst)>1:
-			print parseepg(lst[0])[0]
+			#print parseepg(lst[0])[0]
 			self.channels[cid].epg = EpgEntry(parseepg(lst[0])[1], parseepg(lst[0])[0], parseepg(lst[1])[0])	
 		if len(lst)>2:
 			self.channels[cid].nepg = EpgEntry(parseepg(lst[1])[1], parseepg(lst[1])[0], parseepg(lst[2])[0])	
-		
-#Old authorisation	
-#	def authorize(self):
-#		self.trace("Authorization started")
-#		self.cookiejar.clear()
-#		params = urllib.urlencode({"act" : "login",
-#								   "code_login" : self.username,
-#								   "code_pass" : self.password})
-#		self.opener.open(site, params).read()
-#		
-#		#checking cookies
-#		cookies = list(self.cookiejar)
-#		cookiesdict = {}
-#		hasSSID = False
-#		deleted = False
-#		for cookie in cookies:
-#			cookiesdict[cookie.name] = cookie.value
-#			if (cookie.name.find('SSID') != -1):
-#				hasSSID = True
-#			if (cookie.value.find('deleted') != -1):
-#				deleted = True
-#		if (not hasSSID):
-#			raise Exception(self.username+": Authorization of user failed!")
-#		if (deleted):
-#			raise Exception(self.username+": Wrong authorization request")
-#		
-#		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 	
 	def authorize(self):
 		self.trace("Authorization started")
@@ -358,6 +256,10 @@ class Ktv():
 				  "m": "clients",
 				  "tzn": Timezone }
 		self.getData(site+"/?"+urllib.urlencode(params), "(setting) timezone GMT %s" % Timezone)
+		params = {"var" : "timezone",
+				  "val" : Timezone}
+		#not necessary because of timestamp 
+		#self.getData(site+"/api/xml/settings_set?"+urllib.urlencode(params), "time zone new api %s" % Timezone) 
 	
 	def getVideos(self, stype='last', nums_onpage=15, page=1, genre=[]):
 		params = {"type" : stype,
@@ -393,14 +295,15 @@ class Ktv():
 	def getData(self, url, name):
 		self.SID = False
 		
-		self.trace("Getting %s (%s)" % (name, url))
+		self.trace("Getting %s" % (name))
+		#self.trace("Getting %s (%s)" % (name, url))
 		try:
 			reply = self.opener.open(url).read()
 			#print reply
 		except:
 			reply = ""
 
-		if ((reply.find("code_login") != -1)and(reply.find("code_pass") != -1)):
+		if ((reply.find("code_login") != -1)and(reply.find("code_pass") != -1)or(reply.find("<error>") != -1)):
 			self.trace("Authorization missed or lost")
 			self.authorize()
 			self.trace("Second try to get %s (%s)" % (name, url))
@@ -418,11 +321,13 @@ if __name__ == "__main__":
 	import sys
 	ktv = Ktv(sys.argv[1], sys.argv[2])
 	ktv.start()
+	ktv.setTimeShift(0)
 	ktv.setChannelsList()
-#	print ktv.getStreamUrl(39)
-	ktv.getChannelsEpg([39])
-	for x in ktv.channels.keys():
-		print x, ktv.channels[x].name#, ktv.channels[x].epg.tstart, ktv.channels[x].epg.tend,  ktv.channels[x].epg.name
+	print ktv.getStreamUrl(113)
+#	x = 51
+#	print x, ktv.channels[x].name, ktv.channels[x].epg.tstart, ktv.channels[x].epg.tend,  ktv.channels[x].epg.name
+#	ktv.getChannelsEpg([x])
+#	print x, ktv.channels[x].name, ktv.channels[x].epg.tstart, ktv.channels[x].epg.tend,  ktv.channels[x].epg.name
 	#l = ktv.getVideos()
 	#print int(l[u'rows'][1][u'id'])
 	#print  ktv.getVideoUrl(121)

@@ -1,3 +1,13 @@
+#  Dreambox Enigma2 KartinaTV/RodnoeTV player! (by technic)
+#
+#  Copyright (c) 2010 Alex Maystrenko <alexeytech@gmail.com>
+#  web: http://techhost.dlinkddns.com/
+#
+# This is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 2, or (at your option) any later
+# version.
+
 import datetime
 from operator import attrgetter
 
@@ -17,6 +27,75 @@ def setSyncTime(time):
 def syncTime():
 	#print "[KartinaTV] time delta = ", tdSec(time_delta)
 	return datetime.datetime.now() + time_delta
+
+class EpgEntry():
+	def __init__(self, name, t_start, t_end):
+		self.name = name #all available info
+		#no \n using in List
+		name_split = self.name.split('\n')
+		if name_split:
+			self.progName = name_split[0]
+		else:
+			self.progName = name
+		if len(name_split)>1:
+			self.progDescr = name_split[1]
+		else:
+			self.progDescr = ''
+		self.tstart = t_start
+		self.tend = t_end
+	
+	#EPG is valid only if bouth tstart and tend specified!!!
+	def isValid(self):
+		return self.tstart and self.tend
+	
+	def startDefined(self):
+		return self.tstart
+	
+	def getDuration(self):
+		return tdSec(self.tend - self.tstart)
+
+	duration = property(getDuration)
+	
+	def getTimePass(self, delta):
+		now = syncTime()+secTd(delta)
+		return tdSec(now-self.tstart)
+	
+	def getTimeLeft(self, delta):
+		now = syncTime()+secTd(delta)
+		return tdSec(self.tend-now)
+	
+	#programm is now and tstart and tend defined
+	def isNow(self, delta): 
+		if self.isValid():
+			return self.tstart <= syncTime()+secTd(delta) and syncTime()+secTd(delta) < self.tend  
+		return None
+
+class Channel():
+	def __init__(self, name, group, num, gid, archive=0):
+		self.name = name
+		self.gid = gid
+		self.num = num
+		self.group = group
+		self.archive = archive
+		self.epg = None #epg for current program
+		self.aepg = None #epg of archive
+		self.nepg = None #epg for next program
+		self.lepg = {}
+		self.lastUpdateFailed = False
+	
+	#EPG is valid only if bouth tstart and tend specified!!!
+	#in this case hasSmth returns True
+	
+	def hasEpg(self):
+		return self.epg and self.epg.isNow(0)
+	
+	def hasAEpg(self, delta):
+		return self.aepg and self.aepg.isNow(delta)
+	
+	def hasEpgNext(self):
+		if self.epg and self.epg.isValid() and self.nepg and self.nepg.isValid():
+			return self.epg.tend <= self.nepg.tstart and self.nepg.tstart > syncTime()
+		return False
 	
 class Bouquet():
 	TYPE_SERVICE = 0

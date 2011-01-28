@@ -1,0 +1,200 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-01-25 19:01+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../kartinatv/plugin.py:845 ../kartinatv/plugin.py:940
+msgid "Add"
+msgstr ""
+
+#: ../kartinatv/plugin.py:843
+msgid "All"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1394
+msgid "Apr"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1127
+msgid "Archive"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1394
+msgid "Aug"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1378
+msgid "Buffer size, KB"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1395
+msgid "By group"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1369
+msgid "Cancel"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1098
+msgid "Change pin code"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1072
+msgid "Context menu"
+msgstr ""
+
+#: ../kartinatv/plugin.py:936
+msgid "Delete"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1069
+msgid "Enter edit mode"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1097
+msgid "Enter the service pin"
+msgstr ""
+
+#: ../kartinatv/plugin.py:454
+msgid "Error while getting stream uri"
+msgstr ""
+
+#: ../kartinatv/plugin.py:616
+msgid "Error while getting video uri"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1071
+msgid "Exit edit mode"
+msgstr ""
+
+#: ../kartinatv/plugin.py:846 ../kartinatv/plugin.py:1270
+msgid "Favourites"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1394
+msgid "Feb"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1128 ../kartinatv/plugin.py:1200
+#: ../kartinatv/plugin.py:1244
+msgid "Fully"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1269
+msgid "Generes"
+msgstr ""
+
+#: ../kartinatv/plugin.py:844
+msgid "Groups"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1268
+msgid "Info"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1394
+msgid "Jan"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1394
+msgid "Jul"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1394
+msgid "Jun"
+msgstr ""
+
+#: ../kartinatv/plugin.py:337
+msgid ""
+"Login or initialization failed!\n"
+"Edit options?"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1394
+msgid "Mar"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1394
+msgid "May"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1394
+msgid "Nov"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1370
+msgid "OK"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1394
+msgid "Oct"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1267
+msgid "Play"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1394
+msgid "Sep"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1376
+msgid "Show in mainmenu"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1059
+msgid "Sort by default"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1058
+msgid "Sort by name"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1375
+msgid "Timeshift"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1377
+msgid "Use servicets instead of Gstreamer"
+msgstr ""
+
+#: ../kartinatv/plugin.py:658
+msgid "You can't run this plugin in KartinaTV mode"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1064
+msgid "add to parental protection"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1395
+msgid "all"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1395
+msgid "favourites"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1373
+msgid "login"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1374
+msgid "password"
+msgstr ""
+
+#: ../kartinatv/plugin.py:1066
+msgid "remove from parental protection"
+msgstr ""

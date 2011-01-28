@@ -1,0 +1,498 @@
+# German translations for tuxbox-enigma package.
+# Copyright (C) 2005 THE tuxbox-enigma'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the tuxbox-enigma package.
+# Automatically generated, 2005.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: tuxbox-enigma 0.0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-06-19 22:55+0400\n"
+"PO-Revision-Date: 2010-01-03 07:27+0100\n"
+"Last-Translator: WeeGull <weegull@hotmail.com>\n"
+"Language-Team: WeeGull <weegull@hotmail.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-Language: Swedish\n"
+"X-Poedit-Country: SWEDEN\n"
+"X-Poedit-SourceCharset: iso-8859-15\n"
+
+msgid "All"
+msgstr "Alla"
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Kartina.TV"
+msgstr ""
+
+msgid "Kartina.TV Configuration"
+msgstr ""
+
+msgid "Login"
+msgstr ""
+
+msgid "OK"
+msgstr ""
+
+msgid "Password"
+msgstr ""
+
+msgid "Select channel"
+msgstr ""
+
+msgid "Style clock of infobar"
+msgstr ""
+
+msgid "Timeshift"
+msgstr ""
+
+msgid "You can't run this plugin in KartinaTV mode"
+msgstr ""
+
+msgid "analog"
+msgstr ""
+
+msgid "digital"
+msgstr ""
+
+#~ msgid " Results"
+#~ msgstr " Resultat"
+
+#~ msgid "Added: "
+#~ msgstr "Tillagd: "
+
+#~ msgid "An error occured."
+#~ msgstr "Ett fel uppstod."
+
+#~ msgid "Ascending"
+#~ msgstr "Stigande"
+
+#~ msgid "Ask user"
+#~ msgstr "Fråga användaren"
+
+#~ msgid "Australia"
+#~ msgstr "Australien"
+
+#~ msgid "Author: "
+#~ msgstr "Författare: "
+
+#~ msgid "Autos & Vehicles"
+#~ msgstr "Motor & Fordon"
+
+#~ msgid "Brazil"
+#~ msgstr "Brasilien"
+
+#~ msgid "Canada"
+#~ msgstr "Kanada"
+
+#~ msgid "Category"
+#~ msgstr "Kategori"
+
+#~ msgid "Choose target folder"
+#~ msgstr "Välj målkatalog"
+
+#~ msgid "Clear history on Exit:"
+#~ msgstr "Rensa historik vid Avslut:"
+
+#~ msgid "Close"
+#~ msgstr "Stäng"
+
+#~ msgid "Comedy"
+#~ msgstr "Komedi"
+
+#~ msgid "Czech Republic"
+#~ msgstr "Tjeckien"
+
+#~ msgid "Descending"
+#~ msgstr "Fallande"
+
+#~ msgid "Display search results by:"
+#~ msgstr "Visa sökresultat sortterat på:"
+
+#~ msgid "Do you want to see more entries?"
+#~ msgstr "Vill du se flera bidrag?"
+
+#~ msgid "Download Video"
+#~ msgstr "Ladda ner Video"
+
+#~ msgid "Download location"
+#~ msgstr "Nedladdningsplats"
+
+#~ msgid "Downloading screenshots. Please wait..."
+#~ msgstr "Laddar ner förhandsvisningsbilder. Vänligen vänta..."
+
+#~ msgid "Duration: "
+#~ msgstr "Längd: "
+
+#~ msgid "Education"
+#~ msgstr "Utbildning"
+
+#~ msgid "Enter your search term(s)"
+#~ msgstr "Ange dina sökterm(er)"
+
+#~ msgid "Entertainment"
+#~ msgstr "Underhållning"
+
+#~ msgid "Fetching feed entries"
+#~ msgstr "Hämtar feed poster"
+
+#~ msgid "Fetching search entries"
+#~ msgstr "Hämtar sökning poster"
+
+#~ msgid "Film & Animation"
+#~ msgstr "Film & Animerat"
+
+#~ msgid "France"
+#~ msgstr "Frankrike"
+
+#~ msgid "From Region"
+#~ msgstr "Från Region"
+
+#~ msgid "Gaming"
+#~ msgstr "Spel"
+
+#~ msgid "Germany"
+#~ msgstr "Tyskland"
+
+#~ msgid "Great Britain"
+#~ msgstr "Storbritannien"
+
+#~ msgid "HD videos"
+#~ msgstr "HD video"
+
+#~ msgid "Help"
+#~ msgstr "Hjälp"
+
+#~ msgid "History"
+#~ msgstr "Historia"
+
+#~ msgid "Holland"
+#~ msgstr "Holland"
+
+#~ msgid "Hong Kong"
+#~ msgstr "Hong Kong"
+
+#~ msgid "Howto & Style"
+#~ msgstr "Howto & Design"
+
+#~ msgid "India"
+#~ msgstr "India"
+
+#~ msgid "Ireland"
+#~ msgstr "Irland"
+
+#~ msgid "Israel"
+#~ msgstr "Israel"
+
+#~ msgid "Italy"
+#~ msgstr "Italien"
+
+#~ msgid "Japan"
+#~ msgstr "Japan"
+
+#~ msgid "Load feed on startup:"
+#~ msgstr "Ladda ström vid uppstart:"
+
+#~ msgid "Mexico"
+#~ msgstr "Mexiko"
+
+#~ msgid "More video entries."
+#~ msgstr "Fler video poster."
+
+#~ msgid "Most discussed"
+#~ msgstr "Mest diskuterad"
+
+#~ msgid "Most linked"
+#~ msgstr "Mest länkad"
+
+#~ msgid "Most popular"
+#~ msgstr "Mest populär"
+
+#~ msgid "Most recent"
+#~ msgstr "Mest nyast"
+
+#~ msgid "Most responded"
+#~ msgstr "Mest svarade"
+
+#~ msgid "Most viewed"
+#~ msgstr "Mest visad"
+
+#~ msgid "Music"
+#~ msgstr "Musik"
+
+#~ msgid "My TubePlayer"
+#~ msgstr "My TubePlayer"
+
+#~ msgid "MyTube Settings"
+#~ msgstr "MyTube Inställningar"
+
+#~ msgid "MyTubePlayer"
+#~ msgstr "MyTubePlayer"
+
+#~ msgid "MyTubePlayer Help"
+#~ msgstr "MyTubePlayer Hjälp"
+
+#~ msgid "MyTubePlayer active video downloads"
+#~ msgstr "MyTubePlayer aktiva videonedladdningar"
+
+#~ msgid "MyTubePlayer settings"
+#~ msgstr "MyTubePlayer inställningar"
+
+#~ msgid "MyTubeVideoInfoScreen"
+#~ msgstr "MyTubeVideoInfoScreen"
+
+#~ msgid "MyTubeVideohelpScreen"
+#~ msgstr "MyTubeVideoHjälpSkärm"
+
+#~ msgid "New Zealand"
+#~ msgstr "Nya Zeeland"
+
+#~ msgid "News & Politics"
+#~ msgstr "Nyheter & Politik"
+
+#~ msgid "No"
+#~ msgstr "Nej"
+
+#~ msgid "No playable video found! Stop playing this movie?"
+#~ msgstr "Inga spelbara video hittas! Sluta spela denna film?"
+
+#~ msgid "No videos to display"
+#~ msgstr "Ingen video att visa"
+
+#~ msgid "No, but play video again"
+#~ msgstr "Nej, men spela video igen"
+
+#~ msgid "No, but switch to video entries."
+#~ msgstr "Nej, men byt till videoposter."
+
+#~ msgid "No, but switch to video search."
+#~ msgstr "Nej, men byt till videosökning."
+
+#~ msgid "Not fetching feed entries"
+#~ msgstr "Hämtar inte feed poster"
+
+#~ msgid "Order by"
+#~ msgstr "Sortera efter"
+
+#~ msgid "People & Blogs"
+#~ msgstr "Folk & Bloggar"
+
+#~ msgid "Pets & Animals"
+#~ msgstr "Husdjur & Vilddjur"
+
+#~ msgid "Play YouTube movies"
+#~ msgstr "Spela YouTube filmer"
+
+#~ msgid "Play next video"
+#~ msgstr "Spela nästa video"
+
+#~ msgid "Play video again"
+#~ msgstr "Spela video igen."
+
+#~ msgid "Please enter your search term."
+#~ msgstr "Vänligen ange din sökterm."
+
+#~ msgid "Please select a standard feed or try searching for videos."
+#~ msgstr "Vänligen ange en grundström eller försök söka efter videos."
+
+#~ msgid "Poland"
+#~ msgstr "Polen"
+
+#~ msgid "Published"
+#~ msgstr "Publiserad"
+
+#~ msgid "Rating"
+#~ msgstr "Betyg"
+
+#~ msgid "Ratings: "
+#~ msgstr "Betyg: "
+
+#~ msgid "Really quit MyTube Player?"
+#~ msgstr "Verkligen avsluta MyTubePlayer?"
+
+#~ msgid "Recently featured"
+#~ msgstr "Nyligen aktuell"
+
+#~ msgid "Related video entries."
+#~ msgstr "Liknande video poster."
+
+#~ msgid "Relevance"
+#~ msgstr "Relevance"
+
+#~ msgid "Response video entries."
+#~ msgstr "Svars video poster."
+
+#~ msgid "Return to movie list"
+#~ msgstr "Återvänd till filmlistan"
+
+#~ msgid "Russia"
+#~ msgstr "Russia"
+
+#~ msgid "Save"
+#~ msgstr "Spara"
+
+#~ msgid "Science & Technology"
+#~ msgstr "Vetenskap & Teknik"
+
+#~ msgid "Search Term(s)"
+#~ msgstr "Sökterm(er)"
+
+#~ msgid "Search category:"
+#~ msgstr "Sök kategori:"
+
+#~ msgid "Search region:"
+#~ msgstr "Sök region:"
+
+#~ msgid "Search restricted content:"
+#~ msgstr "Sök begränsat innehåll"
+
+#~ msgid "Select new feed to view."
+#~ msgstr "Välj ny ström att visa."
+
+#~ msgid "Select your choice."
+#~ msgstr "Ange ditt val."
+
+#~ msgid "Short Movies"
+#~ msgstr "Kortfilmer"
+
+#~ msgid "Sorry, video is not available!"
+#~ msgstr "Ledsen, video är ej tillgänglig!"
+
+#~ msgid "South Korea"
+#~ msgstr "Syd Korea"
+
+#~ msgid "Spain"
+#~ msgstr "Spanien"
+
+#~ msgid "Sports"
+#~ msgstr "Sport"
+
+#~ msgid "Start with following feed:"
+#~ msgstr "Starta med följande ström:"
+
+#~ msgid "Std. Feeds"
+#~ msgstr "Grund ström"
+
+#~ msgid "Stop playing this movie?"
+#~ msgstr "Suta spela den här filmen?"
+
+#~ msgid "Sweden"
+#~ msgstr "Sverige"
+
+#~ msgid "Tags: "
+#~ msgstr "Märkning: "
+
+#~ msgid "Taiwan"
+#~ msgstr "Taiwan"
+
+#~ msgid "There was an error getting the feed entries. Please try again."
+#~ msgstr "Det uppstod ett fel i strömningen. Vänlig försök igen."
+
+#~ msgid "This Month"
+#~ msgstr "Den här månaden"
+
+#~ msgid "This Week"
+#~ msgstr "Den här veckan"
+
+#~ msgid "This is the help screen. Feed me with something to display."
+#~ msgstr "Det här är hjälpen. Ge mig något att visa."
+
+#~ msgid "Today"
+#~ msgstr "Idag"
+
+#~ msgid "Top favorites"
+#~ msgstr "Topp favoriter"
+
+#~ msgid "Top rated"
+#~ msgstr "Topp rankade"
+
+#~ msgid "Travel & Events"
+#~ msgstr "Resa & Äventyr"
+
+#~ msgid "Trying to download the Youtube feed entries. Please wait..."
+#~ msgstr "Försöker ladda ner Youtube feed poster. Vänligen vänta..."
+
+#~ msgid "Trying to download the Youtube search results. Please wait..."
+#~ msgstr "Försöker ladda ner Youtube sökresultat. Vänligen vänta..."
+
+#~ msgid "United States"
+#~ msgstr "USA"
+
+#~ msgid "Videobrowser exit behavior:"
+#~ msgstr "Uppförande av Videobläddrare vid avslut:"
+
+#~ msgid "Videoplayer stop/exit behavior:"
+#~ msgstr "Videospelare stopp/avslut uppförande:"
+
+#~ msgid "View Count"
+#~ msgstr "Visa antal"
+
+#~ msgid "View active downloads"
+#~ msgstr "Visa aktiva nedladdningar"
+
+#~ msgid "View related videos"
+#~ msgstr "Visa relaterade videos"
+
+#~ msgid "View response videos"
+#~ msgstr "Visa resultatets videos"
+
+#~ msgid "Views: "
+#~ msgstr "Visningar: "
+
+#~ msgid ""
+#~ "Welcome to the MyTube Youtube Player.\n"
+#~ "\n"
+#~ "Use the Bouqet+ button to navigate to the search field and the Bouqet- to "
+#~ "navigate to the video entries.\n"
+#~ "\n"
+#~ "To play a movie just press OK on your remote control.\n"
+#~ "\n"
+#~ "Press info to see the movie description.\n"
+#~ "\n"
+#~ "Press the Menu button for additional options.\n"
+#~ "\n"
+#~ "The Help button shows this help again."
+#~ msgstr ""
+#~ "Välkommen till MyTube Youtube Spelare.\n"
+#~ "\n"
+#~ "Använd Bouqet+ knappen för att navigera till sökfältet och Bouqet- för "
+#~ "att navigera till videoposterna.\n"
+#~ "\n"
+#~ "För att spela en video tryck OK på din fjärrkontroll.\n"
+#~ "\n"
+#~ "Tryck på MENU knappen för ytterligare val.\n"
+#~ "\n"
+#~ "HELP knappen kommer visa den här informationen igen."
+
+#~ msgid ""
+#~ "Welcome to the MyTube Youtube Player.\n"
+#~ "\n"
+#~ "While entering your search term(s) you will get suggestions displayed "
+#~ "matching your search term.\n"
+#~ "\n"
+#~ "To select a suggestion press DOWN on your remote, select the desired "
+#~ "result and press OK on your remote to start the search.\n"
+#~ "\n"
+#~ "Press exit to get back to the input field."
+#~ msgstr ""
+#~ "Välkommen till MyTube Youtube Spelare.\n"
+#~ "\n"
+#~ "Under tiden som du anger sökterm(er) kommer du få förslag på matchande "
+#~ "söktermer.\n"
+#~ "\n"
+#~ "För att välja ett förslag tryck på NER knappen på din fjärrkontroll, välj "
+#~ "sedan önskat förslag och tryck OK för att starta sökningen.\n"
+#~ "\n"
+#~ "Tryck EXIT för att återgå till inmatningsfältet."
+
+#~ msgid "Yes"
+#~ msgstr "Ja"
+
+#~ msgid "Yes, but play next video"
+#~ msgstr "Ja, men spela nästa video"
+
+#~ msgid "Yes, but play previous video"
+#~ msgstr "Ja, men spela föregående video"

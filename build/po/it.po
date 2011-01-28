@@ -1,0 +1,500 @@
+# English translations for tuxbox-enigma package.
+# Copyright (C) 2005 THE tuxbox-enigma'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the tuxbox-enigma package.
+# Automatically generated, 2005.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: enigma2 - mytube\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-06-19 22:55+0400\n"
+"PO-Revision-Date: 2009-05-29 19:31+0100\n"
+"Last-Translator: Spaeleus <spaeleus@croci.org>\n"
+"Language-Team: www.linsat.net <spaeleus@croci.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-Language: Italian\n"
+"X-Poedit-Country: Italy\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-Basepath: /home/dario/Plugins/mytube\n"
+"X-Poedit-SearchPath-0: /home/dario/Plugins/mytube\n"
+
+msgid "All"
+msgstr "Tutte"
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Kartina.TV"
+msgstr ""
+
+msgid "Kartina.TV Configuration"
+msgstr ""
+
+msgid "Login"
+msgstr ""
+
+msgid "OK"
+msgstr ""
+
+msgid "Password"
+msgstr ""
+
+msgid "Select channel"
+msgstr ""
+
+msgid "Style clock of infobar"
+msgstr ""
+
+msgid "Timeshift"
+msgstr ""
+
+msgid "You can't run this plugin in KartinaTV mode"
+msgstr ""
+
+msgid "analog"
+msgstr ""
+
+msgid "digital"
+msgstr ""
+
+#~ msgid " Results"
+#~ msgstr "Risultati"
+
+#~ msgid "Added: "
+#~ msgstr "Aggiunti: "
+
+#~ msgid "All Time"
+#~ msgstr "Sempre"
+
+#~ msgid "An error occured."
+#~ msgstr "Si è verificato un errore."
+
+#~ msgid "Ascending"
+#~ msgstr "Crescente"
+
+#~ msgid "Ask user"
+#~ msgstr "Chiedere all'utente"
+
+#~ msgid "Australia"
+#~ msgstr "Australia"
+
+#~ msgid "Author: "
+#~ msgstr "Autore: "
+
+#~ msgid "Autos & Vehicles"
+#~ msgstr "Auto & veicoli"
+
+#~ msgid "Brazil"
+#~ msgstr "Brasile"
+
+#~ msgid "Canada"
+#~ msgstr "Canada"
+
+#~ msgid "Choose target folder"
+#~ msgstr "Selezionare la cartella di destinazione"
+
+#~ msgid "Clear history on Exit:"
+#~ msgstr "Ripulire la history in uscita:"
+
+#~ msgid "Close"
+#~ msgstr "Chiudere"
+
+#~ msgid "Comedy"
+#~ msgstr "Commedia"
+
+#~ msgid "Czech Republic"
+#~ msgstr "Repubblica Ceca"
+
+#~ msgid "Descending"
+#~ msgstr "Discendente"
+
+#~ msgid "Display search results by:"
+#~ msgstr "Mostrare i risultati della ricerca per:"
+
+#~ msgid "Do you want to see more entries?"
+#~ msgstr "Visualizzare altre voci?"
+
+#~ msgid "Download Video"
+#~ msgstr "Download filmato"
+
+#~ msgid "Download location"
+#~ msgstr "Collocazione download"
+
+#~ msgid "Downloading screenshots. Please wait..."
+#~ msgstr "Attendere: download screenshot in corso..."
+
+#~ msgid "Duration: "
+#~ msgstr "Durata: "
+
+#~ msgid "Education"
+#~ msgstr "Educativi"
+
+#~ msgid "Enter your search term(s)"
+#~ msgstr "Inserire le voci di ricerca"
+
+#~ msgid "Entertainment"
+#~ msgstr "Intrattenimento"
+
+#~ msgid "Fetching feed entries"
+#~ msgstr "Recupero feed in corso"
+
+#~ msgid "Fetching search entries"
+#~ msgstr "Recupero voci di ricerca in corso"
+
+#~ msgid "Film & Animation"
+#~ msgstr "Film & Animazione"
+
+#~ msgid "France"
+#~ msgstr "Francia"
+
+#~ msgid "Gaming"
+#~ msgstr "Giochi"
+
+#~ msgid "Germany"
+#~ msgstr "Germania"
+
+#~ msgid "Great Britain"
+#~ msgstr "Gran Bretagna"
+
+#~ msgid "HD videos"
+#~ msgstr "Filmati HD"
+
+#~ msgid "Help"
+#~ msgstr "Aiuto"
+
+#~ msgid "History"
+#~ msgstr "History"
+
+#~ msgid "Holland"
+#~ msgstr "Olanda"
+
+#~ msgid "Hong Kong"
+#~ msgstr "Hong Kong"
+
+#~ msgid "Howto & Style"
+#~ msgstr "Howto & Stile"
+
+#~ msgid "India"
+#~ msgstr "India"
+
+#~ msgid "Ireland"
+#~ msgstr "Irlanda"
+
+#~ msgid "Israel"
+#~ msgstr "Israele"
+
+#~ msgid "Italy"
+#~ msgstr "Italia"
+
+#~ msgid "Japan"
+#~ msgstr "Giappone"
+
+#~ msgid "Load feed on startup:"
+#~ msgstr "Caricare fedd all'avvio:"
+
+#~ msgid "Mexico"
+#~ msgstr "Messico"
+
+#~ msgid "More video entries."
+#~ msgstr "Ulteriori filmati"
+
+#~ msgid "Most discussed"
+#~ msgstr "Più discussi"
+
+#~ msgid "Most linked"
+#~ msgstr "Più \"linkati\""
+
+#~ msgid "Most popular"
+#~ msgstr "Più popolari"
+
+#~ msgid "Most recent"
+#~ msgstr "Più recenti"
+
+#~ msgid "Most responded"
+#~ msgstr "Più affidabili"
+
+#~ msgid "Most viewed"
+#~ msgstr "Più visti"
+
+#~ msgid "Music"
+#~ msgstr "Musica"
+
+#~ msgid "My TubePlayer"
+#~ msgstr "My TubePlayer"
+
+#~ msgid "MyTube Settings"
+#~ msgstr "Configurazione MyTube"
+
+#~ msgid "MyTubePlayer"
+#~ msgstr "MyTubePlayer"
+
+#~ msgid "MyTubePlayer Help"
+#~ msgstr "Aiuto su MyTubePlayer"
+
+#~ msgid "MyTubePlayer active video downloads"
+#~ msgstr "MyTubePlayer: download filmati attivi"
+
+#~ msgid "MyTubePlayer settings"
+#~ msgstr "Configurazione MyTubePlayer"
+
+#~ msgid "MyTubeVideoInfoScreen"
+#~ msgstr "MyTubeVideoInfoScreen"
+
+#~ msgid "MyTubeVideohelpScreen"
+#~ msgstr "MyTubeVideohelpScreen"
+
+#~ msgid "New Zealand"
+#~ msgstr "Nuova Zelanda"
+
+#~ msgid "News & Politics"
+#~ msgstr "Notizie & politica"
+
+#~ msgid "No"
+#~ msgstr "No"
+
+#~ msgid "No playable video found! Stop playing this movie?"
+#~ msgstr "Nessun filmato riproducibile trovato! Arrestare la riproduzione?"
+
+#~ msgid "No videos to display"
+#~ msgstr "Nessun filmato da mostrare"
+
+#~ msgid "No, but play video again"
+#~ msgstr "No: riprodurre nuovamente il filmato"
+
+#~ msgid "No, but switch to video entries."
+#~ msgstr "No: commutare sull'elenco filmati"
+
+#~ msgid "No, but switch to video search."
+#~ msgstr "No, ma passare alla ricerca filmati"
+
+#~ msgid "Nonprofits & Activism"
+#~ msgstr "Nonprofit & attivismo"
+
+#~ msgid "Not fetching feed entries"
+#~ msgstr "Voci feed non recuperate"
+
+#~ msgid "People & Blogs"
+#~ msgstr "Gente & blog"
+
+#~ msgid "Pets & Animals"
+#~ msgstr "Cuccioli & animali"
+
+#~ msgid "Play YouTube movies"
+#~ msgstr "Riprodurre filmati YouTube"
+
+#~ msgid "Play next video"
+#~ msgstr "Riprodurre il filmato successivo"
+
+#~ msgid "Play video again"
+#~ msgstr "Riprodurre nuovamente il filmato"
+
+#~ msgid "Please enter your search term."
+#~ msgstr "Inserire le voci di ricerca"
+
+#~ msgid "Please select a standard feed or try searching for videos."
+#~ msgstr "Selezionare un feed standard o eseguire una ricerca filmati."
+
+#~ msgid "Poland"
+#~ msgstr "Polonia"
+
+#~ msgid "Published"
+#~ msgstr "Pubblicato"
+
+#~ msgid "Rating"
+#~ msgstr "Valutazioni"
+
+#~ msgid "Ratings: "
+#~ msgstr "Valutazioni: "
+
+#~ msgid "Really quit MyTube Player?"
+#~ msgstr "Uscire da MyTubePlayer?"
+
+#~ msgid "Recently featured"
+#~ msgstr "Posti in primo piano di recente"
+
+#~ msgid "Related video entries."
+#~ msgstr "Filmati collegati."
+
+#~ msgid "Relevance"
+#~ msgstr "Rilevanza"
+
+#~ msgid "Response video entries."
+#~ msgstr "Filmati disponibili"
+
+#~ msgid "Return to movie list"
+#~ msgstr "Ritornare all'elenco filmati"
+
+#~ msgid "Russia"
+#~ msgstr "Russia"
+
+#~ msgid "Save"
+#~ msgstr "Salvare"
+
+#~ msgid "Science & Technology"
+#~ msgstr "Scienza e tecnologia"
+
+#~ msgid "Search Term(s)"
+#~ msgstr "Voci di ricerca"
+
+#~ msgid "Search category:"
+#~ msgstr "Categoria di ricerca"
+
+#~ msgid "Search region:"
+#~ msgstr "Regione di ricerca"
+
+#~ msgid "Search restricted content:"
+#~ msgstr "Ricarcare contenuti vietati"
+
+#~ msgid "Select new feed to view."
+#~ msgstr "Selezionare il nuovo feed da visualizzare."
+
+#~ msgid "Select your choice."
+#~ msgstr "Selezionare una voce."
+
+#~ msgid "Short Movies"
+#~ msgstr "Corti"
+
+#~ msgid "Sorry, video is not available!"
+#~ msgstr "Filmato non disponibile!"
+
+#~ msgid "South Korea"
+#~ msgstr "Corea del Sud"
+
+#~ msgid "Spain"
+#~ msgstr "Spagna"
+
+#~ msgid "Sports"
+#~ msgstr "Sport"
+
+#~ msgid "Start with following feed:"
+#~ msgstr "Partire dal feed seguente:"
+
+#~ msgid "Std. Feeds"
+#~ msgstr "Feed std."
+
+#~ msgid "Stop playing this movie?"
+#~ msgstr "Arrestare la riproduzione?"
+
+#~ msgid "Sweden"
+#~ msgstr "Svezia"
+
+#~ msgid "Tags: "
+#~ msgstr "Etrichette: "
+
+#~ msgid "Taiwan"
+#~ msgstr "Taiwan"
+
+#~ msgid "There was an error getting the feed entries. Please try again."
+#~ msgstr "Si è generato un errore recuperando le voci del feed. Riprovare..."
+
+#~ msgid "This Month"
+#~ msgstr "Questo mese"
+
+#~ msgid "This Week"
+#~ msgstr "Questa settimana"
+
+#~ msgid "This is the help screen. Feed me with something to display."
+#~ msgstr "Questo è una schermata d'aiuto. Datemi qualcosa da mostrare..."
+
+#~ msgid "Today"
+#~ msgstr "Oggi"
+
+#~ msgid "Top favorites"
+#~ msgstr "Top preferiti"
+
+#~ msgid "Top rated"
+#~ msgstr "Top valutazioni"
+
+#~ msgid "Travel & Events"
+#~ msgstr "Viaggi & eventi"
+
+#~ msgid "Trying to download the Youtube feed entries. Please wait..."
+#~ msgstr "Attendere: download elenco dal feed Youtube in corso..."
+
+#~ msgid "Trying to download the Youtube search results. Please wait..."
+#~ msgstr ""
+#~ "Attendere: download dei risultati della ricerca da Youtube in corso..."
+
+#~ msgid "United States"
+#~ msgstr "Stati Uniti"
+
+#~ msgid "Videobrowser exit behavior:"
+#~ msgstr "Comportamento browser video su uscita: "
+
+#~ msgid "Videoplayer stop/exit behavior:"
+#~ msgstr "Comportamento player video su stop/uscita: "
+
+#~ msgid "View Count"
+#~ msgstr "Visual. conteggio"
+
+#~ msgid "View active downloads"
+#~ msgstr "Visualizzare i download attivi"
+
+#~ msgid "View related videos"
+#~ msgstr "Visualizzare filmati collegati"
+
+#~ msgid "View response videos"
+#~ msgstr "Visualizzare filmati disponibili"
+
+#~ msgid "Views: "
+#~ msgstr "Visite: "
+
+#~ msgid ""
+#~ "Welcome to the MyTube Youtube Player.\n"
+#~ "\n"
+#~ "Use the Bouqet+ button to navigate to the search field and the Bouqet- to "
+#~ "navigate to the video entries.\n"
+#~ "\n"
+#~ "To play a movie just press OK on your remote control.\n"
+#~ "\n"
+#~ "Press info to see the movie description.\n"
+#~ "\n"
+#~ "Press the Menu button for additional options.\n"
+#~ "\n"
+#~ "The Help button shows this help again."
+#~ msgstr ""
+#~ "Benvenuti in MyTube Youtube Player.\n"
+#~ "\n"
+#~ "BOUQUET+ -> Portare il fuoco sul campo ricerca | BOUQUET- -> Portare il "
+#~ "fuoco sui filmati.\n"
+#~ "\n"
+#~ "Ok -> riprodurre un filmato.\n"
+#~ "\n"
+#~ "INFO -> mostrare la descrizione del filmato.\n"
+#~ "\n"
+#~ "MENU -> Informazioni aggiuntive.\n"
+#~ "\n"
+#~ "HELP -> Mostrare di nuovo puesta pagina di aiuto."
+
+#~ msgid ""
+#~ "Welcome to the MyTube Youtube Player.\n"
+#~ "\n"
+#~ "While entering your search term(s) you will get suggestions displayed "
+#~ "matching your search term.\n"
+#~ "\n"
+#~ "To select a suggestion press DOWN on your remote, select the desired "
+#~ "result and press OK on your remote to start the search.\n"
+#~ "\n"
+#~ "Press exit to get back to the input field."
+#~ msgstr ""
+#~ "benvenuti in MyTube Youtube player.\n"
+#~ "\n"
+#~ "Durante l'iserimento dei criteri di ricerca, verranno mostrati "
+#~ "suggerimenti circa le possibili corrispondenze.\n"
+#~ "\n"
+#~ "Per selezionare un suggerimento, premere GIU' sul telecomando, scegliere "
+#~ "la voce desiderata poi premere Ok per avviare la ricerca.\n"
+#~ "\n"
+#~ "Premere EXIT per tornare alla schermata di inserimento."
+
+#~ msgid "Yes"
+#~ msgstr "Sì"
+
+#~ msgid "Yes, but play next video"
+#~ msgstr "Sì: riprodurre il filmato successivo"
+
+#~ msgid "Yes, but play previous video"
+#~ msgstr "Sì: riprodurre il filmato precedente"

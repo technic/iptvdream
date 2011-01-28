@@ -1,0 +1,33 @@
+
+AC_INIT([kartinatv], [1.1])
+
+AC_CONFIG_SRCDIR([hello.c])
+AM_INIT_AUTOMAKE
+
+##my config
+AC_PROG_MAKE_SET
+LANGUAGES="de ru en"
+NAME="KartinaTV"
+INSTALLDIR="/usr/lib/enigma2/python/Plugins/Extensions/KartinaTV"
+SKINDIR="/usr/share/enigma2/KartinaTV_skin"
+AC_SUBST(LANGUAGES)
+AC_SUBST(NAME)
+AC_SUBST(INSTALLDIR)
+AC_SUBST(SKINDIR)
+
+
+AC_PROG_CC
+AC_PROG_CXX
+AC_ISC_POSIX
+AM_PATH_PYTHON()
+AC_STDC_HEADERS
+AC_HAVE_HEADERS(string.h fcntl.h sys/file.h sys/param.h)
+
+AC_FUNC_ALLOCA
+
+AC_ST_BLKSIZE
+
+AC_CONFIG_FILES([Makefile servicets/Makefile kartinatv/Makefile po/Makefile misc/Makefile misc/menu/Makefile misc/buttons/Makefile])
+AC_OUTPUT
+
+

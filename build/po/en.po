@@ -1,0 +1,154 @@
+# English translations for tuxbox-enigma package.
+# Copyright (C) 2005 THE tuxbox-enigma'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the tuxbox-enigma package.
+# Automatically generated, 2005.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: tuxbox-enigma 0.0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-01-24 19:44+0200\n"
+"PO-Revision-Date: 2005-11-17 20:53+0100\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Add"
+msgstr ""
+
+msgid "All"
+msgstr ""
+
+msgid "Apr"
+msgstr ""
+
+msgid "Archive"
+msgstr ""
+
+msgid "Aug"
+msgstr ""
+
+msgid "Buffer size, KB"
+msgstr ""
+
+msgid "By group"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Change pin code"
+msgstr ""
+
+msgid "Context menu"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Enter edit mode"
+msgstr ""
+
+msgid "Enter the service pin"
+msgstr ""
+
+msgid "Error while getting stream uri"
+msgstr ""
+
+msgid "Error while getting video uri"
+msgstr ""
+
+msgid "Exit edit mode"
+msgstr ""
+
+msgid "Favourites"
+msgstr ""
+
+msgid "Feb"
+msgstr ""
+
+msgid "Fully"
+msgstr ""
+
+msgid "Generes"
+msgstr ""
+
+msgid "Groups"
+msgstr ""
+
+msgid "Info"
+msgstr ""
+
+msgid "Jan"
+msgstr ""
+
+msgid "Jul"
+msgstr ""
+
+msgid "Jun"
+msgstr ""
+
+msgid ""
+"Login or initialization failed!\n"
+"Edit options?"
+msgstr ""
+
+msgid "Mar"
+msgstr ""
+
+msgid "May"
+msgstr ""
+
+msgid "Nov"
+msgstr ""
+
+msgid "OK"
+msgstr ""
+
+msgid "Oct"
+msgstr ""
+
+msgid "Play"
+msgstr ""
+
+msgid "Sep"
+msgstr ""
+
+msgid "Show in mainmenu"
+msgstr ""
+
+msgid "Sort by default"
+msgstr ""
+
+msgid "Sort by name"
+msgstr ""
+
+msgid "Timeshift"
+msgstr ""
+
+msgid "Use servicets instead of Gstreamer"
+msgstr ""
+
+msgid "You can't run this plugin in KartinaTV mode"
+msgstr ""
+
+msgid "add to parental protection"
+msgstr ""
+
+msgid "all"
+msgstr ""
+
+msgid "favourites"
+msgstr ""
+
+msgid "login"
+msgstr ""
+
+msgid "password"
+msgstr ""
+
+msgid "remove from parental protection"
+msgstr ""
