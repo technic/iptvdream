@@ -19,7 +19,6 @@ AC_SUBST(SKINDIR)
 AC_PROG_CC
 AC_PROG_CXX
 AC_ISC_POSIX
-AM_PATH_PYTHON()
 AC_STDC_HEADERS
 AC_HAVE_HEADERS(string.h fcntl.h sys/file.h sys/param.h)
 
