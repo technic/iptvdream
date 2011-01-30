@@ -5,14 +5,20 @@ plug_path="/usr/lib/enigma2/python/Plugins/Extensions/"
 build_path="staging"
 snap_path="snapshots"
 pack_path="packages"
-export DESTDIR="/home/tech/dream_dev/KartinaTV/staging"
+export DESTDIR=`pwd`/staging
 
 
-if [ -d $2 ]; then
+echo "Welcome to dreambox bulder v0.2 ! developed by technic(c)"
+echo "Добро пожаловть в дримбокс билдер v0.2 ! Разработано technic(с)"
+
+
+if [ -d $2 && -z $2 ]; then
   src=$2
 else
   src="build"
 fi
+
+echo "find sources path: " $src
 
 rename(){
   echo ""
@@ -30,6 +36,9 @@ buildpkg(){
     read -p "Enter new version: " newver
     sed "s/Version:.*/Version: $newver/" $build_path/DEBIAN/control > control.tmp
     mv control.tmp $build_path/DEBIAN/control
+    if ! -d $pack_path; then
+    	mkdir $pack_path
+    fi
     dpkg-deb -b $build_path $pack_path
     rename
 }
@@ -69,6 +78,7 @@ makesrc(){
     echo ""
     echo "make src"
     cd $src
+    echo $src
     make
     cd ..
 }
@@ -99,10 +109,6 @@ clean()
     make clean
     cd ../
 }
-
-
-echo "Welcome to dreambox bulder v0.2 ! developed by technic(c)"
-echo "Добро пожаловть в дримбокс билдер v0.2 ! Разработано technic(с)"
 
 case "$1" in
     buildpkg)

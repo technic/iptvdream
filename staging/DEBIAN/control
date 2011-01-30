@@ -1,0 +1,9 @@
+Package: enigma2-plugin-extensions-kartinatv
+Version: 1.52
+Description: Dreambox(E2) KartinaTV plugin 
+Section: extra
+Priority: optional
+Maintainer: Alex Maystrenko <alexeytech@gmail.com>
+Architecture: mipsel
+Homepage: unknown
+Depends: enigma2(>=2.5git20080501)
