@@ -141,7 +141,7 @@ private:
 	std::string m_filename;
 	int m_vpid, m_apid;
 	int m_destfd;
-	int m_buffer_size;
+	int m_buffer_time;
 	ePtr<iDVBDemux> m_decodedemux;
 	ePtr<iTSMPEGDecoder> m_decoder;
 	ePtr<eStreamThread> m_streamthread;
@@ -164,7 +164,7 @@ DECLARE_REF(eStreamThread);
 public:
 	eStreamThread();
 	virtual ~eStreamThread();
-	void start(int srcfd, int destfd, int bufsize);
+	void start(int srcfd, int destfd, int buftime);
 	void stop();
 	bool running() { return m_running; }
 
@@ -178,7 +178,7 @@ public:
 private:
 	bool m_stop;
 	bool m_running;
-	int m_srcfd, m_destfd, m_buffer_size;
+	int m_srcfd, m_destfd, m_buffer_time;
 	pthread_cond_t m_full;
 	pthread_mutex_t m_mutex;
 	ePtr<TSAudioInfoWeb> m_audioInfo;

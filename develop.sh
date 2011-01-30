@@ -36,7 +36,7 @@ buildpkg(){
     read -p "Enter new version: " newver
     sed "s/Version:.*/Version: $newver/" $build_path/DEBIAN/control > control.tmp
     mv control.tmp $build_path/DEBIAN/control
-    if ! -d $pack_path; then
+    if [ ! -d $pack_path ]; then
     	mkdir $pack_path
     fi
     dpkg-deb -b $build_path $pack_path
@@ -46,6 +46,9 @@ buildpkg(){
 snapshot(){
     echo ""
     echo "doing snapshot..."
+    if ! test -d $snap_path; then
+    	mkdir $snap_path
+    fi
     name="$snap_path/KartinaTV_`date +"%Y%m%d"`-r"
     n=0
     while [ -f "$name$n.tar.gz" ]; do

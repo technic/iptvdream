@@ -24,7 +24,7 @@ def Plugins(path, **kwargs):
 
 from Screens.Screen import Screen
 from Components.ActionMap import ActionMap, NumberActionMap
-from Components.config import config, ConfigSubsection, ConfigText, ConfigInteger, getConfigListEntry, ConfigYesNo, ConfigSubDict
+from Components.config import config, ConfigSubsection, ConfigText, ConfigInteger, getConfigListEntry, ConfigYesNo, ConfigSubDict, getKeyNumber, KEY_ASCII, KEY_NUMBERS
 from Components.ConfigList import ConfigListScreen
 import kartina_api, rodnoe_api
 from Components.Label import Label
@@ -37,7 +37,7 @@ from Screens.MessageBox import MessageBox
 from Screens.MinuteInput import MinuteInput
 from Screens.ChoiceBox import ChoiceBox
 from Tools.BoundFunction import boundFunction
-from enigma import eServiceReference, iServiceInformation, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, gFont, eTimer, iPlayableServicePtr, iStreamedServicePtr, getDesktop, eLabel, eSize, ePoint
+from enigma import eServiceReference, iServiceInformation, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, gFont, eTimer, iPlayableServicePtr, iStreamedServicePtr, getDesktop, eLabel, eSize, ePoint, getPrevAsciiCode
 from Components.ParentalControl import parentalControl
 #from threading import Thread
 from Tools.LoadPixmap import LoadPixmap
@@ -118,7 +118,7 @@ config.plugins.KartinaTv.login = ConfigNumberText(default="145")
 config.plugins.KartinaTv.password = ConfigNumberText(default="541")
 config.plugins.KartinaTv.timeshift = ConfigInteger(0, (0,12) )
 config.plugins.KartinaTv.lastroot = ConfigText(default="[]")
-config.plugins.KartinaTv.lastcid = ConfigInteger(0, (1,1000))
+config.plugins.KartinaTv.lastcid = ConfigInteger(0, (0,1000))
 config.plugins.KartinaTv.favourites = ConfigText(default="[]")
 config.plugins.KartinaTv.usesrvicets = ConfigYesNo(default=True)
 config.plugins.KartinaTv.sortkey = ConfigSubDict()
@@ -133,7 +133,7 @@ config.plugins.rodnoetv.login = ConfigText(default="demo", visible_width = 50, f
 config.plugins.rodnoetv.password = ConfigText(default="demo", visible_width = 50, fixed_size = False)
 config.plugins.rodnoetv.timeshift = ConfigInteger(0, (0,12) ) ##NOT USED!!! ADDED FOR COMPATIBILITY
 config.plugins.rodnoetv.lastroot = ConfigText(default="[]")
-config.plugins.rodnoetv.lastcid = ConfigInteger(0, (1,1000))
+config.plugins.rodnoetv.lastcid = ConfigInteger(0, (0,1000))
 config.plugins.rodnoetv.favourites = ConfigText(default="[]")
 config.plugins.rodnoetv.usesrvicets = ConfigYesNo(default=True)
 config.plugins.rodnoetv.sortkey = ConfigSubDict()
@@ -141,8 +141,8 @@ config.plugins.rodnoetv.sortkey["all"] = ConfigInteger(1,(1,2))
 config.plugins.rodnoetv.sortkey["By group"] = ConfigInteger(1,(1,2))
 config.plugins.rodnoetv.sortkey["in group"] = ConfigInteger(1,(1,2))
 config.plugins.rodnoetv.in_mainmenu = ConfigYesNo(default=False)
-#bufsize is general
-config.plugins.KartinaTv.bufsize = ConfigInteger(256, (50,2560) ) #TODO: replace bufsize with buftime because stream rates are different
+#buftime is general
+config.plugins.KartinaTv.buftime = ConfigInteger(1500, (300,7000) ) #milliseconds!!!
 
 def menuktv(menuid):
 	if menuid == "mainmenu" and config.plugins.KartinaTv.in_mainmenu.value:
@@ -379,6 +379,26 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		bouquet.appendRoot(ktv.sortByName())
 		bouquet.appendRoot(ktv.sortByGroup())
 		bouquet.appendRoot(fav)
+		
+		#sort bouquets #TODO: move sorting to utils
+		def sortBouquet():
+			for x in range(len(bouquet.getList())):
+				bouquet.goIn()
+				if bouquet.current.type == Bouquet.TYPE_SERVICE:
+					bouquet.goOut()
+					return
+				n = bouquet.current.name
+				if cfg.sortkey.has_key(n):
+					bouquet.current.sortByKey(cfg.sortkey[n].value)
+				else:
+					bouquet.current.sortByKey(cfg.sortkey['in group'].value)
+				if bouquet.current.type == Bouquet.TYPE_MENU:
+					sortBouquet()
+				bouquet.goOut()
+				bouquet.current.index += 1
+		
+		sortBouquet()
+		bouquet.current = bouquet.root
 	
 		#apply parentalControl
 		for x in Ktv.locked_cids: #Ktv.locked_ids:
@@ -387,7 +407,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			parentalControl.protectService(sref.toCompareString())
 		
 		#startup service
-		print "[KartinaTV] set path to", cfg.lastroot.value
+		print "[KartinaTV] set path to", cfg.lastroot.value, cfg.lastcid.value
 		bouquet.setPath(eval(cfg.lastroot.value), cfg.lastcid.value)
 		print "[KartinaTV] now bouquet.current is", bouquet.current.name 
 		if bouquet.current.type == Bouquet.TYPE_MENU:
@@ -669,9 +689,9 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		self.session.nav.playService(self.oldService)
 		if bouquet:
 			cfg.lastroot.value = str(bouquet.getPath())
-			print "[KartinaTV] save path", cfg.lastroot.value
-			cfg.lastroot.save()
 			cfg.lastcid.value = self.current
+			print "[KartinaTV] save path", cfg.lastroot.value, cfg.lastcid.value
+			cfg.lastroot.save()
 			cfg.lastcid.save()
 			cfg.favourites.value = str(favouritesList)
 			cfg.favourites.save()
@@ -704,7 +724,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 				bouquet.setIndex(num)
 				bouquet.goIn()
 				self.current = bouquet.getCurrent()
-				boquet.historyAppend()
+				bouquet.historyAppend()
 				self.switchChannel()
 			else:
 				bouquet.current = lastroot
@@ -889,7 +909,11 @@ class KartinaChannelSelection(Screen):
 		self["epgProgress"]=Slider(0, 100)
 		self["epgNextTime"]=Label()
 		self["epgNextName"]=Label()
-		self["epgNextDiscription"]=Label()	
+		self["epgNextDiscription"]=Label()
+		
+		self["packetExpire"] = Label()
+		if ktv.packet_expire:
+			self["packetExpire"].setText(_("Expire on")+" "+ktv.packet_expire.strftime('%d.%m %H:%M'))		
 		
 		self["actions"] = ActionMap(["OkCancelActions", "ChannelSelectBaseActions", "DirectionActions", "ChannelSelectEditActions", "ChannelSelectEPGActions"], 
 		{
@@ -1427,7 +1451,7 @@ class KartinaConfig(ConfigListScreen, Screen):
 			getConfigListEntry(_("Timeshift"), cfg.timeshift),
 			getConfigListEntry(_("Show in mainmenu"), cfg.in_mainmenu), 
 			getConfigListEntry(_("Use servicets instead of Gstreamer"), cfg.usesrvicets),
-			getConfigListEntry(_("Buffer size, KB"), config.plugins.KartinaTv.bufsize)
+			getConfigListEntry(_("Buffering time, milliseconds"), config.plugins.KartinaTv.buftime)
 		]
 			
 		ConfigListScreen.__init__(self, cfglist, session)

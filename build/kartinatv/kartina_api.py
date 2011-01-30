@@ -224,7 +224,7 @@ class Ktv():
 		self.cookiejar.clear()
 		params = urllib.urlencode({"login" : self.username,
 								  "pass" : self.password})
-		reply = self.opener.open(site+'/api/json/login?', params).read()
+		reply = self.opener.open(site+'/api/xml/login?', params).read()
 		
 		#checking cookies
 		cookies = list(self.cookiejar)
@@ -232,9 +232,9 @@ class Ktv():
 		hasSSID = False
 		deleted = False
 		
-		reply = jdecode(reply)
-		if reply.has_key("error"):
-			raise Exception(reply['error']['message'])
+		reply = fromstring(reply)
+		if reply.find("error"):
+			raise Exception(reply.find('error').findtext('message'))
 		
 		for cookie in cookies:
 			cookiesdict[cookie.name] = cookie.value
@@ -246,9 +246,9 @@ class Ktv():
 			raise Exception(self.username+": Authorization of user failed!")
 		if (deleted):
 			raise Exception(self.username+": Wrong authorization request")
-		self.packet_expire = datetime.datetime.fromtimestamp(int(reply['account']['packet_expire']))		
+		self.packet_expire = datetime.datetime.fromtimestamp(int(reply.find('account').findtext('packet_expire')))
 		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
-		self.trace("Packet info: %s - %s" % (self.packet_expire, reply['account']['packet_name']))
+		self.trace("Packet expire: %s" % self.packet_expire)
 		self.SID = True	
 	
 	def setTimezone(self):
@@ -323,7 +323,7 @@ if __name__ == "__main__":
 	ktv.start()
 	ktv.setTimeShift(0)
 	ktv.setChannelsList()
-	print ktv.getStreamUrl(113)
+	print ktv.getStreamUrl(39)
 #	x = 51
 #	print x, ktv.channels[x].name, ktv.channels[x].epg.tstart, ktv.channels[x].epg.tend,  ktv.channels[x].epg.name
 #	ktv.getChannelsEpg([x])

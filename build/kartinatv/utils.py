@@ -123,6 +123,7 @@ class Bouquet():
 			self.index -= 1
 	
 	def sortByKey(self, keyn):
+		print "[KartinaTV] sorting", self.name, keyn 
 		if keyn == self.sortedkey: return
 		if keyn == 1:
 			self.__content.sort(key= attrgetter('key1'))
@@ -248,6 +249,8 @@ class BouquetManager():
 				self.goIn(i)
 			else:
 				break;
+		print self.getPathName()
+		print self.getCurrent
 		if self.getCurrent() != cid:
 			print "[KartinaTV] service not found in path!"
 			self.current = self.root
@@ -273,6 +276,7 @@ class BouquetManager():
 			self.setPath(h[0], h[1])
 			return True
 		else: return False
+	
 	#FIXME: history stack is ugly!
 	def historyAppend(self):
 		h = (self.getPath(), self.getCurrent())
@@ -286,11 +290,3 @@ class BouquetManager():
 			self.history += [h]
 		self.historyEnd = self.historyId
 		#print "[KartinaTV]", self.history, self.historyId
-
-#Skin class
-class Rect():
-	def __init__(self, x, y, width, height):
-		self.x = x
-		self.y = y
-		self.w = width
-		self.h = height  

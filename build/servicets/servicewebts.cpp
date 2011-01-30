@@ -129,11 +129,11 @@ eServiceTS::eServiceTS(const eServiceReference &url): m_pump(eApp, 1)
 	m_audioInfo = 0;
 	m_destfd = -1;
 	
-	m_buffer_size = 0;
-	std::string config_bufsize;	
-	if(ePythonConfigQuery::getConfigValue("config.plugins.KartinaTv.bufsize", config_bufsize) == 0)
-		m_buffer_size = atoi(config_bufsize.c_str())*1024;
-	m_buffer_size = ((m_buffer_size < 1<<23) && (m_buffer_size > 50000)) ? m_buffer_size : 256*1024;
+	m_buffer_time = 0;
+	std::string config_buftime;	
+	if(ePythonConfigQuery::getConfigValue("config.plugins.KartinaTv.buftime", config_buftime) == 0)
+		m_buffer_time = atoi(config_buftime.c_str());
+	m_buffer_time = ((m_buffer_time < 12000) && (m_buffer_time > 100)) ? m_buffer_time : 2000;
 }
 
 eServiceTS::~eServiceTS()
@@ -417,7 +417,7 @@ RESULT eServiceTS::unpause()
 			return 1;
 		}
 		//m_decodedemux->flush();
-		m_streamthread->start(srcfd, m_destfd, m_buffer_size);
+		m_streamthread->start(srcfd, m_destfd, m_buffer_time);
 		//m_decoder->unfreeze();
 	}
 	else
@@ -440,7 +440,7 @@ PyObject *eServiceTS::getBufferCharge()
 
 int eServiceTS::setBufferSize(int size)
 {
-	m_buffer_size = size;
+	m_buffer_time = size;
 	return 0;
 }
 
@@ -604,10 +604,10 @@ eStreamThread::eStreamThread(): m_messagepump(eApp, 0) {
 eStreamThread::~eStreamThread() {
 }
 
-void eStreamThread::start(int srcfd, int destfd, int bufsize) {
+void eStreamThread::start(int srcfd, int destfd, int buftime) {
 	m_srcfd = srcfd;
 	m_destfd = destfd;
-	m_buffer_size = bufsize;
+	m_buffer_time = buftime;
 	pthread_mutex_init(&m_mutex, NULL);
 	pthread_cond_init(&m_full, NULL);
 	m_stop = false;
@@ -794,7 +794,7 @@ void eStreamThread::thread() {
 	fd_set wset;
 	bool sosSend = false;
 	bool stop = false;
-	int predone = m_buffer_size;
+	int predone = 15000;
 	struct RingBuffer ring; 
 	
 	m_running = true;
@@ -805,7 +805,7 @@ void eStreamThread::thread() {
 		return;
 	}
 
-	eDebug("eStreamThread started with buffer = %d bytes", m_buffer_size);
+	eDebug("eStreamThread started with buffering time = %d ms", m_buffer_time);
 	ring.put = 1;
 	ring.get = 0;
 	ring.size = bufsize;
@@ -818,8 +818,8 @@ void eStreamThread::thread() {
 	putThread->start(m_srcfd, buf, &ring, &m_mutex, &empty, &m_full);
 	
 	hasStarted();
-	//TODO: wait for prebuffering
-	//usleep(1000*m_buffer_time);
+	//wait for prebuffering
+	usleep(1000*m_buffer_time);
 	
 	while (!m_stop) {
 		pthread_testcancel();

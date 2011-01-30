@@ -235,6 +235,7 @@ class Ktv():
 		#	raise Exception(self.username+": Authorization of user failed!")
 		#if (deleted):
 		#	raise Exception(self.username+": Wrong authorization request")
+		self.packet_expire = None #XXX: no info in api..
 		self.opener.addheaders += [("Cookie", "%s=%s" % (self.sid_name, self.sid) )]
 		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 		self.SID = True

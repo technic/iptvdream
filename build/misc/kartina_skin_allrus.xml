@@ -78,7 +78,8 @@
 	    <widget backgroundColor="#00000000" font="Regular;20" halign="left" name="key_red" position="100,635" size="260,24" transparent="1" zPosition="1" />
 	    <widget backgroundColor="#00000000" font="Regular;20" halign="left" name="key_green" position="390,635" size="260,24" transparent="1" zPosition="1" />
 	    <widget backgroundColor="#00000000" font="Regular;20" halign="left" name="key_yellow" position="680,635" size="260,24" transparent="1" zPosition="1" />
-	    <widget backgroundColor="#00000000" font="Regular;20" halign="left" name="key_blue" position="970,635" size="260,24" transparent="1" zPosition="1" />		
+	    <widget backgroundColor="#00000000" font="Regular;20" halign="left" name="key_blue" position="970,635" size="260,24" transparent="1" zPosition="1" />
+	    <widget backgroundColor="#001b2c47" font="Regular;18" halign="center" position="535,688" size="300,22" name="packetExpire" transparent="1"/>				
 	</screen>
 
 	<screen name="KartinaEpgList" position="35,70" size="1210,620" title="EPG">
