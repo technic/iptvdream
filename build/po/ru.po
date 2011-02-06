@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: tuxbox-enigma 0.0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-01-30 22:47+0200\n"
+"POT-Creation-Date: 2011-02-06 19:39+0200\n"
 "PO-Revision-Date: 2011-01-24 19:58+0300\n"
 "Last-Translator: technic <alexeytech@gmail.com>\n"
 "Language-Team: Russian / enigma(c) Ukraine, Kiev>\n"
@@ -132,6 +132,9 @@ msgstr "Отсортировать по умолчанию"
 
 msgid "Sort by name"
 msgstr "Отсортировать по имени"
+
+msgid "The pin code you entered is wrong."
+msgstr ""
 
 msgid "Timeshift"
 msgstr "Задержка в просмотре (ч)"

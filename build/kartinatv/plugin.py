@@ -36,6 +36,7 @@ from Components.MenuList import MenuList
 from Screens.MessageBox import MessageBox
 from Screens.MinuteInput import MinuteInput
 from Screens.ChoiceBox import ChoiceBox
+from Screens.InputBox import PinInput
 from Tools.BoundFunction import boundFunction
 from enigma import eServiceReference, iServiceInformation, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, gFont, eTimer, iPlayableServicePtr, iStreamedServicePtr, getDesktop, eLabel, eSize, ePoint, getPrevAsciiCode
 from Components.ParentalControl import parentalControl
@@ -1174,6 +1175,13 @@ class KartinaChannelSelection(Screen):
 			favouritesList = [x.name for x in bouquet.getList()]
 			print "[KartinaTV] now fav are:", favouritesList
 			self.fillList()
+
+	def pinEntered(self, service, result):
+		if result:
+			parentalControl.unProtectService(service)
+			self.close()
+		else:
+			self.session.openWithCallback(self.close, MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR)
 	
 	def showEpgList(self):
 		if self.editMode: return

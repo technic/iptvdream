@@ -249,12 +249,11 @@ class BouquetManager():
 				self.goIn(i)
 			else:
 				break;
-		print self.getPathName()
-		print self.getCurrent
 		if self.getCurrent() != cid:
 			print "[KartinaTV] service not found in path!"
 			self.current = self.root
-			return -1
+			return False
+		return True
 	
 	def historyNext(self):
 		#print "[KartinaTV]", self.history, self.historyId
@@ -262,8 +261,7 @@ class BouquetManager():
 			self.historyId += 1
 			h = self.history[self.historyId]
 			self.current = self.root
-			self.setPath(h[0], h[1])
-			return True
+			return self.setPath(h[0], h[1])
 		else: return False
 	
 	def historyPrev(self):
@@ -273,8 +271,7 @@ class BouquetManager():
 			print "[KartinaTV]", self.historyId
 			h = self.history[self.historyId]
 			self.current = self.root
-			self.setPath(h[0], h[1])
-			return True
+			return self.setPath(h[0], h[1])
 		else: return False
 	
 	#FIXME: history stack is ugly!

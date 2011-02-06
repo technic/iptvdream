@@ -6,7 +6,7 @@ AM_INIT_AUTOMAKE
 
 ##my config
 AC_PROG_MAKE_SET
-LANGUAGES="de ru en"
+LANGUAGES="de ru en lt"
 NAME="KartinaTV"
 INSTALLDIR="/usr/lib/enigma2/python/Plugins/Extensions/KartinaTV"
 SKINDIR="/usr/share/enigma2/KartinaTV_skin"

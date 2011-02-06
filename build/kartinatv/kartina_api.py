@@ -157,7 +157,7 @@ class Ktv():
 			id = int(channel.attrib.get("id").encode("utf-8"))
 			prog = channel.attrib.get("programm")
 			if prog:
-				prog = prog.encode("utf-8")
+				prog = prog.encode("utf-8").replace("&quot;", "\"")
 				t_str = channel.attrib.get("sprog").encode("utf-8")
 				t_start = datetime.datetime.strptime(t_str, "%b %d, %Y %H:%M:%S")
 				t_str = channel.attrib.get("eprog") and channel.attrib.get("eprog").encode("utf-8")
