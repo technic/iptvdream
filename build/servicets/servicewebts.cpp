@@ -1007,7 +1007,7 @@ void eStreamThreadPut::thread()
 		FD_ZERO(&rset);
 		FD_SET(m_srcfd, &rset);
 		timeout.tv_sec = 1;
-		timeout.tv_usec = 0;
+		timeout.tv_usec = 500*1000;
 		maxfd = m_srcfd + 1;
 		rc = select(maxfd, &rset, NULL, NULL, &timeout);
 		if (rc < 0) {
@@ -1024,6 +1024,10 @@ void eStreamThreadPut::thread()
 			continue;
 		}			
 		
+		if(timeouts > 0){
+			timeouts = 0;
+			eDebug("reset timeout counter");
+		}
 		
 		rc = ::read(m_srcfd, m_buf+put, MIN(free, packsize) );
 		

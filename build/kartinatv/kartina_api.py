@@ -176,7 +176,7 @@ class Ktv():
 				  "just_info" : 1 }
 		xmlstream = self.getData(site+"/?"+urllib.urlencode(params), "URL of stream %s" % id)
 		root = fromstring(xmlstream)
-		prog = root.attrib.get("programm").encode("utf-8")
+		prog = root.attrib.get("programm").encode("utf-8").replace("&quot;", "\"")
 		tstart = datetime.datetime.fromtimestamp( int(root.attrib.get("start").encode("utf-8")) ) #unix
 		tend = datetime.datetime.fromtimestamp( int(root.attrib.get("next").encode("utf-8")) )
 		self.channels[id].aepg = EpgEntry(prog, tstart,  tend)
@@ -197,8 +197,8 @@ class Ktv():
 		for program in root:
 			t = int(program.attrib.get("t_start").encode("utf-8"))
 			time = datetime.datetime.fromtimestamp(t)
-			progname = program.attrib.get("progname").encode("utf-8")
-			pdescr =  program.attrib.get("pdescr").encode("utf-8")
+			progname = program.attrib.get("progname").encode("utf-8").replace("&quot;", "\"")
+			pdescr =  program.attrib.get("pdescr").encode("utf-8").replace("&quot;", "\"")
 			epglist += [(time, progname, pdescr)]
 		return epglist
 	

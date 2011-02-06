@@ -87,25 +87,30 @@
 	    <widget backgroundColor="#00000000" font="Regular;20" halign="left" name="key_blue" position="970,635" size="260,24" transparent="1" zPosition="1" />		
 	</screen>
 
-	<screen name="KartinaEpgList" position="35,70" size="1210,620" title="EPG">
-		<eLabel backgroundColor="#999999" position="30,5" size="1150,2"/>
-		<eLabel backgroundColor="#999999" position="812,20" size="2,540"/>
-		<widget name="list" position="15,11" size="790,542" transparent="1" scrollbarMode="showOnDemand"/>
-		<ePixmap alphatest="blend" pixmap="KartinaTV_skin/ButtonRed.png" position="80,579" size="250,38" zPosition="1"/>
-		<ePixmap alphatest="blend" pixmap="KartinaTV_skin/ButtonGreen.png" position="350,579" size="250,38" zPosition="1"/>
-		<ePixmap alphatest="blend" pixmap="KartinaTV_skin/ButtonYellow.png" position="620,579" size="250,38" zPosition="1"/>
-		<widget backgroundColor="#9f1313" font="Regular;24" halign="center" name="key_red" position="80,578" size="250,38" transparent="1" valign="center" zPosition="2"/>
-		<widget backgroundColor="#1f771f" font="Regular;24" halign="center" name="key_green" position="350,578" size="250,38" transparent="1" valign="center" zPosition="2"/>
-		<widget backgroundColor="#a08500" font="Regular;24" halign="center" name="key_yellow" position="620,578" size="250,38" transparent="1" valign="center" zPosition="2"/>
-		<widget font="Regular;24" foregroundColor="#00ACD1" halign="center" position="821,15" size="371,25" name="epgtime" zPosition="1"/>
-		<widget font="Regular;20" halign="right" position="950,85" size="180,22" name="epgdur" zPosition="1"/>
-		<widget font="Regular;20" foregroundColor="#ffa550" position="825,115" size="366,412" name="epginfo" zPosition="1"/>
-		<widget font="Regular;24" foregroundColor="#00ACD1" position="20,527" size="371,32" name="sepgtime" zPosition="1"/>
-		<widget font="Regular;26" halign="right" position="600,525" size="200,32" name="sepgdur" zPosition="1"/>
-		<widget font="Regular;26" foregroundColor="#ffa550" position="15,11" size="790,520" name="sepginfo" zPosition="1"/>
-		<ePixmap alphatest="on" pixmap="skin_default/icons/clock.png" position="955,55" size="14,14" zPosition="1"/>
-		<widget font="Regular;22" halign="center" position="975,50" render="Label" size="70,20" source="global.CurrentTime" zPosition="1">
-			<convert type="ClockToText"/>
-		</widget>
+	<screen flags="wfNoBorder" name="KartinaEpgList" position="0,0" size="1280,720" title="Channel Selection">
+		<ePixmap pixmap="KartinaTV_skin/menu/back1.png" position="0,0" size="1280,720" zPosition="-10" />
+	    <eLabel backgroundColor="#00ffffff" position="800,120" size="430,244" zPosition="2" />
+	    <widget backgroundColor="#ff000000" position="802,122" render="Pig" size="426,240" source="session.VideoPicture" zPosition="3" />
+	    <widget backgroundColor="#001b2c47" font="Regular;26" halign="right" position="799,71" render="Label" size="100,28" source="global.CurrentTime" transparent="1">
+	      <convert type="ClockToText">Default</convert>
+	    </widget>
+	    <widget backgroundColor="#001b2c47" font="Regular;20" halign="right" position="969,74" render="Label" size="252,25" source="global.CurrentTime" transparent="1">
+	      <convert type="ClockToText">Format:%d.%m.%Y</convert>
+	    </widget>
+	    <eLabel backgroundColor="#001b2c47" font="Regular;35" halign="center" position="392,23" shadowColor="#000064c7" size="459,43" text="EPG List" transparent="1" />
+	    <widget backgroundColor="#00343c4f" font="Regular;23" position="70,71" render="Label" shadowColor="#000064c7" size="700,28" source="Title" transparent="1" />
+	    <widget name="list" position="56,107" scrollbarMode="showOnDemand" transparent="1" size="714,506" foregroundColorSelected="#00ff880a" backgroundColor="#15000000" foregroundColor="#00ffffff" backgroundColorSelected="#000a1822"/>
+	    <widget backgroundColor="#0038435a" font="Regular;22" foregroundColor="#00e5b243" halign="center" position="795,375" size="430,25" name="epgName" transparent="1"/>
+	    <widget backgroundColor="#0038435a" font="Regular;19" position="795,405" size="145,22" name="epgTime" transparent="1"/>
+	    <widget backgroundColor="#0038435a" font="Regular;19" position="945,405" size="145,22" name="epgDuration" transparent="1"/>
+	    <widget backgroundColor="#0038435a" font="Regular;18" foregroundColor="#00bbbbbb" position="795,437" size="435,170" name="epgDiscription" transparent="1"/>
+	    <ePixmap alphatest="on" pixmap="KartinaTV_skin/buttons/red.png" position="360,635" size="24,24" />
+	    <ePixmap alphatest="on" pixmap="KartinaTV_skin/buttons/green.png" position="650,635" size="24,24" />
+	    <widget backgroundColor="#00000000" font="Regular;20" halign="left" name="key_red" position="390,635" size="260,24" transparent="1" zPosition="1" />
+	    <widget backgroundColor="#00000000" font="Regular;20" halign="left" name="key_green" position="680,635" size="260,24" transparent="1" zPosition="1" />
+	    <widget backgroundColor="#0038435a" font="Regular;26" halign="center" position="56,107" size="714,35" name="sepgName" transparent="1"/>
+	    <widget backgroundColor="#00343c4f" font="Regular;25" foregroundColor="#00e5b243" halign="left" position="56,146" size="714,450" name="sepgDiscription" transparent="1"/>
+	    <widget backgroundColor="#0038435a" font="Regular;25" foregroundColor="#00e5b243" halign="left" position="56,581" size="300,32" name="sepgTime" transparent="1"/>
+	    <widget backgroundColor="#0038435a" font="Regular;25" foregroundColor="#00e5b243" halign="rigth" position="470,581" size="300,32" name="sepgDuration" transparent="1"/>
 	</screen>
 </skin>

@@ -396,6 +396,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 					sortBouquet()
 				bouquet.goOut()
 				bouquet.current.index += 1
+			bouquet.current.index = 0
 		
 		sortBouquet()
 		bouquet.current = bouquet.root
@@ -662,7 +663,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 	def playVideo(self):
 		print "[KartinaTV] play video id=", self.vid 
 		vid = self.vid
-		#TODO: getting url and seeking in c++ part
+		#TODO: seeking in c++ part
 		try:
 			uri = ktv.getVideoUrl(vid)
 		except:
@@ -930,8 +931,6 @@ class KartinaChannelSelection(Screen):
 		}, -1)
 		
 		self.list.onSelectionChanged.append(self.selectionChanged)
-		self.execingTimer = eTimer()
-		self.execingTimer.callback.append(self.updateEpgInfo())
 		self.lastroot = bouquet.current
 		self.editMode = False
 		self.editMoving = False
@@ -1073,13 +1072,8 @@ class KartinaChannelSelection(Screen):
 			self.lastIndex = idx
 			self.fillList() #TODO: optimize!!!
 		bouquet.setIndex(self.list.getSelectionIndex())
-		
 		self.updateEpgInfo()
-#		if self.execing:
-#			#Don't fill epg labels while moving in the list. Do it later.
-#		
-#			self.execingTimer.start(100, True)
-		
+				
 	def updateEpgInfo(self):		
 		print "[KartinaTV]", bouquet.current.index, bouquet.current.name
 		curr = bouquet.getCurrentSel()
@@ -1208,13 +1202,15 @@ class KartinaEpgList(Screen):
 		self.list.l.setFont(1, gFont("Regular", 20))
 		self.list.l.setItemHeight(28)
 		self["list"] = self.list
-		self["epginfo"] = Label()
-		self["epgdur"] = Label()
-		self["epgtime"] = Label()
+		self["epgName"] = Label()
+		self["epgDiscription"] = Label()
+		self["epgTime"] = Label()
+		self["epgDuration"] = Label()
 		
-		self["sepginfo"] = Label()
-		self["sepgdur"] = Label()
-		self["sepgtime"] = Label()
+		self["sepgName"] = Label()
+		self["sepgDiscription"] = Label()
+		self["sepgTime"] = Label()
+		self["sepgDuration"] = Label()
 		
 		self["actions"] = ActionMap(["OkCancelActions", "ColorActions", "DirectionActions", "EPGSelectActions"], 
 		{
@@ -1283,22 +1279,25 @@ class KartinaEpgList(Screen):
 		idx = self.list.getSelectionIndex()
 		if len(self.list.list):
 			entry = self.list.list[idx][0]
-			self[s % "epginfo"].setText("%s\n%s" % (entry[1], entry[2]) )
-			self[s % "epgtime"].setText(entry[0].strftime("%d.%m %H:%M"))
-			self[s % "epginfo"].show()
-			self[s % "epgtime"].show()
+			self[s % "epgName"].setText(entry[1])
+			self[s % "epgTime"].setText(entry[0].strftime("%d.%m %H:%M"))
+			self[s % "epgDiscription"].setText(entry[2])
+			self[s % "epgDiscription"].show()
+			self[s % "epgName"].show()
+			self[s % "epgTime"].show()
 			if len(self.list.list) > idx+1:
 				next = self.list.list[idx+1][0]
-				self[s % "epgdur"].setText("%s min" % (tdSec(next[0]-entry[0])/60))
-				self[s % "epgdur"].show()
+				self[s % "epgDuration"].setText("%s min" % (tdSec(next[0]-entry[0])/60))
+				self[s % "epgDuration"].show()
 			else:
-				self[s % "epgdur"].hide()
+				self[s % "epgDuration"].hide()
 	
 	def hideLabels(self, s = "%s"):
 		print "hide", s
-		self[s % "epginfo"].hide()
-		self[s % "epgtime"].hide()
-		self[s % "epgdur"].hide()
+		self[s % "epgName"].hide()
+		self[s % "epgTime"].hide()
+		self[s % "epgDuration"].hide()
+		self[s % "epgDiscription"].hide()
 		
 	def showSingle(self):
 		if not self.single:
