@@ -4,7 +4,7 @@
   <!-- You can modify and redistribute it as long as you keep this License for the skin and all of your modifications -->	
   <screen backgroundColor="#ff000000" flags="wfNoBorder" name="KartinaPlayer" position="0,480" size="1280,240" title="IPTV">
     <ePixmap alphatest="blend" pixmap="KartinaTV_skin/infobar.png" position="center,0" size="1280,240" zPosition="-5" />
-    <ePixmap alphatest="blend" pixmap="KartinaTV_skin/logo_iptv.png" position="1145,60" size="52,34" zPosition="3" />
+    <ePixmap alphatest="blend" pixmap="KartinaTV_skin/logo_iptv.png" position="1145,80" size="52,34" zPosition="3" />
     
     <widget backgroundColor="#00343c4f" font="Regular; 24" foregroundColor="#00f23d21" shadowColor="#00f23d21" halign="center" position="155,77" render="FixedLabel" size="70,26" source="KartinaInArchive" text="(A)" transparent="1" zPosition="5">
       <convert type="ConditionalShowHide">Blink</convert>
@@ -22,13 +22,14 @@
       <convert type="ExtraNumText">secHand</convert>
     </widget>
     <!--Video info-->
-     <widget backgroundColor="background" font="Regular;18" halign="right" position="1003,128" render="Label" shadowColor="green" shadowOffset="-1,-1" size="45,22" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
+     <widget backgroundColor="background" font="Regular;18" halign="right" position="1123,128" render="Label" shadowColor="green" shadowOffset="-1,-1" size="45,22" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
       <convert type="ServiceInfo">VideoWidth</convert>
     </widget>
-    <eLabel backgroundColor="black" font="Regular;18" halign="center" position="1049,128" shadowColor="green" shadowOffset="-1,-1" size="15,22" text="x" transparent="1" />
-    <widget backgroundColor="background" font="Regular;18" halign="left" position="1069,128" render="Label" shadowColor="green" shadowOffset="-1,-1" size="42,22" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
+    <eLabel backgroundColor="black" font="Regular;18" halign="center" position="1169,128" shadowColor="green" shadowOffset="-1,-1" size="15,22" text="x" transparent="1" />
+    <widget backgroundColor="background" font="Regular;18" halign="left" position="1189,128" render="Label" shadowColor="green" shadowOffset="-1,-1" size="42,22" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
       <convert type="ServiceInfo">VideoHeight</convert>
-    </widget>       
+    </widget>
+         
     <!--font was LCD2-->
     <widget backgroundColor="#00333333" font="LCD2;26" foregroundColor="#00ffffff" halign="center" position="70,77" render="Label" shadowColor="#00e5b243" shadowOffset="-1,-1" size="83,26" source="global.CurrentTime" transparent="1">
       <convert type="ClockToText">Default</convert>
@@ -85,8 +86,7 @@
 	    <widget backgroundColor="#00000000" font="Regular;20" halign="left" name="key_red" position="100,635" size="260,24" transparent="1" zPosition="1" />
 	    <widget backgroundColor="#00000000" font="Regular;20" halign="left" name="key_green" position="390,635" size="260,24" transparent="1" zPosition="1" />
 	    <widget backgroundColor="#00000000" font="Regular;20" halign="left" name="key_yellow" position="680,635" size="260,24" transparent="1" zPosition="1" />
-	    <widget backgroundColor="#00000000" font="Regular;20" halign="left" name="key_blue" position="970,635" size="260,24" transparent="1" zPosition="1" />
-	    <widget backgroundColor="#001b2c47" font="Regular;18" halign="center" position="535,688" size="300,22" name="packetExpire" transparent="1"/>		
+	    <widget backgroundColor="#00000000" font="Regular;20" halign="left" name="key_blue" position="970,635" size="260,24" transparent="1" zPosition="1" />	
 	    <!--new packet expire date -->
 	    <widget backgroundColor="#001b2c47" font="Regular;18" halign="center" position="535,688" size="300,22" name="packetExpire" transparent="1"/>			
 	</screen>

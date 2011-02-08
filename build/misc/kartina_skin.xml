@@ -75,7 +75,7 @@
 	    <ePixmap alphatest="blend" pixmap="KartinaTV_skin/buttons/info.png" position="204,669" size="70,30" zPosition="3" />
 	    <ePixmap alphatest="blend" pixmap="KartinaTV_skin/buttons/menu.png" position="129,669" size="70,30" zPosition="3" />
 	    <eLabel backgroundColor="#001b2c47" font="Regular;35" halign="center" position="392,23" shadowColor="#000064c7" size="459,43" text="Channel Selection" transparent="1" />
-	    <widget backgroundColor="#00343c4f" font="Regular;21" position="70,71" render="Label" shadowColor="#000064c7" size="700,28" source="Title" transparent="1" />
+	    <widget backgroundColor="#00343c4f" font="Regular;23" position="70,71" render="Label" shadowColor="#000064c7" size="700,28" source="Title" transparent="1" />
 	    <widget name="list" position="56,107" scrollbarMode="showOnDemand" colorEventProgressbar="#005DB5" colorEventProgressbarBorder="#00bbbbbb" colorEventProgressbarBorderSelected="#FFC387" colorServiceDescription="#C1E3FF" colorServiceDescriptionSelected="#FFC387" serviceItemHeight="28" serviceNumberFont="Regular;23" serviceNameFont="Regular;23" serviceInfoFont="Regular;21" size="714,506" transparent="1" foregroundColorSelected="#00ff880a" backgroundColor="#15000000" foregroundColor="#00ffffff" backgroundColorSelected="#000a1822" picServiceArchive="KartinaTV_skin/rec.png"/>
 	    <widget backgroundColor="#0038435a" font="Regular;22" foregroundColor="#00e5b243" halign="center" position="795,375" size="430,25" name="epgName" transparent="1"/>
 	    <widget backgroundColor="#0038435a" font="Regular;19" position="795,405" size="145,22" name="epgTime" transparent="1"/>
