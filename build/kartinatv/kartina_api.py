@@ -38,7 +38,7 @@ class Ktv():
 
 		self.cookiejar = cookielib.CookieJar()
 		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
-		self.opener.addheaders = [('User-Agent', 'Mozilla/5.0')]
+		self.opener.addheaders = [('User-Agent', 'Mozilla/5.0 technic-plugin-1.5')]
 		self.channels = {}
 		self.aTime = 0
 		self.__videomode = False
