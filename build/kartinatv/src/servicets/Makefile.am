@@ -1,9 +1,9 @@
 plugindir = $(libdir)/enigma2/python/Plugins/Extensions/KartinaTV
-plugin_LTLIBRARIES = servicets.la
+plugin_LTLIBRARIES = servicewebts.la
 
-servicets_la_SOURCES = \
-	servicets.cpp \
-	servicets.h
+servicewebts_la_SOURCES = \
+	servicewebts.cpp \
+	servicewebts.h
 
-servicets_la_LDFLAGS = \
+servicewebts_la_LDFLAGS = \
 	-avoid-version -module

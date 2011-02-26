@@ -1,0 +1,16 @@
+<default>
+	  <prerequisites>
+                    <tag type="Software" />
+	  </prerequisites>
+          <info>
+                    <author>technic</author>
+                    <name>KartinaTV + RodnoeTV</name>
+                    <packagename>enigma2-plugin-extensions-kartinatv</packagename>
+                    <shortdescription>Iptv plugin to watch KartinaTV + RodnoeTV on enigma2 box</shortdescription>
+                    <license>GNU GPLv2</license>
+          </info>
+
+	  <files type="package"> <!-- without version, without .ipk -->
+		<file type="package" name="enigma2-plugin-extensions-kartinatv" />
+	  </files>
+</default>

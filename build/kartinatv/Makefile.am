@@ -1,1 +1,1 @@
-SUBDIRS = meta po src
+SUBDIRS = src skin po meta
