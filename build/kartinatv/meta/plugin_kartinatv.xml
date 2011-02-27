@@ -1,6 +1,6 @@
 <default>
 	  <prerequisites>
-                    <tag type="Software" />
+                    <tag type="Software"/>
 	  </prerequisites>
           <info>
                     <author>technic</author>

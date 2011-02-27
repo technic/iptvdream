@@ -11,10 +11,6 @@
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 import datetime
-try: 
-	from json import loads as jdecode
-except:
-	from cjson import decode as jdecode
 from md5 import md5
 from utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager, EpgEntry, Channel
 
