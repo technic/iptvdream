@@ -618,7 +618,10 @@ void eStreamThread::start(int srcfd, int destfd, int buftime) {
 void eStreamThread::stop() {
 	m_stop = true;
 	if(m_running) {
-		eDebug("eStreamThread global stop");
+		//XXX: EDEBUG HERE HANG UP DREAMBOX, IF PYTHON CRASH OCCURES
+		//TODO: REPORRT ENIGMA2 DEVELOPERS!!!
+		//eDebug
+		
 		//mutex lock
 		pthread_mutex_lock(&m_mutex);
 		m_stop = true;
