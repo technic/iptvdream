@@ -38,7 +38,7 @@ from Screens.MinuteInput import MinuteInput
 from Screens.ChoiceBox import ChoiceBox
 from Screens.InputBox import PinInput
 from Tools.BoundFunction import boundFunction
-from enigma import eServiceReference, iServiceInformation, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, gFont, eTimer, iPlayableServicePtr, iStreamedServicePtr, getDesktop, eLabel, eSize, ePoint, getPrevAsciiCode
+from enigma import eServiceReference, iServiceInformation, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, gFont, eTimer, iPlayableServicePtr, iStreamedServicePtr, getDesktop, eLabel, eSize, ePoint, getPrevAsciiCode, iPlayableService
 from Components.ParentalControl import parentalControl
 #from threading import Thread
 from Tools.LoadPixmap import LoadPixmap
@@ -186,6 +186,7 @@ EPG_UPDATE_INTERVAL = 60 #Seconds, in channel list.
 PROGRESS_TIMER = 1000*60 #Update progress in infobar.
 PROGRESS_SIZE = 500
 ARCHIVE_TIME_FIX = 5 #sec. When archive paused, we could miss some video
+AUTO_AUDIOSELECT = True
 	
 def setServ():
 	global SERVICE_KARTINA
@@ -294,6 +295,12 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		self["archiveDate"] = Label("")
 		self["playPause"] = Label("")
 		self["KartinaInArchive"] = Boolean(False)
+		
+		self.__event_tracker = ServiceEventTracker(screen=self, eventmap=
+			{
+				iPlayableService.evUpdatedInfo: self.audioSelect
+			})
+		self.__audioSelected = False
 		
 		#FIXME: actionmap add help.
 		#TODO: Create own actionmap
@@ -518,6 +525,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		
 		#self.session.nav.stopService() #FIXME: do we need it?? some bugs in servicets?
 		self.session.nav.playService(sref)
+		self.__audioSelected = False
 		self["channelName"].setText(ktv.channels[cid].name)
 		self.epgEvent()	
 
@@ -730,6 +738,24 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 				self.switchChannel()
 			else:
 				bouquet.current = lastroot
+	
+	def audioSelect(self):
+		print "[KartinaTV] event audio select"
+		if self.__audioSelected or not AUTO_AUDIOSELECT: return
+		self.__audioSelected = True
+		service = self.session.nav.getCurrentService()
+		audio = service and service.audioTracks()
+		n = audio and audio.getNumberOfTracks() or 0
+		if n > 0:
+			selectedAudio = audio.getCurrentTrack()
+			for x in range(n):
+				language = audio.getTrackInfo(x).getLanguage()
+				if language.find('Russian') and x != selectedAudio:
+					if self.session.nav.getCurrentService().audioTracks().getNumberOfTracks() > x:
+						audio.selectTrack(x)
+						break
+										
+
 				
 #TODO: BouquetManager guiContent. Don't recreate and refill ChannelSelection if possible
 class ChannelList(MenuList):
@@ -1179,9 +1205,9 @@ class KartinaChannelSelection(Screen):
 	def pinEntered(self, service, result):
 		if result:
 			parentalControl.unProtectService(service)
-			self.close()
+			self.exit()
 		else:
-			self.session.openWithCallback(self.close, MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR)
+			self.session.openWithCallback(self.exit, MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR)
 	
 	def showEpgList(self):
 		if self.editMode: return

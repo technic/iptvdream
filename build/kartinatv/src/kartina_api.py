@@ -10,11 +10,6 @@
 
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
-try: 
-	from json import loads as jdecode
-except:
-	print "[KartinaTV] using cjson"
-	from cjson import decode as jdecode
 import datetime
 from utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager, EpgEntry, Channel
 
@@ -45,7 +40,8 @@ class Ktv():
 		self.SID = False
 	
 	def setVideomode(self, mode):
-		self.__videomode = mode
+		return False
+		#self.__videomode = mode
 	
 	def getVideomode(self):
 		return self.__videomode
@@ -258,38 +254,38 @@ class Ktv():
 		self.getData(site+"/?"+urllib.urlencode(params), "(setting) timezone GMT %s" % Timezone)
 		params = {"var" : "timezone",
 				  "val" : Timezone}
-		#not necessary because of timestamp 
+		#not necessary because we use timestamp 
 		#self.getData(site+"/api/xml/settings_set?"+urllib.urlencode(params), "time zone new api %s" % Timezone) 
 	
-	def getVideos(self, stype='last', nums_onpage=15, page=1, genre=[]):
-		params = {"type" : stype,
-				  "nums" : nums_onpage,
-				  "page" : page,
-				  "genre" : "|".join(genre) }
-		d = self.getData(site+"/api/json/vod_list?"+urllib.urlencode(params), "getting video list by type %s" % stype)
-		root = jdecode(d)
-		root['total'] =  int(root[u'total'].encode('utf-8'))
-		for x in root['rows']:
-			x['id'] = int(x[u'id'])
-		#self.videos = jdecode(d)["rows"]
-		return root
-	
-	def getVideoInfo(self, vid):
-		params = {"id": vid}
-		d = self.getData(site+"/api/json/vod_info?"+urllib.urlencode(params), "getting video info %s" % vid)
-		root = jdecode(d)
-		#self.videos = jdecode(d)["rows"]
-		return root
-	
-	def getVideoUrl(self, vid):
-		params = {"fileid" : vid}
-		d = self.getData(site+"/api/xml/vod_geturl?"+urllib.urlencode(params), "getting video url %s" % vid)
-		root = fromstring(d)
-		#self.videos = jdecode(d)["rows"]
-		#if root.has_key('url'):
-		return root.find('url').text.encode('utf-8').split(' ')[0]
-		#else: 
-		#	raise Exception(root['error']['message'])	
+#	def getVideos(self, stype='last', nums_onpage=15, page=1, genre=[]):
+#		params = {"type" : stype,
+#				  "nums" : nums_onpage,
+#				  "page" : page,
+#				  "genre" : "|".join(genre) }
+#		d = self.getData(site+"/api/xml/vod_list?"+urllib.urlencode(params), "getting video list by type %s" % stype)
+#		root = jdecode(d)
+#		root['total'] =  int(root[u'total'].encode('utf-8'))
+#		for x in root['rows']:
+#			x['id'] = int(x[u'id'])
+#		#self.videos = jdecode(d)["rows"]
+#		return root
+#	
+#	def getVideoInfo(self, vid):
+#		params = {"id": vid}
+#		d = self.getData(site+"/api/json/vod_info?"+urllib.urlencode(params), "getting video info %s" % vid)
+#		root = jdecode(d)
+#		#self.videos = jdecode(d)["rows"]
+#		return root
+#	
+#	def getVideoUrl(self, vid):
+#		params = {"fileid" : vid}
+#		d = self.getData(site+"/api/xml/vod_geturl?"+urllib.urlencode(params), "getting video url %s" % vid)
+#		root = fromstring(d)
+#		#self.videos = jdecode(d)["rows"]
+#		#if root.has_key('url'):
+#		return root.find('url').text.encode('utf-8').split(' ')[0]
+#		#else: 
+#		#	raise Exception(root['error']['message'])	
 	
 		
 	def getData(self, url, name):
@@ -324,10 +320,3 @@ if __name__ == "__main__":
 	ktv.setTimeShift(0)
 	ktv.setChannelsList()
 	print ktv.getStreamUrl(39)
-#	x = 51
-#	print x, ktv.channels[x].name, ktv.channels[x].epg.tstart, ktv.channels[x].epg.tend,  ktv.channels[x].epg.name
-#	ktv.getChannelsEpg([x])
-#	print x, ktv.channels[x].name, ktv.channels[x].epg.tstart, ktv.channels[x].epg.tend,  ktv.channels[x].epg.name
-	#l = ktv.getVideos()
-	#print int(l[u'rows'][1][u'id'])
-	#print  ktv.getVideoUrl(121)
