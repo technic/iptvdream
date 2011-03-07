@@ -750,7 +750,8 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			selectedAudio = audio.getCurrentTrack()
 			for x in range(n):
 				language = audio.getTrackInfo(x).getLanguage()
-				if language.find('Russian') and x != selectedAudio:
+				print "[KartinaTV] scan langstr:", x, language
+				if language.find('rus') > -1 and x != selectedAudio:
 					if self.session.nav.getCurrentService().audioTracks().getNumberOfTracks() > x:
 						audio.selectTrack(x)
 						break
