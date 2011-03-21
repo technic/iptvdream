@@ -23,8 +23,10 @@ AX_PTHREAD
 TUXBOX_APPS_DVB
 
 PKG_CHECK_MODULES(ENIGMA2, enigma2)
-PKG_CHECK_MODULES(GSTREAMER, gstreamer-0.10 gstreamer-pbutils-0.10)
+#PKG_CHECK_MODULES(GSTREAMER, gstreamer-0.10 gstreamer-pbutils-0.10)
 PKG_CHECK_MODULES(LIBCRYPTO, libcrypto)
+PKG_CHECK_MODULES(SIGC,sigc++-1.2)
+PKG_CHECK_MODULES(DVBSI,libdvbsi++)
 
 AC_ARG_WITH(debug,
 	AS_HELP_STRING([--without-debug],[disable debugging code]),
@@ -48,8 +50,9 @@ if test "$with_po" = "yes"; then
 fi
 AM_CONDITIONAL(UPDATE_PO, test "$with_po" = "yes")
 
-CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS -include Python.h -include enigma2-plugins-config.h"
+CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS $SIGC_CFLAGS -include Python.h -include enigma2-plugins-config.h"
 CFLAGS="$CFLAGS $DEBUG_CFLAGS -Wall"
+CXXFLAGS="$CXXFLAGS -fno-rtti -fno-exceptions -Wall"
 CXXFLAGS="$CXXFLAGS $DEBUG_CFLAGS -Wall $ENIGMA2_CFLAGS $PTHREAD_CFLAGS"
 
 AC_CONFIG_FILES([

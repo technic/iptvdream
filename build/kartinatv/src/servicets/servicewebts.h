@@ -71,7 +71,7 @@ public:
 
 class eStreamThread;
 class eServiceTS: public iPlayableService, public iPauseableService,
-	public iServiceInformation, public iSeekableService, public iStreamedService,
+	public iServiceInformation, public iSeekableService,
 	public iAudioTrackSelection, public iAudioChannelSelection, public Object
 {
 DECLARE_REF(eServiceTS);
@@ -129,11 +129,6 @@ public:
 	// iAudioChannelSelection
 	int getCurrentChannel() { return iAudioChannelSelection_ENUMS::STEREO; };
 	RESULT selectChannel(int i) { return 0; };
-	
-	// iStreamedService
-	RESULT streamed(ePtr<iStreamedService> &ptr);
-	PyObject *getBufferCharge();
-	int setBufferSize(int size);
 
 private:
 	friend class eServiceFactoryWebTS;
