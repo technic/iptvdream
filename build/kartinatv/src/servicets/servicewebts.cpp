@@ -280,15 +280,6 @@ RESULT eServiceTS::start()
 	ePtr<eDVBResourceManager> rmgr;
 	eDVBResourceManager::getInstance(rmgr);
 	eDVBChannel dvbChannel(rmgr, 0);
-	if (m_destfd == -1)
-	{
-		m_destfd = ::open("/dev/misc/pvr", O_WRONLY);
-		if (m_destfd < 0)
-		{
-			eDebug("Cannot open /dev/misc/pvr");
-			return -1;
-		}
-	}
 	if (dvbChannel.getDemux(m_decodedemux, iDVBChannel::capDecode) != 0) {
 		eDebug("Cannot allocate decode-demux");
 		return -1;
@@ -297,8 +288,15 @@ RESULT eServiceTS::start()
 		eDebug("Cannot allocate MPEGDecoder");
 		return -1;
 	}
-	//m_decoder->setVideoPID(m_vpid, eDVBVideo::MPEG2);
-	//m_decoder->setAudioPID(m_apid, eDVBAudio::aMPEG);
+	if (m_destfd == -1)
+	{
+		m_destfd = m_decodedemux->openDVR(O_WRONLY);
+		if (m_destfd < 0)
+		{
+			eDebug("openDVR failed");
+			return -1;
+		}
+	}
 	m_decoder->connectVideoEvent(slot(*this, &eServiceTS::video_event), m_video_event_connection);
 	m_streamthread = new eStreamThread();
 	CONNECT(m_streamthread->m_event, eServiceTS::recv_event);
@@ -391,6 +389,12 @@ RESULT eServiceTS::pause(ePtr<iPauseableService> &ptr)
 {
 	ptr = this;
 	return 0;
+}
+
+RESULT eServiceTS::streamed(ePtr<iStreamedService> &ptr)
+{
+	ptr = 0;
+	return -1;
 }
 
 // iPausableService

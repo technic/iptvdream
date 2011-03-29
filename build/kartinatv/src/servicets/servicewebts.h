@@ -85,7 +85,8 @@ public:
 	RESULT pause(ePtr<iPauseableService> &ptr);
 	RESULT seek(ePtr<iSeekableService> &ptr);
 	RESULT info(ePtr<iServiceInformation>&);
-
+	RESULT streamed(ePtr<iStreamedService> &ptr);
+	
 	// not implemented
 	RESULT setTarget(int target) { return -1; };
 	RESULT setSlowMotion(int ratio) { return -1; };
