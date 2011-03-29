@@ -23,7 +23,7 @@ def Plugins(path, **kwargs):
 	]
 
 from Screens.Screen import Screen
-from Components.ActionMap import ActionMap, NumberActionMap
+from Components.ActionMap import ActionMap, NumberActionMap, HelpableActionMap
 from Components.config import config, ConfigSubsection, ConfigText, ConfigInteger, getConfigListEntry, ConfigYesNo, ConfigSubDict, getKeyNumber, KEY_ASCII, KEY_NUMBERS
 from Components.ConfigList import ConfigListScreen
 import kartina_api, rodnoe_api
@@ -304,24 +304,23 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		
 		#FIXME: actionmap add help.
 		#TODO: Create own actionmap
-		#TODO: disable/enabling action map
-		self["actions"] = ActionMap(["OkCancelActions", "ColorActions", "ChannelSelectEPGActions", "InfobarChannelSelection", "TvRadioActions"], 
+		#TODO: split and disable/enable action map
+		self["actions"] = HelpableActionMap(["OkCancelActions", "ColorActions", "ChannelSelectEPGActions", "InfobarChannelSelection", "TvRadioActions"], 
 		{
-			"cancel": self.hide,
-			"green" : self.kartinaConfig,
-			"red" :self.archivePvr,
-			"yellow" :self.playpauseArchive,
-			#"blue" :self.doNothing,
-			"zapUp" : self.previousChannel,
-			"zapDown" : self.nextChannel,
+			"cancel": self.hide, 
+			"green" : (self.kartinaConfig, _("Configure plugin")),
+			"red" : self.archivePvr,
+			"yellow" : self.playpauseArchive,
+			"zapUp" : (self.previousChannel, _("previous channel")),
+			"zapDown" : (self.nextChannel, _("next channel")),
 			"ok" : self.toggleShow,
-			"switchChannelUp" : self.showList,
-			"switchChannelDown" : self.showList,
-			"openServiceList" : self.showList,
-			"historyNext" : self.historyNext,
-			"historyBack" : self.historyBack,
-			"showEPGList" :self.showEpg,
-			"keyTV" : self.exit 
+			"switchChannelUp" : (self.showList,  _("open servicelist")),
+			"switchChannelDown" : (self.showList,  _("open servicelist")),
+			"openServiceList" : (self.showList,  _("open servicelist")),
+			"historyNext" : (self.historyNext, _("previous channel in history")),
+			"historyBack" : (self.historyBack, _("next channel in history")),
+			"showEPGList" : (self.showEpg, _("show EPG...")),
+			"keyTV" : (self.exit, _("Exit plugin")) 
 		}, -1)
 		
 		self["NumberActions"] = NumberActionMap([ "NumberActions"],
@@ -347,8 +346,17 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		self.epgTimer.callback.append(self.epgEvent)
 		self.epgProgressTimer.callback.append(self.epgUpdateProgress)
 		
+		#Standby notifier!!
+		config.misc.standbyCounter.addNotifier(self.standbyCountChanged, initial_call = False)
+		
 		self.onClose.append(self.__onClose)
 		self.onShown.append(self.start)
+
+
+	def standbyCountChanged(self, configElement):
+		from Screens.Standby import inStandby
+		if bouquet and ktv.SID:
+			inStandby.onClose.append(self.play) #in standby stream stops, so we need reconnect..
 	
 	def __onClose(self):
 		KartinaPlayer.instance = None
