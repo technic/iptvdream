@@ -771,7 +771,7 @@ bool eStreamThread::scanAudioInfo(unsigned char buf[], int len)
 					APID =pid;
 			//}
 			break;
-		case 0xF:  //FIXME: I don't really know what I am doing :D
+		case 0x0F:  // MPEG 2 AAC
 			if (APID == 0)
 				APID =pid;
 			lang = getDescriptor(pmt+b+5, pmt[b+4], LANGUAGE_DESCRIPTOR);	
