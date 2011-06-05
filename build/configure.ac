@@ -1,4 +1,4 @@
-AC_INIT([enigma2-kartinatv],[1.6.0])
+AC_INIT([enigma2-plugin-extensions-kartinatv],[1.7.0])
 AM_INIT_AUTOMAKE([dist-bzip2 foreign no-define tar-pax])
 AC_CONFIG_HEADERS([enigma2-plugins-config.h])
 
