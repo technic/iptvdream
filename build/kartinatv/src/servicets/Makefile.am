@@ -6,4 +6,4 @@ servicewebts_la_SOURCES = \
 	servicewebts.h
 
 servicewebts_la_LDFLAGS = \
-	-avoid-version -module -shared
+	-avoid-version -module

@@ -11,9 +11,10 @@
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 import datetime
-from utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager, EpgEntry, Channel
+from utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager, EpgEntry, Channel, Video
 
 site = "http://iptv.kartina.tv"
+VIDEO_CACHING = True
 
 #TODO: GLOBAL: add private! Get values by properties.
 
@@ -21,7 +22,7 @@ global Timezone
 import time
 Timezone = -time.timezone / 3600
 print "[KartinaTV] dreambox timezone is GMT", Timezone
-				
+			
 class Ktv():
 
 	locked_cids = [155, 159, 161, 257]
@@ -35,9 +36,13 @@ class Ktv():
 		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
 		self.opener.addheaders = [('User-Agent', 'Mozilla/5.0 technic-plugin-1.5')]
 		self.channels = {}
+		self.video_genres = []
+		self.videos = {}
+		self.filmFiles = {}
 		self.aTime = 0
 		self.__videomode = False
 		self.SID = False
+		self.currentPageIds = []
 	
 	def setVideomode(self, mode):
 		return False
@@ -82,7 +87,7 @@ class Ktv():
 		return groups
 	
 	def setChannelsList(self):
-		root = fromstring(self.getChannelsList())
+		root = self.getChannelsList()
 		lst = []
 		t_str = root.findtext("servertime").encode("utf-8")
 		t_cur = datetime.datetime.fromtimestamp(int(t_str))
@@ -130,8 +135,7 @@ class Ktv():
 		if self.aTime:
 			params["gmt"] = (syncTime() + secTd(self.aTime)).strftime("%s")
 		params["protect_code"] = self.password
-		xmlstream = self.getData(site+"/?"+urllib.urlencode(params), "URL of stream %s" % id)
-		root = fromstring(xmlstream)
+		root = self.getData(site+"/?"+urllib.urlencode(params), "URL of stream %s" % id)
 		if self.aTime:
 			prog = root.attrib.get("programm")
 			if prog:
@@ -147,8 +151,7 @@ class Ktv():
 		params = {"m" : "channels",
 				  "act" : "get_info_xml",
 				  "cids" : str(cids).replace(" ","")[1:-1]}
-		xmlstream = self.getData(site+"/?"+urllib.urlencode(params), "getting epg of cids = %s" % cids)
-		root = fromstring(xmlstream)
+		root = self.getData(site+"/?"+urllib.urlencode(params), "getting epg of cids = %s" % cids)
 		for channel in root:
 			id = int(channel.attrib.get("id").encode("utf-8"))
 			prog = channel.attrib.get("programm")
@@ -170,8 +173,7 @@ class Ktv():
 				  "cid" : id,
 				  "gmt": (syncTime() + secTd(self.aTime)).strftime("%s"),
 				  "just_info" : 1 }
-		xmlstream = self.getData(site+"/?"+urllib.urlencode(params), "URL of stream %s" % id)
-		root = fromstring(xmlstream)
+		root = self.getData(site+"/?"+urllib.urlencode(params), "URL of stream %s" % id)
 		prog = root.attrib.get("programm").encode("utf-8").replace("&quot;", "\"")
 		tstart = datetime.datetime.fromtimestamp( int(root.attrib.get("start").encode("utf-8")) ) #unix
 		tend = datetime.datetime.fromtimestamp( int(root.attrib.get("next").encode("utf-8")) )
@@ -185,8 +187,7 @@ class Ktv():
 				  "act" : "show_day_xml",
 				  "day" : date.strftime("%d%m%y"),
 				  "cid" : cid}
-		xmlstream = self.getData(site+"/?"+urllib.urlencode(params), "EPG for channel %s" % cid)
-		root = fromstring(xmlstream)
+		root = self.getData(site+"/?"+urllib.urlencode(params), "EPG for channel %s" % cid)
 		epglist = []
 		archive = int(root.attrib.get("have_archive").encode("utf-8"))
 		self.channels[cid].archive = archive
@@ -200,8 +201,7 @@ class Ktv():
 	
 	def epgNext(self, cid):
 		params = {"cid": cid}
-		xmlstream = self.getData(site+"/api/xml/epg_next?"+urllib.urlencode(params), "EPG next for channel %s" % cid)
-		root = fromstring(xmlstream)		
+		root = self.getData(site+"/api/xml/epg_next?"+urllib.urlencode(params), "EPG next for channel %s" % cid)
 		lst = root.find('epg')
 		def parseepg(epg):
 			t = int(epg.findtext('ts').encode("utf-8"))
@@ -213,10 +213,10 @@ class Ktv():
 			self.channels[cid].epg = EpgEntry(parseepg(lst[0])[1], parseepg(lst[0])[0], parseepg(lst[1])[0])	
 		if len(lst)>2:
 			self.channels[cid].nepg = EpgEntry(parseepg(lst[1])[1], parseepg(lst[1])[0], parseepg(lst[2])[0])	
-	
+		
 	def authorize(self):
 		self.trace("Authorization started")
-		self.trace("username = %s" % self.username)
+		#self.trace("username = %s" % self.username)
 		self.cookiejar.clear()
 		params = urllib.urlencode({"login" : self.username,
 								  "pass" : self.password})
@@ -256,37 +256,7 @@ class Ktv():
 				  "val" : Timezone}
 		#not necessary because we use timestamp 
 		#self.getData(site+"/api/xml/settings_set?"+urllib.urlencode(params), "time zone new api %s" % Timezone) 
-	
-#	def getVideos(self, stype='last', nums_onpage=15, page=1, genre=[]):
-#		params = {"type" : stype,
-#				  "nums" : nums_onpage,
-#				  "page" : page,
-#				  "genre" : "|".join(genre) }
-#		d = self.getData(site+"/api/xml/vod_list?"+urllib.urlencode(params), "getting video list by type %s" % stype)
-#		root = jdecode(d)
-#		root['total'] =  int(root[u'total'].encode('utf-8'))
-#		for x in root['rows']:
-#			x['id'] = int(x[u'id'])
-#		#self.videos = jdecode(d)["rows"]
-#		return root
-#	
-#	def getVideoInfo(self, vid):
-#		params = {"id": vid}
-#		d = self.getData(site+"/api/json/vod_info?"+urllib.urlencode(params), "getting video info %s" % vid)
-#		root = jdecode(d)
-#		#self.videos = jdecode(d)["rows"]
-#		return root
-#	
-#	def getVideoUrl(self, vid):
-#		params = {"fileid" : vid}
-#		d = self.getData(site+"/api/xml/vod_geturl?"+urllib.urlencode(params), "getting video url %s" % vid)
-#		root = fromstring(d)
-#		#self.videos = jdecode(d)["rows"]
-#		#if root.has_key('url'):
-#		return root.find('url').text.encode('utf-8').split(' ')[0]
-#		#else: 
-#		#	raise Exception(root['error']['message'])	
-	
+
 		
 	def getData(self, url, name):
 		self.SID = False
@@ -306,17 +276,138 @@ class Ktv():
 			reply = self.opener.open(url).read()
 			if ((reply.find("code_login") != -1)and(reply.find("code_pass") != -1)):
 				raise Exception("Failed to get %s:\n%s" % (name, reply))
+		try:
+			root = fromstring(reply)
+		except:
+			raise Exception("Failed to parse xml response")
+		if root.find('error'):
+			err = root.find('error')
+			raise Exception(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8'))
+		
 		self.SID = True
-		return reply
+		return root
+	
+	def getVideos(self, stype='last', page=1, genre=[],  nums_onpage=20, query=''):
+		if not VIDEO_CACHING:
+			self.videos = {}
+						
+		params = {"type" : stype,
+				  "nums" : nums_onpage,
+				  "page" : page,
+				  "genre" : "|".join(genre) }
+		if stype == 'text':
+			params['query'] = query
+		root = self.getData(site+"/api/xml/vod_list?"+urllib.urlencode(params), "getting video list by type %s" % stype)
+		videos_count = int(root.findtext('total'))
+		
+		self.currentPageIds = []
+		for v in root.find('rows'):
+			vid = int(v.findtext('id'))
+			self.currentPageIds += [vid]
+			name = v.findtext('name').encode('utf-8')
+			video = Video(name)
+			video.name_orig = v.findtext('name_orig').encode('utf-8')
+			video.descr = v.findtext('description').encode('utf-8')
+			video.image = v.findtext('poster')
+			video.year = v.findtext('year')
+			video.rate_imdb = floatConvert(v.findtext('rate_imdb'))
+			video.rate_kinopoisk = floatConvert(v.findtext('rate_kinopoisk'))
+			video.rate_mpaa = v.findtext('rate_mpaa')
+			video.country = v.findtext('country')
+			video.genre = v.findtext('genre_str')
+			self.videos[vid] = video				
+		return videos_count 
+	
+	def getVideoInfo(self, vid):
+		params = {"id": vid}
+		root = self.getData(site+"/api/xml/vod_info?"+urllib.urlencode(params), "getting video info %s" % vid)
+		v = root.find('film')
+		name = v.findtext('name').encode('utf-8')
+		video = Video(name)
+		
+		video.name_orig = v.findtext('name_orig').encode('utf-8')
+		video.descr = v.findtext('description').encode('utf-8')
+		video.image = v.findtext('poster')
+		video.year = v.findtext('year')
+		video.rate_imdb = floatConvert(v.findtext('rate_imdb'))
+		video.rate_kinopoisk = floatConvert(v.findtext('rate_kinopoisk'))
+		video.rate_mpaa = v.findtext('rate_mpaa')
+		video.country = v.findtext('country').encode('utf-8')
+		video.genre = v.findtext('genre_str').encode('utf-8')
+		video.length = v.findtext('length') and int(v.findtext('length'))
+		video.director = v.findtext('director')
+		video.scenario = v.findtext('scenario')
+		video.actors = v.findtext('actors').encode('utf-8')
+		video.studio = v.findtext('studio')
+		video.awards = v.findtext('awards')
+		video.budget = v.findtext('budget')
+		video.files = []
+		for f in v.find('videos'):
+			episode = {}
+			fid = int(f.findtext('id'))
+			episode["format"] = f.findtext('format')
+			episode["length"] = f.findtext('length')
+			episode["title"] = f.findtext('title').encode('utf-8') or video.name
+			episode["tracks"] = []
+			i = 1
+			while True:
+				if f.find("track%d_codec" % i):
+					episode["tracks"] += ["%s-%s" % (f.findtext("track%d_codec" % i), f.find("track%d_lang" % i))]
+					i +=1
+				else:
+					break
+			video.files += [fid]
+			self.filmFiles[fid] = episode 
+		self.videos[vid]= video
+	
+	def getVideoUrl(self, fid):
+		params = {"fileid" : fid}
+		root = self.getData(site+"/api/xml/vod_geturl?"+urllib.urlencode(params), "getting video url %s" % fid)
+		return root.find('url').text.encode('utf-8').split(' ')[0]
+	
+	def getVideoGenres(self):
+		root = self.getData(site+"/api/xml/vod_genres?", "getting genres list")		
+		self.video_genres = []
+		for genre in root.find('genres'):
+			self.video_genres += [{"id": genre.findtext('id'), "name": genre.findtext('name').encode('utf-8')}]
+	
+	def getPosterPath(self, vid, local=False):
+		if local:
+			return self.videos[vid].image.split('/')[-1]
+		else:	
+			return site+self.videos[vid].image
+		
+	
+	def buildVideoBouquet(self):
+		movs = Bouquet(Bouquet.TYPE_MENU, 'films')
+		for x in self.currentPageIds:
+			 mov = Bouquet(Bouquet.TYPE_MENU, x, self.videos[x].name, self.videos[x].year) #two sort args [name, year]
+			 movs.append(mov)
+		return movs
+	
+	def buildEpisodesBouquet(self, vid):
+		files = Bouquet(Bouquet.TYPE_MENU, 'episodes') 
+		for x in self.videos[vid].files:
+			print 'add fid', x, 'to bouquet'
+			file = Bouquet(Bouquet.TYPE_SERVICE, x)
+			files.append(file)
+		return files
 
 	def trace(self, msg):
 		if self.traces:
 			print "[KartinaTV] api: %s" % (msg)
 
+def floatConvert(s):
+	return s and int(float(s)*10) or 0 
+
 if __name__ == "__main__":
 	import sys
 	ktv = Ktv(sys.argv[1], sys.argv[2])
 	ktv.start()
-	ktv.setTimeShift(0)
-	ktv.setChannelsList()
+	#ktv.setTimeShift(0)
+	#ktv.setChannelsList()
 	print ktv.getStreamUrl(39)
+	x = ktv.getVideos()
+	print ktv.videos.keys()
+	x = ktv.getVideoInfo(407)
+	print ktv.getVideoUrl(ktv.videos[407].files[0])

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #  Dreambox Enigma2 KartinaTV/RodnoeTV player! (by technic)
 #
 #  Copyright (c) 2010 Alex Maystrenko <alexeytech@gmail.com>
@@ -30,13 +31,16 @@ import kartina_api, rodnoe_api
 from Components.Label import Label
 from Components.Slider import Slider
 from Components.Button import Button
+from Components.Pixmap import Pixmap
 from Components.ServiceEventTracker import ServiceEventTracker, InfoBarBase
 from Screens.InfoBarGenerics import InfoBarMenu, InfoBarPlugins, InfoBarExtensions, InfoBarAudioSelection, NumberZap, InfoBarSubtitleSupport, InfoBarNotifications, InfoBarSeek
 from Components.MenuList import MenuList
 from Screens.MessageBox import MessageBox
 from Screens.MinuteInput import MinuteInput
 from Screens.ChoiceBox import ChoiceBox
-from Screens.InputBox import PinInput
+from Screens.InputBox import PinInput, InputBox
+from Components.SelectionList import SelectionList
+from Screens.VirtualKeyBoard import VirtualKeyBoard, VirtualKeyBoardList
 from Tools.BoundFunction import boundFunction
 from enigma import eServiceReference, iServiceInformation, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, gFont, eTimer, iPlayableServicePtr, iStreamedServicePtr, getDesktop, eLabel, eSize, ePoint, getPrevAsciiCode, iPlayableService
 from Components.ParentalControl import parentalControl
@@ -44,7 +48,7 @@ from Components.ParentalControl import parentalControl
 from Tools.LoadPixmap import LoadPixmap
 #from Components.Pixmap import Pixmap
 from skin import loadSkin, parseFont, colorNames, SkinError
-def parseColor(str):
+def parseColor(str): #FIXME: copy-paste form skin source
 	if str[0] != '#':
 		print colorNames
 		try:
@@ -111,6 +115,50 @@ class ConfigNumberText(ConfigText):
 		if not self.last_value == self.value:
 			self.changedFinal()
 			self.last_value = self.value
+
+class VirtualKeyBoardRu(VirtualKeyBoard):
+	def __init__(self, session, title="", text=""):
+		Screen.__init__(self, session)
+		self.keys_list = []
+		self.shiftkeys_list = []
+		self.keys_list = [
+			[u"EXIT", u"1", u"2", u"3", u"4", u"5", u"6", u"7", u"8", u"9", u"0", u"BACKSPACE"],
+			[u"а", u"б", u"в", u"г", u"д", u"е", u"ж", u"з", u"и", u"й", u"к", u"л"],
+			[u"м", u"н", u"о", u"п", u"р", u"с", u"т", u"у", u"ф", u"х", u"ц", "ч"],
+			[u"ш", u"щ", u"ь", u"ы", u"ъ", u"э", u"ю", u"я", u"-", ".", u",", u"CLEAR"],
+			[u"SHIFT", u"SPACE", u"OK"]]
+			
+		self.shiftkeys_list = [
+			[u"EXIT", u"!", u'"', u"§", u"$", u"%", u"&", u"/", u"(", u")", u"=", u"BACKSPACE"],
+			[u"Q", u"W", u"E", u"R", u"T", u"Z", u"U", u"I", u"O", u"P", u"*"],
+			[u"A", u"S", u"D", u"F", u"G", u"H", u"J", u"K", u"L", u"'", u"?"],
+			[u">", u"Y", u"X", u"C", u"V", u"B", u"N", u"M", u";", u":", u"_", u"CLEAR"],
+			[u"SHIFT", u"SPACE", u"OK"]]
+		
+		self.shiftMode = False
+		self.text = text
+		self.selectedKey = 0
+		
+		self["header"] = Label(title)
+		self["text"] = Label(self.text)
+		self["list"] = VirtualKeyBoardList([])
+		
+		self["actions"] = ActionMap(["OkCancelActions", "WizardActions", "ColorActions"],
+			{
+				"ok": self.okClicked,
+				"cancel": self.exit,
+				"left": self.left,
+				"right": self.right,
+				"up": self.up,
+				"down": self.down,
+				"red": self.backClicked,
+				"green": self.ok
+			}, -2)
+		
+		self.onLayoutFinish.append(self.buildVirtualKeyBoard)
+	
+		self.max_key=47+len(self.keys_list[4])
+
 	  
 
 #Initialize Configuration #kartinatv
@@ -126,7 +174,7 @@ config.plugins.KartinaTv.sortkey = ConfigSubDict()
 config.plugins.KartinaTv.sortkey["all"] = ConfigInteger(1, (1,2))
 config.plugins.KartinaTv.sortkey["By group"] = ConfigInteger(1, (1,2))
 config.plugins.KartinaTv.sortkey["in group"] = ConfigInteger(1,(1,2))
-config.plugins.KartinaTv.numsonpage = ConfigInteger(15,(1,100))
+config.plugins.KartinaTv.numsonpage = ConfigInteger(20,(1,100))
 config.plugins.KartinaTv.in_mainmenu = ConfigYesNo(default=True) 
 #rodnoetv
 config.plugins.rodnoetv = ConfigSubsection()
@@ -170,7 +218,7 @@ def KOpen(session, **kwargs):
 
 def ROpen(session, **kwargs):
 	print "[RodnoeTV] plugin started"
-	global Ktv, cfg, favouritesList,  iName
+	global Ktv, cfg, favouritesList, iName
 	Ktv = rodnoe_api.Ktv
 	cfg = config.plugins.rodnoetv
 	iName = "RodnoeTV"
@@ -187,6 +235,10 @@ PROGRESS_TIMER = 1000*60 #Update progress in infobar.
 PROGRESS_SIZE = 500
 ARCHIVE_TIME_FIX = 5 #sec. When archive paused, we could miss some video
 AUTO_AUDIOSELECT = True
+USE_VIRTUAL_KB = 1 #XXX: not used!
+POSTER_CACHE = 0
+POSTER_PATH = '/hdd/'
+
 	
 def setServ():
 	global SERVICE_KARTINA
@@ -279,7 +331,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		InfoBarSubtitleSupport.__init__(self)
 		InfoBarNotifications.__init__(self)
 		MyInfoBarShowHide.__init__(self) #Use myInfoBar because image developers modify InfoBarGenerics
-		#InfoBarSeek.__init__(self)
+		InfoBarSeek.__init__(self)
 		
 		self.setTitle(iName)
 		
@@ -302,28 +354,29 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			})
 		self.__audioSelected = False
 		
-		#FIXME: actionmap add help.
-		#TODO: Create own actionmap
+		#TODO: actionmap add help.
+		
 		#TODO: split and disable/enable action map
-		self["actions"] = HelpableActionMap(["OkCancelActions", "ColorActions", "ChannelSelectEPGActions", "InfobarChannelSelection", "TvRadioActions"], 
+		self["actions"] = ActionMap(["OkCancelActions", "ColorActions", "ChannelSelectEPGActions", "InfobarChannelSelection", "InfobarActions"], 
 		{
 			"cancel": self.hide, 
-			"green" : (self.kartinaConfig, _("Configure plugin")),
+			"green" : self.kartinaConfig,
 			"red" : self.archivePvr,
 			"yellow" : self.playpauseArchive,
-			"zapUp" : (self.previousChannel, _("previous channel")),
-			"zapDown" : (self.nextChannel, _("next channel")),
+			"zapUp" : self.previousChannel,
+			"zapDown" : self.nextChannel, 
 			"ok" : self.toggleShow,
-			"switchChannelUp" : (self.showList,  _("open servicelist")),
-			"switchChannelDown" : (self.showList,  _("open servicelist")),
-			"openServiceList" : (self.showList,  _("open servicelist")),
-			"historyNext" : (self.historyNext, _("previous channel in history")),
-			"historyBack" : (self.historyBack, _("next channel in history")),
-			"showEPGList" : (self.showEpg, _("show EPG...")),
-			"keyTV" : (self.exit, _("Exit plugin")) 
+			"switchChannelUp" : self.showList,  
+			"switchChannelDown" : self.showList, 
+			"openServiceList" : self.showList,  
+			"historyNext" : self.historyNext, 
+			"historyBack" : self.historyBack,
+			"showEPGList" : self.showEpg,
+			"showTv" : self.exit,
+			"showMovies" : self.showVideoList
 		}, -1)
 		
-		self["NumberActions"] = NumberActionMap([ "NumberActions"],
+		self["NumberActions"] = NumberActionMap(["NumberActions"],
 			{
 				"1": self.keyNumberGlobal,
 				"2": self.keyNumberGlobal,
@@ -336,6 +389,8 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 				"9": self.keyNumberGlobal,
 				"0": self.keyNumberGlobal,
 			})
+		
+		self["NumberActions"].setEnabled(False)
 			
 		self.setTitle(iName)		
 		
@@ -532,7 +587,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			sref.setData(6,1) #again hack;)	
 		
 		#self.session.nav.stopService() #FIXME: do we need it?? some bugs in servicets?
-		self.session.nav.playService(sref)
+		self.session.nav.playService(sref) 
 		self.__audioSelected = False
 		self["channelName"].setText(ktv.channels[cid].name)
 		self.epgEvent()	
@@ -690,7 +745,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		sref = eServiceReference(4097, 0, uri) #TODO: 4112 
 		#self.session.nav.stopService() #FIXME: do we need it?? some bugs in servicets?
 		self.session.nav.playService(sref)
-		self["channelName"].setText(ktv.videos[vid].name)
+		self["channelName"].setText(ktv.filmFiles[vid]['title'])
 	
 	def kartinaConfig(self):
 		self.session.openWithCallback(self.restart, KartinaConfig)
@@ -918,14 +973,7 @@ class ChannelList(MenuList):
 				lst += [(eListboxPythonMultiContent.TYPE_TEXT, xoffset, 0, self.itemWidth, self.itemHeight, 1, defaultFlag, text, self.col['colorServiceDescription'], self.col['colorServiceDescriptionSelected'] )]
 			
 			return lst
-
-def kartinaVideoEntry(entry):
-	res = [
-		(entry),
-		(eListboxPythonMultiContent.TYPE_TEXT, 145, 2, 580, 24, 0, RT_HALIGN_LEFT, entry[u'name'].encode('utf-8') )
-	]
-	return res
-		
+	
 class KartinaChannelSelection(Screen):
 
 	def __init__(self, session):
@@ -985,7 +1033,6 @@ class KartinaChannelSelection(Screen):
 			self.fillList()
 	
 	def ok(self):
-		bouquet.setIndex(self.list.getSelectionIndex())
 		if self.editMode:
 			self.editMoving = not self.editMoving
 			self.lastIndex = self.list.getSelectionIndex()
@@ -1232,7 +1279,6 @@ class KartinaChannelSelection(Screen):
 	 
 		
 class KartinaEpgList(Screen):
-
 		
 	def __init__(self, session, current):
 		Screen.__init__(self, session)
@@ -1361,6 +1407,7 @@ class KartinaEpgList(Screen):
 			self.single = False
 			self["key_green"].setText(_("Fully"))
 			self.fillList()
+			self.fillEpgLabels()
 			return
 		bouquet.current = self.lastroot
 		self.close()
@@ -1377,100 +1424,389 @@ class KartinaEpgList(Screen):
 		self.epgDownloaded = False
 		self.fillList()
 
-class KartinaVideoList(Screen):
+class multiListHandler():
+    def __init__(self, menu_lists):
+	self.count = len(menu_lists)
+	self.curr = menu_lists[0]
+	self.lists = menu_lists
+	self.is_selection = False
+	
+	self["multiActions"] = ActionMap(["DirectionActions"], 
+	{
+	    "right": self.doNothing,
+	    "rightRepeated": self.doNothing,
+	    "rightUp": self.pageDown,
+	    "left": self.doNothing,
+	    "leftRepeated": self.doNothing,
+	    "leftUp": self.pageUp,
+	    
+	    "up": self.up,
+	    "upRepeated": self.up,
+	    "upUp": self.doNothing,
+	    "down": self.down,
+	    "downRepeated": self.down,
+	    "downUp": self.doNothing,
+	}, -2)
+    
+    def doNothing(self): #moves away annoing messages in log
+	pass
+    
+    def selectList(self, curr):
+	self.curr = curr
+	for i in self.lists:
+	    self[i].selectionEnabled(0)
+	self[self.curr].selectionEnabled(1)
+	self.is_selection = isinstance(self[self.curr], SelectionList)
+	print "[KartinaTV] select list", self.curr, "selection", self.is_selection
+    
+    def ok(self): #returns if selection action applied
+	if self.is_selection:
+	    self[self.curr].toggleSelection()
+	    return True
+	return False
+    
+    def down(self):
+	    self[self.curr].down()
+    
+    def up(self):
+	    self[self.curr].up()
+    
+    def pageDown(self):
+	    self[self.curr].pageDown()
+    
+    def pageUp(self):
+	    self[self.curr].pageUp()
+
+
+class KartinaVideoList(Screen, multiListHandler):
+	
+	MODE_MAIN = 0 
+	MODE_GENRES = 1
 
 	def __init__(self, session):
 		Screen.__init__(self, session)
 		
-		self["key_red"] = Button(_("Play"))
-		self["key_green"] = Button(_("Info"))
-		self["key_yellow"] = Button(_("Generes"))
-		self["key_blue"] = Button(_("Favourites"))
+		self["key_red"] = Button(_("Last"))
+		self["key_green"] = Button(_("Genres"))
+		self["key_yellow"] = Button(_("Search"))
+		self["key_blue"] = Button(_("Best"))
 		self.list = MenuList([], enableWrapAround=True, content = eListboxPythonMultiContent)
 		self.list.l.setFont(0, gFont("Regular", 20))
 		self.list.l.setItemHeight(28)
 		self["list"] = self.list
 		
-		#tmp
-		self["epginfo"] = Label()
-		self["epgdur"] = Label()
-		self["epgtime"] = Label()
+		self.glist = SelectionList()
+		self.glist.l.setFont(0, gFont("Regular", 20))
+		self.glist.l.setItemHeight(28)
+		self["glist"] = self.glist
+		self.currList = "list"
 		
-		self["sepginfo"] = Label()
-		self["sepgdur"] = Label()
-		self["sepgtime"] = Label()
+		multiListHandler.__init__(self, ["list", "glist"])
 		
-		self["actions"] = ActionMap(["OkCancelActions", "ColorActions", "DirectionActions", "EPGSelectActions"], 
+		self["name"] = Label()
+		self["description"] = Label()
+		self["year"] = Label()
+		
+		self["sname"] = Label()
+		self["sdescription"] = Label()
+		self["syear"] = Label()
+		self["rate1"] = Slider(0, 100) 
+		self["rate2"] = Slider(0, 100)
+		self["rate1_back"] = Pixmap()
+		self["rate2_back"] = Pixmap()
+		self["rate1_text"] = Label("IMDB")
+		self["rate2_text"] = Label("Kinopoisk")
+		self["moreinfo"] = Label()
+		self["poster"] = Pixmap() 
+		
+		self["pages"] = Label()
+		self["genres"] = Label()
+		self["genres"].setText(_("Genres: ")+_("all"))
+				
+		self["actions"] = ActionMap(["OkCancelActions","ColorActions", "EPGSelectActions"], 
 		{
 			"cancel": self.exit,
-			"red" : self.play,
-			"ok": self.play,
-			"yellow": self.selectGenres,
+			"ok": self.ok,
+			"red" : self.showLast,
+			"blue" : self.showBest,
+			"green": self.selectGenres,
+			"yellow": self.search,
 			"nextBouquet" : self.nextPage,
-			"prevBouquet" :self.prevPage,
-			"green" : self.showSingle
+			"prevBouquet" :self.prevPage
 		}, -1)
 		
 		self.page = 1
 		self.genres = []
 		self.count = 0
 		self.stype = 'last'
-		self.list.onSelectionChanged.append(self.updateInfo)
-		self.onLayoutFinish.append(self.fillList)
+		self.query = ''
+		self.mode = self.MODE_MAIN
 		
-	def fillList(self):
-		try:
-			l = ktv.getVideos(self.stype, cfg.numsonpage.value, self.page, self.genres)
-		except:
-			print "[KartinaTV] load videos failed!!!"
-			return
-		self.count = l['total']
+		self.list.onSelectionChanged.append(self.selectionChanged)
+		self.editMode = False
+		self.editMoving = False
+		self.onShown.append(self.start)
+		
+		global vid_bouquet
+		vid_bouquet = BouquetManager()
+		
+	def start(self):
+		if self.start in self.onShown:
+			self.onShown.remove(self.start)
+		
+		self.endSelectGenres()
+		
+		#try:
+		self.count = ktv.getVideos(self.stype, self.page, self.genres, cfg.numsonpage.value, self.query)
+		
+		#except:
+		#	print "[KartinaTV] load videos failed!!!"
+		#	self.session.openWithCallback(self.exit, MessageBox, _("Get videos failed!"))
+		#	return
 		print "[KartinaTV] total videos", self.count
-		self.list.setList(map(kartinaVideoEntry, l['rows']))	
+		vid_bouquet.current = vid_bouquet.root
+		if vid_bouquet.getList():
+			vid_bouquet.root.remove()
+			print 'clear bouquet'
+		vid_bouquet.appendRoot(ktv.buildVideoBouquet())
+		vid_bouquet.goIn()
+		
+		self.fillList()		
+		#buildVideoBouqet already return list sorted by server.. #TODO: Think about local sort.
+		#vid_bouquet.current.sortByKey(self.sortkey) 
+	
+	def kartinaVideoEntry(self, entry):
+		vid = entry.name
+		res = [
+			(vid),
+			(eListboxPythonMultiContent.TYPE_TEXT, 2, 2, 580, 24, 0, RT_HALIGN_LEFT, ktv.videos[vid].name )
+		]
+		return res
+
+	def kartinaVideoSEntry(self, entry):
+		fid = entry.name
+		print 'file id', fid
+		print ktv.filmFiles[fid]
+		print ktv.filmFiles[fid]['title']
+		res = [
+			(fid),
+			(eListboxPythonMultiContent.TYPE_TEXT, 20, 2, 580, 24, 0, RT_HALIGN_LEFT, ktv.filmFiles[fid]['title'])
+		]
+		return res
+	
+	def fillList(self):			
+		print "[KartinaTV] fill video list"
+		self.fillingList = True
+		self.list.setList(map(self.kartinaVideoEntry, vid_bouquet.getList() ))	
+		self.list.moveToIndex(vid_bouquet.current.index)
+		self.fillingList = False
+		
+		self.setTitle(iName+" / Films / "+_(self.stype)+" "+self.query)
+		pages = (self.count)/cfg.numsonpage.value
+		if self.count % cfg.numsonpage.value != 0:
+			pages += 1
+		self["pages"].setText("%d / %d" % (self.page,  pages))
+		self.hideLabels('s%s')
+		self.selectionChanged()
+	
+	def fillSingle(self):
+		t = vid_bouquet.getCurrentSel()
+		if not t:
+			return
+		vid = t[0]
+		#try:
+		ktv.getVideoInfo(vid)
+		#except:
+		#	print "[KartinaTV] load videos failed!!!"
+		#	self.session.openWithCallback(self.exit, MessageBox, _("Get videos failed!"))
+		#	return
+		vid_bouquet.goIn()
+		for e in ktv.buildEpisodesBouquet(vid).getContent():
+			vid_bouquet.current.append(e)
+		print vid_bouquet.getList()
+				
+		self.fillingList = True
+		self.list.setList(map(self.kartinaVideoSEntry, vid_bouquet.getList() ))	
+		self.fillingList = False
+		
+		self.setTitle(iName+" / Films / "+ktv.videos[vid].name)
+		self.hideLabels('%s')
+		self.selectionChanged()
 	
 	def nextPage(self):
 		self.page += 1
 		if  (self.page-1)*cfg.numsonpage.value > self.count:
 			self.page = 1
-		self.fillList()
+		self.start()
 	
 	def prevPage(self):
 		self.page -= 1
 		if self.page == 0:
-			self.page = self.count / cfg.numsopage.value
-			if self.count % cfg.numsopage.value != 0:
+			self.page = self.count / cfg.numsonpage.value
+			if self.count % cfg.numsonpage.value != 0:
 				self.page += 1
-		self.fillList()
+		self.start()
 	
 	def selectGenres(self):
-		pass
+		#for button click
+		if self.mode == self.MODE_GENRES:
+			self.endSelectGenres()
+			self.start()
+			return
+		#main code
+		if not len(self.glist.list):
+			ktv.getVideoGenres()
+			idx = 0
+			for g in ktv.video_genres:
+				self.glist.addSelection(g['name'], g['id'], idx, False)
+				idx += 1
+		self["key_green"].setText(_("OK"))
+		self["genres"].setText(_("Genres: ")+"...")
+		self.selectList("glist")
+		self.glist.show()
+		self.hideLabels('%s')
+		self.mode = self.MODE_GENRES
 	
-	def showSingle(self):
-		pass
+	def endSelectGenres(self):
+		self["key_green"].setText(_("Genres"))
+		self.selectList("list")
+		self.genres = [item[1] for item in self.glist.getSelectionsList()]
+		genrestxt = [item[0] for item in self.glist.getSelectionsList()]
+		self.glist.hide()
+		if len(genrestxt):
+			self["genres"].setText(_("Genres: ")+', '.join(genrestxt))
+		else:
+			self["genres"].setText(_("Genres: ")+_("all"))
+		self.mode = self.MODE_MAIN
+	
+	def selectionChanged(self):
+		if self.fillingList: return			#simple hack
+		idx = self.list.getSelectionIndex()
+		if self.editMoving and self.lastIndex != idx:
+			print "[KartinaTV] moving entry", idx
+			if self.lastIndex > idx:
+				vid_bouquet.current.moveOneUp()
+			else:
+				vid_bouquet.current.moveOneDown()
+			self.lastIndex = idx
+			self.fillList() #TODO: optimize!!!
+		vid_bouquet.setIndex(self.list.getSelectionIndex())
+		self.updateInfo()
 	
 	def updateInfo(self):
-		pass
+		curr = vid_bouquet.getCurrentSel()
+		print 'selection=', curr
+		type = None
+		if curr:
+			(cid, type) = curr
+		#some specific here
+		if type == Bouquet.TYPE_MENU:
+			s = "%s"
+			pass
+		elif type == Bouquet.TYPE_SERVICE:
+			s = "s%s"
+			cid = vid_bouquet.current.name
+			pass
+		else:
+			s = "%s"	
+			self[s % "name"].setText("")
+			self[s % "year"].setText("")
+			self[s % "description"].setText("")
+			self["rate1"].setValue(0)
+			self["rate2"].setValue(0)
+			return
+		
+		self["rate1"].setValue(ktv.videos[cid].rate_imdb)
+		self["rate2"].setValue(ktv.videos[cid].rate_kinopoisk)
+		self[s % "name"].setText(ktv.videos[cid].name)
+		self[s % "year"].setText(ktv.videos[cid].year)
+		self[s % "description"].setText(ktv.videos[cid].descr)
+		self[s % "name"].show()
+		self[s % "year"].show()
+		self[s % "description"].show()
+		self["rate1"].show()
+		self["rate2"].show()
+		self["rate1_back"].show()
+		self["rate2_back"].show()
+		self["rate1_text"].show()
+		self["rate2_text"].show()
 	
-	def play(self):
-		idx = self.list.getSelectionIndex()
-		if len(self.list.list) > idx:	
+	def showLast(self):
+		self.stype = 'last'
+		self.page = 1
+		self.start() 
+		
+	def showBest(self):
+		self.stype = 'best'
+		self.page = 1
+		self.start()
+	
+	def search(self):
+		self.session.openWithCallback(self.searchCB, VirtualKeyBoardRu, _("Search films"))
+	
+	def searchCB(self, text):
+		if text:
+			self.stype = 'text'
+			self.query = text
+			print "[KartinaTV] searching for", text
+			self.page = 1
+			self.start()	
+		
+	def hideLabels(self, s = "%s"):
+		#FIXME: non-readable code
+		print "hide", s
+		self[s % "name"].hide()
+		self[s % "year"].hide()
+		self[s % "description"].hide()
+		self["rate1"].hide()
+		self["rate2"].hide()
+		self["rate1_back"].hide()
+		self["rate2_back"].hide()
+		self["rate1_text"].hide()
+		self["rate2_text"].hide()
+		
+	def showElements(self,element_list,hide=False):
+		#TODO: use it!!
+		if hide:
+			for e in element_list:
+				self[e].hide()
+		else:	
+			for e in element_list:
+				self[e].show()
+		return		
+	
+	def ok(self):
+		if multiListHandler.ok(self):
+			return
+		t = vid_bouquet.getCurrentSel()
+		if not t:
+			return
+		(vid, type) = t
+		print 'type', type, 'file', vid
+		if type == Bouquet.TYPE_MENU:
+			self.fillSingle()
+		elif type == Bouquet.TYPE_SERVICE:
 			self.list.onSelectionChanged.pop() #Do it before close, else event happed while close.
-			self.close(self.list.list[idx][0]['id'])
+			self.close(vid)
 	
 	def exit(self):
-		self.list.onSelectionChanged.pop() #Do it before close, else event happed while close.
-		self.close()
+		if vid_bouquet.getCurrentSel()[1] == Bouquet.TYPE_SERVICE:
+			vid_bouquet.goOut()
+			self.fillList()
+		else:
+			self.list.onSelectionChanged.pop() #Do it before close, else event happed while close.
+			self.close()
 	
 		
 #----------Config Class----------
 class KartinaConfig(ConfigListScreen, Screen):
 	skin = """
-		<screen name="KartinaConfig" position="center,center" size="550,200" title="IPTV">
+		<screen name="KartinaConfig" position="center,center" size="550,250" title="IPTV">
 			<widget name="config" position="20,10" size="520,150" scrollbarMode="showOnDemand" />
-			<ePixmap name="red"	position="0,150" zPosition="4" size="140,40" pixmap="skin_default/buttons/red.png" transparent="1" alphatest="on" />
-			<ePixmap name="green" position="140,150" zPosition="4" size="140,40" pixmap="skin_default/buttons/green.png" transparent="1" alphatest="on" />
-			<widget name="key_red" position="0,150" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
-			<widget name="key_green" position="140,150" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
+			<ePixmap name="red"	position="0,200" zPosition="4" size="140,40" pixmap="skin_default/buttons/red.png" transparent="1" alphatest="on" />
+			<ePixmap name="green" position="140,200" zPosition="4" size="140,40" pixmap="skin_default/buttons/green.png" transparent="1" alphatest="on" />
+			<widget name="key_red" position="0,200" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
+			<widget name="key_green" position="140,200" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
 		</screen>"""
 	
 	def __init__(self, session):
@@ -1511,3 +1847,4 @@ class KartinaConfig(ConfigListScreen, Screen):
 #gettext HACK:
 [_("Jan"), _("Feb"), _("Mar"), _("Apr"), _("May"), _("Jun"), _("Jul"), _("Aug"), _("Sep"), _("Oct"), _("Nov") ] 
 [_("all"), _("favourites"), _("By group")]
+[_("last"), _("best"), _("text")]

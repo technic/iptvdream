@@ -108,7 +108,7 @@ class Bouquet():
 		self.name = name
 		self.key1 = key1
 		self.key2 = key2
-		self.sortedkey = 0
+		self.sortedkey = -1 #XXX: Think more!!!
 		self.index = 0
 	
 	def append(self, entry):
@@ -287,3 +287,10 @@ class BouquetManager():
 			self.history += [h]
 		self.historyEnd = self.historyId
 		#print "[KartinaTV]", self.history, self.historyId
+		
+class Video():
+	def __init__(self, name):
+		self.name = name
+		self.year = None
+		#TODO: set ALL fields!
+		return
