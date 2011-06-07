@@ -10,11 +10,14 @@ if UPDATE_PO
 $(PLUGIN)-py.pot: $(srcdir)/../src/*.py
 	$(XGETTEXT) -L python --from-code=UTF-8 --add-comments="TRANSLATORS:" -d $(PLUGIN) -s -o $@ $^
 
-$(PLUGIN)-xml.pot: $(top_srcdir)/xml2po.py $(srcdir)/../src/*.xml
-	$(PYTHON) $^ > $@
+#we have no xml..
+#$(PLUGIN)-xml.pot: $(top_srcdir)/xml2po.py $(srcdir)/../src/*.xml
+#	$(PYTHON) $^ > $@
 
-$(PLUGIN).pot: $(PLUGIN)-py.pot $(PLUGIN)-xml.pot
-	cat $^ | $(MSGUNIQ) --no-location -o $@ -
+$(PLUGIN).pot: $(PLUGIN)-py.pot #$(PLUGIN)-xml.pot
+	for x in $<; do
+		$(MSGUNIQ) --no-location -o $@ $x
+	done
 
 %.po: $(PLUGIN).pot
 	if [ -f $@ ]; then \

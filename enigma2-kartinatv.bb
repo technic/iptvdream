@@ -18,6 +18,8 @@ EXTRA_OECONF = " \
         STAGING_INCDIR=${STAGING_INCDIR} \
         STAGING_LIBDIR=${STAGING_LIBDIR} \
 "
+EXTRA_OECONF += " --with-po "
+
 FILES_${PN} += " /usr/share/enigma2/KartinaTV_skin /usr/lib/enigma2/python/Plugins/Extensions/KartinaTV"
 
 FILES_${PN}-dbg = " /usr/lib/enigma2/python/Plugins/Extensions/KartinaTV/.debug "
