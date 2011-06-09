@@ -133,8 +133,8 @@
 		<eLabel backgroundColor="#001b2c47" font="Regular;35" halign="center" position="392,23" shadowColor="#000064c7" size="459,43" text="Video collection" transparent="1" />
 		<widget backgroundColor="#00343c4f" font="Regular;23" position="70,71" render="Label" shadowColor="#000064c7" size="700,28" source="Title" transparent="1" />
 		<widget backgroundColor="#00343c4f" font="Regular;23" position="670,71" shadowColor="#000064c7" size="100,28" name="pages" transparent="1" />
-		<widget name="list" position="56,109" scrollbarMode="showOnDemand" transparent="1" size="714,506" foregroundColorSelected="#00ff880a" backgroundColor="15000000" foregroundColor="foreground" backgroundColorSelected="#000a1822" zPosition="0" />
-		<widget name="glist" position="788,106" scrollbarMode="showOnDemand" transparent="1" size="472,492" foregroundColorSelected="#00ff880a" backgroundColor="15000000" foregroundColor="foreground" backgroundColorSelected="#000a1822" zPosition="0" />
+		<widget name="list" position="56,109" scrollbarMode="showOnDemand" transparent="1" size="714,506" foregroundColorSelected="#00ff880a" backgroundColor="#15000000" foregroundColor="foreground" backgroundColorSelected="#000a1822" zPosition="0" />
+		<widget name="glist" position="788,106" scrollbarMode="showOnDemand" transparent="1" size="472,492" foregroundColorSelected="#00ff880a" backgroundColor="#15000000" foregroundColor="foreground" backgroundColorSelected="#000a1822" zPosition="3" />
 		<widget backgroundColor="#0038435a" font="Regular;22" foregroundColor="#00e5b243" halign="center" position="795,375" size="430,25" name="name" transparent="1" />
 		<widget backgroundColor="#0038435a" font="Regular;18" foregroundColor="#00bbbbbb" position="794,426" size="435,170" name="description" transparent="1" />
 		<ePixmap alphatest="on" pixmap="KartinaTV_skin/buttons/red.png" position="70,635" size="24,24" />
@@ -146,17 +146,17 @@
 		<widget backgroundColor="#00000000" font="Regular;20" halign="left" name="key_yellow" position="680,635" size="260,24" transparent="1" zPosition="1" />
 		<widget backgroundColor="#00000000" font="Regular;20" halign="left" name="key_blue" position="970,635" size="260,24" transparent="1" zPosition="1" />
 		<widget backgroundColor="#0038435a" font="Regular;26" halign="center" position="56,107" size="714,35" name="sname" transparent="1" />
-		<widget backgroundColor="#00343c4f" font="Regular;25" foregroundColor="#00e5b243" halign="left" position="56,156" size="714,415" name="sdescription" transparent="1" valign="top" zPosition="1" />
-		<widget backgroundColor="#0038435a" font="Regular;25" foregroundColor="#00e5b243" halign="center" position="798,164" size="100,30" name="syear" transparent="1" zPosition="3" />
+		<widget backgroundColor="#00343c4f" font="Regular;22" foregroundColor="#00e5b243" halign="left" position="56,156" size="714,415" name="sdescription" transparent="1" valign="top" zPosition="1" />
+		<widget backgroundColor="#0038435a" font="Regular;22" foregroundColor="#00e5b243" halign="center" position="798,164" size="100,30" name="year" transparent="1" zPosition="3" />
 		<widget backgroundColor="#001b2c47" font="Regular;18" halign="left" position="420,685" size="400,22" name="genres" transparent="1" />
-		<ePixmap position="788,246" size="120,24" alphatest="blend" pixmap="KartinaTV_skin/stars_back.png" zPosition="2" transparent="0" />
-		<widget name="rate1" position="788,246" size="120,24" zPosition="3" render="Pixmap" pixmap="KartinaTV_skin/stars.png" />
-		<widget name="rate2" position="789,309" size="120,24" zPosition="3" render="Pixmap" pixmap="KartinaTV_skin/stars.png" />
-		<ePixmap position="788,309" size="120,24" alphatest="blend" pixmap="KartinaTV_skin/stars_back.png" zPosition="2" transparent="0" />
-		<eLabel position="797,214" size="100,22" text="IMDB" font="Regular; 22" backgroundColor="#001b2c47" halign="center" transparent="1" />
-		<eLabel position="791,285" size="110,22" text="Kinopoisk" font="Regular; 20" backgroundColor="#001b2c47" halign="center" transparent="1" />
+		<widget name="rate1_back" position="788,246" size="120,24" alphatest="blend" pixmap="KartinaTV_skin/stars_back.png" />
+		<widget name="rate1" position="788,246" size="120,24" zPosition="2" pixmap="KartinaTV_skin/stars.png" transparent="1"/>
+		<widget name="rate2_back" position="788,309" size="120,24" alphatest="blend" pixmap="KartinaTV_skin/stars_back.png"/>
+		<widget name="rate2" position="789,309" size="120,24" zPosition="2" pixmap="KartinaTV_skin/stars.png" transparent="1"/>
+		<widget name="rate1_text" position="797,214" size="100,22" text="IMDB" font="Regular; 22" backgroundColor="#001b2c47" halign="center" transparent="1" />
+		<widget name="rate2_text" position="791,285" size="110,22" text="Kinopoisk" font="Regular; 20" backgroundColor="#001b2c47" halign="center" transparent="1" />
 		<widget name="poster" position="929,143" size="120,180" backgroundColor="transparent" />
-		<widget name="people" position="1072,140" size="166,207" zPosition="5" transparent="1" valign="top" />
+		<widget name="moreinfo" position="1072,140" size="166,207" zPosition="5" transparent="1" valign="top" />
 	</screen>
 	   	   
 	   <screen name="VirtualKeyBoardRu" position="center,center" size="560,350" title="Virtual KeyBoard RU" zPosition="99">
