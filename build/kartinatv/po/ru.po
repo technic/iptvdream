@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: tuxbox-enigma 0.0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-06 19:39+0200\n"
-"PO-Revision-Date: 2011-06-07 20:42+0300\n"
+"POT-Creation-Date: 2011-06-18 23:15+0300\n"
+"PO-Revision-Date: 2011-06-18 23:19+0300\n"
 "Last-Translator: Alex Maystrenko <alexeytech@gmail.com>\n"
 "Language-Team: Russian / enigma(c) Ukraine, Kiev>\n"
 "MIME-Version: 1.0\n"
@@ -32,6 +32,9 @@ msgstr "Архив"
 
 msgid "Aug"
 msgstr "Август"
+
+msgid "Best"
+msgstr "Лучшие"
 
 msgid "Buffering time, milliseconds"
 msgstr "Время буферизации, миллисекунды"
@@ -78,14 +81,14 @@ msgstr "Февраль"
 msgid "Fully"
 msgstr "Подробно"
 
-msgid "Generes"
+msgid "Genres"
 msgstr "Жанры"
+
+msgid "Genres: "
+msgstr "Жанры:"
 
 msgid "Groups"
 msgstr "Группы"
-
-msgid "Info"
-msgstr ""
 
 msgid "Jan"
 msgstr "Январь"
@@ -95,6 +98,9 @@ msgstr "Июль"
 
 msgid "Jun"
 msgstr "Июнь"
+
+msgid "Last"
+msgstr "Последние"
 
 msgid ""
 "Login or initialization failed!\n"
@@ -118,8 +124,11 @@ msgstr "ОК"
 msgid "Oct"
 msgstr "Октябрь"
 
-msgid "Play"
-msgstr ""
+msgid "Search"
+msgstr "Поиск"
+
+msgid "Search films"
+msgstr "Найти фильмы"
 
 msgid "Sep"
 msgstr "Сентябрь"
@@ -151,8 +160,14 @@ msgstr ""
 msgid "all"
 msgstr "Все"
 
+msgid "best"
+msgstr "лучшеи"
+
 msgid "favourites"
 msgstr "Избранное"
+
+msgid "last"
+msgstr "последние"
 
 msgid "login"
 msgstr "Абонемент"
@@ -162,6 +177,9 @@ msgstr "Пароль"
 
 msgid "remove from parental protection"
 msgstr ""
+
+msgid "text"
+msgstr "поиск"
 
 #~ msgid "Buffer size, KB"
 #~ msgstr "Размер буфера, КБ"
@@ -177,6 +195,9 @@ msgstr ""
 
 #~ msgid "EPG"
 #~ msgstr "EPG"
+
+#~ msgid "Generes"
+#~ msgstr "Жанры"
 
 #~ msgid "Kartina.TV"
 #~ msgstr "Kartina.TV"

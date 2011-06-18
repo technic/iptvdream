@@ -7,9 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: tuxbox-enigma 0.0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-06 19:39+0200\n"
-"PO-Revision-Date: 2005-11-17 20:53+0100\n"
-"Last-Translator: Automatically generated\n"
+"POT-Creation-Date: 2011-06-18 23:15+0300\n"
+"PO-Revision-Date: 2011-06-18 23:22+0300\n"
+"Last-Translator: Alex Maystrenko <alexeytech@gmail.com>\n"
 "Language-Team: none\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -29,6 +29,9 @@ msgid "Archive"
 msgstr ""
 
 msgid "Aug"
+msgstr ""
+
+msgid "Best"
 msgstr ""
 
 msgid "Buffering time, milliseconds"
@@ -76,13 +79,13 @@ msgstr ""
 msgid "Fully"
 msgstr ""
 
-msgid "Generes"
+msgid "Genres"
+msgstr ""
+
+msgid "Genres: "
 msgstr ""
 
 msgid "Groups"
-msgstr ""
-
-msgid "Info"
 msgstr ""
 
 msgid "Jan"
@@ -92,6 +95,9 @@ msgid "Jul"
 msgstr ""
 
 msgid "Jun"
+msgstr ""
+
+msgid "Last"
 msgstr ""
 
 msgid ""
@@ -114,7 +120,10 @@ msgstr ""
 msgid "Oct"
 msgstr ""
 
-msgid "Play"
+msgid "Search"
+msgstr ""
+
+msgid "Search films"
 msgstr ""
 
 msgid "Sep"
@@ -147,7 +156,13 @@ msgstr ""
 msgid "all"
 msgstr ""
 
+msgid "best"
+msgstr ""
+
 msgid "favourites"
+msgstr ""
+
+msgid "last"
 msgstr ""
 
 msgid "login"
@@ -158,3 +173,7 @@ msgstr ""
 
 msgid "remove from parental protection"
 msgstr ""
+
+msgid "text"
+msgstr "search"
+
