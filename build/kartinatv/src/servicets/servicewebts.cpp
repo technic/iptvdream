@@ -355,6 +355,10 @@ void eServiceTS::recv_event(int evt)
 					m_decoder->setVideoPID(VPID, eDVBVideo::MPEG4_H264);
 				else
 					m_decoder->setVideoPID(VPID, eDVBVideo::MPEG2);
+			} else {
+				std::string radio_pic;
+				if (!ePythonConfigQuery::getConfigValue("config.misc.radiopic", radio_pic))
+				m_decoder->setRadioPic(radio_pic);
 			}
 			//m_decoder->setAudioPID(APID, eDVBAudio::aMPEG);
 			if (m_audioInfo) {
