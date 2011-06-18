@@ -15,9 +15,9 @@ $(PLUGIN)-py.pot: $(srcdir)/../src/*.py
 #	$(PYTHON) $^ > $@
 
 $(PLUGIN).pot: $(PLUGIN)-py.pot #$(PLUGIN)-xml.pot
-	for x in $<; do
-		$(MSGUNIQ) --no-location -o $@ $x
-	done
+	for x in $<; do \
+	    $(MSGUNIQ) $$x --no-location -o $@; \
+	done 
 
 %.po: $(PLUGIN).pot
 	if [ -f $@ ]; then \
