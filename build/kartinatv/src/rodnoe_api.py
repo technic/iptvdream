@@ -17,7 +17,8 @@ from utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager, 
 site = "http://file-teleport.com/iptv/api/xml"
 
 global Timezone
-Timezone = int(round(tdSec(datetime.datetime.now()-datetime.datetime.utcnow()) / 3600.0)*60)
+#XXX: API BUG with Timezone!!! This trick works:
+Timezone = 120 #int(round(tdSec(datetime.datetime.now()-datetime.datetime.utcnow()) / 3600.0)*60)
 print "[KartinaTV] dreambox timezone is", Timezone, "min"
 	
 class Ktv():
@@ -52,7 +53,7 @@ class Ktv():
 	def start(self):
 		if self.authorize():
 			params = {'var': 'time_zone time_shift',
-					  'val':  '%s %s' % (60, self.time_shift*60) } #FIXME: API BUG!!
+					  'val':  '%s %s' % (Timezone, 0) }
 			root = self.getData(site+"/set?"+urllib.urlencode(params), "setting time zone %s and time shift %s" % (Timezone, self.time_shift) )	
 
 	def sortByName(self):
@@ -282,4 +283,3 @@ if __name__ == "__main__":
 		print x, ktv.channels[x].name, ktv.channels[x].archive#, ktv.channels[x].epg.tstart, ktv.channels[x].epg.tend,  ktv.channels[x].epg.name
 	#print ktv.getDayEpg(x)[2][3]
 	print ktv.getStreamUrl(66)
-#	ktv.getChannelsEpg([x])
