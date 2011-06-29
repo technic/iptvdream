@@ -359,7 +359,6 @@ void eServiceTS::recv_event(int evt)
 				eDebug("[ServiceTS] %d audiostreams found", m_audioInfo->audioStreams.size());
 				selectTrack(0);
 			}
-			m_decoder->pause();
 			m_event(this, evStart);
 			m_decoder->play();
 			
@@ -546,7 +545,7 @@ RESULT eServiceTS::selectTrack(unsigned int i) {
 		m_apid = m_audioInfo->audioStreams[i].pid;
 		eDebug("[ServiceTS] audio track %d PID 0x%02x type %d\n", i, m_apid, m_audioInfo->audioStreams[i].type);
 		m_decoder->setAudioPID(m_apid, m_audioInfo->audioStreams[i].type);
-		m_decoder->set();
+		//m_decoder->set();
 		m_event(this, evUpdatedInfo); //FIXME: hack for update audioInfo 
 		return 0;
 	} else {
