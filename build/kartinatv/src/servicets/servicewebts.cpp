@@ -4,8 +4,8 @@
 
  Modified by Dr. Best
  Modified by technic
- 	-KartinaTV compatibility
- 	-Ring buffer now!
+ 	-KartinaTV & RodnoeTV compatibility
+ 	-Ring buffer now!!
 
  This is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free
@@ -290,13 +290,14 @@ RESULT eServiceTS::start()
 	}
 	if (m_destfd == -1)
 	{
-		m_destfd = m_decodedemux->openDVR(O_WRONLY);
-		if (m_destfd < 0)
-		{
-			eDebug("openDVR failed");
-			return -1;
-		}
+		char dvrDev[128];
+		int dvrIndex = rmgr->m_adapter.begin()->getNumDemux() - 1;
+		sprintf(dvrDev, "/dev/dvb/adapter0/dvr%d", dvrIndex);
+		m_pvr_fd_dst = open(dvrDev, O_WRONLY);
+		eDebug("open dvr device %99s", dvrDev)
 	}
+	//m_decoder->setVideoPID(m_vpid, eDVBVideo::MPEG2);
+	//m_decoder->setAudioPID(m_apid, eDVBAudio::aMPEG);
 	m_decoder->connectVideoEvent(slot(*this, &eServiceTS::video_event), m_video_event_connection);
 	m_streamthread = new eStreamThread();
 	CONNECT(m_streamthread->m_event, eServiceTS::recv_event);
@@ -353,6 +354,10 @@ void eServiceTS::recv_event(int evt)
 					m_decoder->setVideoPID(VPID, eDVBVideo::MPEG4_H264);
 				else
 					m_decoder->setVideoPID(VPID, eDVBVideo::MPEG2);
+			} else {
+				std::string radio_pic;
+				if (!ePythonConfigQuery::getConfigValue("config.misc.radiopic", radio_pic))
+				m_decoder->setRadioPic(radio_pic);
 			}
 			//m_decoder->setAudioPID(APID, eDVBAudio::aMPEG);
 			if (m_audioInfo) {
@@ -390,12 +395,6 @@ RESULT eServiceTS::pause(ePtr<iPauseableService> &ptr)
 	return 0;
 }
 
-RESULT eServiceTS::streamed(ePtr<iStreamedService> &ptr)
-{
-	ptr = 0;
-	return -1;
-}
-
 // iPausableService
 RESULT eServiceTS::pause()
 {
@@ -428,6 +427,24 @@ RESULT eServiceTS::unpause()
 	return 0;
 }
 
+//iStreamedService
+RESULT eServiceTS::streamed(ePtr<iStreamedService> &ptr)
+{
+	ptr = this;
+	return 0;
+}
+
+PyObject *eServiceTS::getBufferCharge()
+{
+	ePyObject tuple = PyTuple_New(0);
+	return tuple;
+}
+
+int eServiceTS::setBufferSize(int size)
+{
+	m_buffer_time = size;
+	return 0;
+}
 
 // iSeekableService
 RESULT eServiceTS::seek(ePtr<iSeekableService> &ptr)
@@ -604,7 +621,7 @@ void eStreamThread::stop() {
 	m_stop = true;
 	if(m_running) {
 		//XXX: EDEBUG HERE HANG UP DREAMBOX, IF PYTHON CRASH OCCURES
-		//TODO: REPORRT ENIGMA2 DEVELOPERS!!!!
+		//TODO: REPORRT ENIGMA2 DEVELOPERS!!!
 		//eDebug
 		
 		//mutex lock
@@ -756,7 +773,7 @@ bool eStreamThread::scanAudioInfo(unsigned char buf[], int len)
 					APID =pid;
 			//}
 			break;
-		case 0xF:  //FIXME: I don't really know what I am doing :D
+		case 0x0F:  // MPEG 2 AAC
 			if (APID == 0)
 				APID =pid;
 			lang = getDescriptor(pmt+b+5, pmt[b+4], LANGUAGE_DESCRIPTOR);	

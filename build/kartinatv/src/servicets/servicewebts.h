@@ -71,7 +71,7 @@ public:
 
 class eStreamThread;
 class eServiceTS: public iPlayableService, public iPauseableService,
-	public iServiceInformation, public iSeekableService,
+	public iServiceInformation, public iSeekableService, public iStreamedService,
 	public iAudioTrackSelection, public iAudioChannelSelection, public Object
 {
 DECLARE_REF(eServiceTS);
@@ -85,8 +85,7 @@ public:
 	RESULT pause(ePtr<iPauseableService> &ptr);
 	RESULT seek(ePtr<iSeekableService> &ptr);
 	RESULT info(ePtr<iServiceInformation>&);
-	RESULT streamed(ePtr<iStreamedService> &ptr);
-	
+
 	// not implemented
 	RESULT setTarget(int target) { return -1; };
 	RESULT setSlowMotion(int ratio) { return -1; };
@@ -130,6 +129,11 @@ public:
 	// iAudioChannelSelection
 	int getCurrentChannel() { return iAudioChannelSelection_ENUMS::STEREO; };
 	RESULT selectChannel(int i) { return 0; };
+	
+	// iStreamedService
+	RESULT streamed(ePtr<iStreamedService> &ptr);
+	PyObject *getBufferCharge();
+	int setBufferSize(int size);
 
 private:
 	friend class eServiceFactoryWebTS;
