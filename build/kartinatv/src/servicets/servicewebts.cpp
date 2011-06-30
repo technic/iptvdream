@@ -293,8 +293,8 @@ RESULT eServiceTS::start()
 		char dvrDev[128];
 		int dvrIndex = rmgr->m_adapter.begin()->getNumDemux() - 1;
 		sprintf(dvrDev, "/dev/dvb/adapter0/dvr%d", dvrIndex);
-		m_pvr_fd_dst = open(dvrDev, O_WRONLY);
-		eDebug("open dvr device %99s", dvrDev)
+		m_destfd = open(dvrDev, O_WRONLY);
+		eDebug("open dvr device %99s", dvrDev);
 	}
 	//m_decoder->setVideoPID(m_vpid, eDVBVideo::MPEG2);
 	//m_decoder->setAudioPID(m_apid, eDVBAudio::aMPEG);
