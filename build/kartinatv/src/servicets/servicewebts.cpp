@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  VLC Player Plugin by A. Lätsch 2007
 
@@ -793,13 +792,13 @@ bool eStreamThread::scanAudioInfo(unsigned char buf[], int len)
 void eStreamThread::thread() {
 	const int bufsize = 1 << 22; //4 MB TODO: define
 	//const int bufmask = bufsize -1;
-	const int blocksize = 15000;
+	const int blocksize = 512*188;
 	int rc, avail, put, get, size;
 	time_t next_scantime = 0;
 	fd_set wset;
 	bool sosSend = false;
 	bool stop = false;
-	int predone = 15000;
+	int predone = blocksize;
 	struct RingBuffer ring; 
 	
 	m_running = true;
@@ -866,7 +865,7 @@ void eStreamThread::thread() {
 		
 		if (avail > predone && predone != 0)
 		{
-			predone = 0;
+			//predone = 0;
 			eDebug("eStreamThread prebuffering DONE %d", time(0));
 		}
 			
