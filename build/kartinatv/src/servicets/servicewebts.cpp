@@ -888,7 +888,7 @@ void eStreamThread::thread() {
 		}
 			
 		rc = ::write(m_destfd, buf+get, MIN(avail, blocksize));
-		//eDebug("eStreamThreadGet write=%d", rc);
+		eDebug("eStreamThreadGet write=%d", rc);
 		if (rc < 0) {
 			eDebug("eStreamThreadGet error in write (%d)", errno);
 			m_messagepump.send(evtWriteError);
