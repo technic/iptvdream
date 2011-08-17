@@ -8,11 +8,12 @@
 # Software Foundation; either version 2, or (at your option) any later
 # version.
 
+from abstract_api import MODE_STREAM
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 import datetime
 from md5 import md5
-from utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager, EpgEntry, Channel
+from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager, EpgEntry, Channel
 
 site = "http://file-teleport.com/iptv/api/xml"
 
@@ -22,6 +23,11 @@ Timezone = 120 #int(round(tdSec(datetime.datetime.now()-datetime.datetime.utcnow
 print "[KartinaTV] dreambox timezone is", Timezone, "min"
 	
 class Ktv():
+	
+	iName = "RodnoeTV"
+	iProvider = "rodnoe"
+	MODE = MODE_STREAM
+	NUMBER_PASS = False
 	
 	locked_cids = [155, 156, 157, 158, 159]
 	

@@ -168,7 +168,7 @@ class Bouquet():
 		return self.__content
 	
 	content = property(getContent)
-
+	
 class BouquetManager():
 	
 	history_len = 10
@@ -219,7 +219,7 @@ class BouquetManager():
 	
 	def getCurrentSel(self):
 		if len(self.current.content):
-			return (self.current.content[self.current.index].name, self.current.content[self.current.index].type)
+			return self.current.content[self.current.index]
 	
 	def getCurrent(self):
 		return self.current.name

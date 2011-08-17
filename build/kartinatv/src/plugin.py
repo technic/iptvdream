@@ -14,20 +14,10 @@
 import servicewebts
 
 from Plugins.Plugin import PluginDescriptor
-
-def Plugins(path, **kwargs):
-	return [ 
-	PluginDescriptor(name="RodnoeTV", description="Iptv player for RodnoeTV", icon="plugin-rtv.png", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = ROpen),
-	PluginDescriptor(name="KartinaTV", description="Iptv player for KartinaTV", icon="plugin-ktv.png", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = KOpen), 
-	PluginDescriptor(name="KartinaTV", description="Iptv player for KartinaTV", where = PluginDescriptor.WHERE_MENU, fnc = menuktv),
-	PluginDescriptor(name="RodnoeTV", description="Iptv player for RodnoeTV", where = PluginDescriptor.WHERE_MENU, fnc = menurtv) 
-	]
-
 from Screens.Screen import Screen
 from Components.ActionMap import ActionMap, NumberActionMap, HelpableActionMap
 from Components.config import config, ConfigSubsection, ConfigText, ConfigInteger, getConfigListEntry, ConfigYesNo, ConfigSubDict, getKeyNumber, KEY_ASCII, KEY_NUMBERS
 from Components.ConfigList import ConfigListScreen
-import kartina_api, rodnoe_api
 from Components.Label import Label
 from Components.Slider import Slider
 from Components.Button import Button
@@ -42,9 +32,12 @@ from Screens.InputBox import PinInput, InputBox
 from Components.SelectionList import SelectionList
 from Screens.VirtualKeyBoard import VirtualKeyBoard, VirtualKeyBoardList
 from Tools.BoundFunction import boundFunction
-from enigma import eServiceReference, iServiceInformation, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, gFont, eTimer, iPlayableServicePtr, iStreamedServicePtr, getDesktop, eLabel, eSize, ePoint, getPrevAsciiCode, iPlayableService
+from enigma import eServiceReference, iServiceInformation, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, gFont, eTimer, iPlayableServicePtr, iStreamedServicePtr, getDesktop, eLabel, eSize, ePoint, getPrevAsciiCode, iPlayableService, ePicLoad
+from Components.AVSwitch import AVSwitch
+from urllib import urlretrieve
 from Components.ParentalControl import parentalControl
-#from threading import Thread
+from threading import Thread, Lock, Condition
+from enigma import ePythonMessagePump, PSignal0V
 from Tools.LoadPixmap import LoadPixmap
 #from Components.Pixmap import Pixmap
 from skin import loadSkin, parseFont, colorNames, SkinError
@@ -84,6 +77,7 @@ if skinHD:
 else:
 	loadSkin(SKIN_PATH + '/kartina_skinsd.xml')
 
+
 #text that contain only 0-9 characters..	
 class ConfigNumberText(ConfigText):
 	def __init__(self, default = ""):
@@ -115,6 +109,77 @@ class ConfigNumberText(ConfigText):
 		if not self.last_value == self.value:
 			self.changedFinal()
 			self.last_value = self.value
+			
+config.iptvdream = ConfigSubDict()
+#Import apis
+from os import path as os_path, listdir as os_listdir
+from Tools.Import import my_import
+from api.abstract_api import MODE_VIDEOS, MODE_STREAM
+PLUGIN_PREFIX = 'Plugins.Extensions.KartinaTV'
+API_PREFIX = '/usr/lib/enigma2/python/Plugins/Extensions/KartinaTV/'
+API_DIR = 'api'
+API_NAME = 'Ktv'
+apis = {}
+api_providers = []
+api_modules = []
+
+for afile in os_listdir(API_PREFIX + API_DIR):
+	if afile.endswith('.py'):
+		afile = afile[:-3]
+	elif afile.endswith('.pyc') or afile.endswith('.pyo'):
+		afile = afile[:-4]
+	else:
+		continue
+	if afile in api_modules:
+		continue
+	else:
+		api_modules += [afile]
+	print "[KartinaTV] found %s" % afile
+	_api = my_import('.'.join([PLUGIN_PREFIX, API_DIR, afile]))
+	if _api.__dict__.has_key(API_NAME):
+		_api = getattr(_api, API_NAME)
+		aprov = _api.iProvider
+		aname = _api.iName
+		apis[aname] = (_api, aprov)
+		if not aprov in api_providers:
+			api_providers += [aprov]
+		#create config
+			config.iptvdream[aprov] = ConfigSubsection()
+			if _api.NUMBER_PASS:
+				config.iptvdream[aprov].login = ConfigNumberText(default="1111")
+				config.iptvdream[aprov].password = ConfigNumberText(default="1111")			
+			else:
+				config.iptvdream[aprov].login = ConfigText(default="nologin", visible_width = 50, fixed_size = False)
+				config.iptvdream[aprov].password = ConfigText(default="nopassword", visible_width = 50, fixed_size = False)
+		config.iptvdream[aname] = ConfigSubsection()
+		config.iptvdream[aname].in_mainmenu = ConfigYesNo(default=False) 
+		config.iptvdream[aname].lastroot = ConfigText(default="[]")
+		config.iptvdream[aname].lastcid = ConfigInteger(0, (0,1000))
+		config.iptvdream[aname].favourites = ConfigText(default="[]")
+		config.iptvdream[aname].usesrvicets = ConfigYesNo(default=True)
+		if _api.MODE == MODE_STREAM:
+			config.iptvdream[aname].timeshift = ConfigInteger(0, (0,12) ) #FIXME: think about abstract...
+			config.iptvdream[aname].sortkey = ConfigSubDict()
+			config.iptvdream[aname].sortkey["all"] = ConfigInteger(1, (1,2))
+			config.iptvdream[aname].sortkey["By group"] = ConfigInteger(1, (1,2))
+			config.iptvdream[aname].sortkey["in group"] = ConfigInteger(1,(1,2))
+		elif _api.MODE == MODE_VIDEOS:
+			config.iptvdream[aname].numsonpage = ConfigInteger(18,(1,100))
+		print "[KartinaTV] import api %s:%s" % (aprov, aname)
+
+#buftime is general
+config.plugins.KartinaTv = ConfigSubsection()
+config.plugins.KartinaTv.buftime = ConfigInteger(1500, (300,7000) ) #milliseconds!!!
+
+
+def Plugins(path, **kwargs):
+	res = []
+	for aname in apis.keys():
+		res += [
+		PluginDescriptor(name=aname, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = boundFunction(AOpen, aname) ),
+		PluginDescriptor(name=aname, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_MENU, fnc = boundFunction(menuOpen, aname) ) ]
+	res.append(PluginDescriptor(name="IPtvDream config", description="Configure all IPtvDream services", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = selectConfig ))
+	return res
 
 class VirtualKeyBoardRu(VirtualKeyBoard):
 	def __init__(self, session, title="", text=""):
@@ -159,75 +224,80 @@ class VirtualKeyBoardRu(VirtualKeyBoard):
 	
 		self.max_key=47+len(self.keys_list[4])
 
-	  
-
-#Initialize Configuration #kartinatv
-config.plugins.KartinaTv = ConfigSubsection()
-config.plugins.KartinaTv.login = ConfigNumberText(default="145")
-config.plugins.KartinaTv.password = ConfigNumberText(default="541")
-config.plugins.KartinaTv.timeshift = ConfigInteger(0, (0,12) )
-config.plugins.KartinaTv.lastroot = ConfigText(default="[]")
-config.plugins.KartinaTv.lastcid = ConfigInteger(0, (0,1000))
-config.plugins.KartinaTv.favourites = ConfigText(default="[]")
-config.plugins.KartinaTv.usesrvicets = ConfigYesNo(default=True)
-config.plugins.KartinaTv.sortkey = ConfigSubDict()
-config.plugins.KartinaTv.sortkey["all"] = ConfigInteger(1, (1,2))
-config.plugins.KartinaTv.sortkey["By group"] = ConfigInteger(1, (1,2))
-config.plugins.KartinaTv.sortkey["in group"] = ConfigInteger(1,(1,2))
-config.plugins.KartinaTv.numsonpage = ConfigInteger(20,(1,100))
-config.plugins.KartinaTv.in_mainmenu = ConfigYesNo(default=True) 
-#rodnoetv
-config.plugins.rodnoetv = ConfigSubsection()
-config.plugins.rodnoetv.login = ConfigText(default="demo", visible_width = 50, fixed_size = False)
-config.plugins.rodnoetv.password = ConfigText(default="demo", visible_width = 50, fixed_size = False)
-config.plugins.rodnoetv.timeshift = ConfigInteger(0, (0,12) ) ##NOT USED!!! ADDED FOR COMPATIBILITY
-config.plugins.rodnoetv.lastroot = ConfigText(default="[]")
-config.plugins.rodnoetv.lastcid = ConfigInteger(0, (0,1000))
-config.plugins.rodnoetv.favourites = ConfigText(default="[]")
-config.plugins.rodnoetv.usesrvicets = ConfigYesNo(default=True)
-config.plugins.rodnoetv.sortkey = ConfigSubDict()
-config.plugins.rodnoetv.sortkey["all"] = ConfigInteger(1,(1,2))
-config.plugins.rodnoetv.sortkey["By group"] = ConfigInteger(1,(1,2))
-config.plugins.rodnoetv.sortkey["in group"] = ConfigInteger(1,(1,2))
-config.plugins.rodnoetv.in_mainmenu = ConfigYesNo(default=False)
-#buftime is general
-config.plugins.KartinaTv.buftime = ConfigInteger(1500, (300,7000) ) #milliseconds!!!
-
-def menuktv(menuid):
-	if menuid == "mainmenu" and config.plugins.KartinaTv.in_mainmenu.value:
-		return [("Kartina.TV", KOpen, "kartinatv", 9)]
+def menuOpen(aname, menuid):
+	if menuid == "mainmenu" and config.iptvdream[aname].in_mainmenu.value:
+		return [(aname, boundFunction(AOpen, aname), "iptvdream_"+aname, -4)]
 	return []
 
-def menurtv(menuid):
-	if menuid == "mainmenu" and config.plugins.rodnoetv.in_mainmenu.value:
-		return [("Rodnoe.TV", ROpen, "rodnoetv", 8)]
-	return []
+class RunManager():
+	def __init__(self):
+		self.session = None
+		self.timer = eTimer()
+		self.timer.callback.append(self._recursiveClose)
+	
+	def running(self):
+		return KartinaPlayer.instance != None
+	
+	def init(self, session):
+		if not self.session:
+			self.session = session
+	
+	def run(self, aname):
+		self.aname = aname
+		if self.running():
+			if Ktv.iName == aname:
+				print "[KartinaTV] %s already running" % aname
+				return 
+			print "[KartinaTV] try close recursive to KartinaPlayer"
+			self.startRecClose()
+#			if not res:
+#				print "[KartinaTV] recursiveClose failed!!"
+#				return
+		else:
+			self.open()
+	
+	def open(self):
+		aname = self.aname	
+		global Ktv, cfg, cfg_prov, favouritesList
+		Ktv = apis[aname][0]
+		cfg = config.iptvdream[aname]
+		cfg_prov = config.iptvdream[apis[aname][1]]
+		favouritesList = eval(cfg.favourites.value)
+		if Ktv.MODE == MODE_STREAM:
+			self.session.open(KartinaStreamPlayer)
+		elif Ktv.MODE == MODE_VIDEOS:
+			self.session.open(KartinaVideoPlayer)
+	
+	def startRecClose(self):
+		self.__run_open = False
+		assert self.running()
+		self._recursiveClose()		  	
+		
+	def _recursiveClose(self): #close all dialogs till KartinaPlayer
+		#This may crash if retval needed
+		if self.__run_open:
+			self.open()
+		elif self.session.current_dialog != KartinaPlayer.instance:
+			print "[KartinaTV] closing", self.session.in_exec, self.session.current_dialog 
+			try:
+				self.session.close(self.session.current_dialog)
+			except:
+				print "[KartinaTV] recursiveClose FAILED!!"
+				return
+			self.timer.start(1,1)		
+		else:
+			KartinaPlayer.instance.exit()
+			self.__run_open = True
+			self.timer.start(1,1)
 
-def KOpen(session, **kwargs):	
-	print "[KartinaTV] plugin started"
-	global Ktv, cfg, favouritesList, iName
-	Ktv = kartina_api.Ktv
-	cfg = config.plugins.KartinaTv
-	iName = "KartinaTV"
-	favouritesList = eval(cfg.favourites.value)
-	if KartinaPlayer.instance is None: #avoid recursing
-		session.open(KartinaPlayer) 
-	else:
-		print "[KartinaTV] error: already running!"
-		return
+global runManager
+runManager = RunManager()	
 
-def ROpen(session, **kwargs):
-	print "[RodnoeTV] plugin started"
-	global Ktv, cfg, favouritesList, iName
-	Ktv = rodnoe_api.Ktv
-	cfg = config.plugins.rodnoetv
-	iName = "RodnoeTV"
-	favouritesList = eval(cfg.favourites.value)
-	if KartinaPlayer.instance is None: #avoid recursing
-		session.open(KartinaPlayer) 
-	else:
-		print "[KartinaTV] error: already running!"
-		return
+def AOpen(aname, session, **kwargs):	
+	print "[KartinaTV] %s plugin starting" % aname
+	runManager.init(session)
+	runManager.run(aname)
+
 	
 rec_png = LoadPixmap(cached=True, path='/usr/share/enigma2/KartinaTV_skin/rec.png')
 EPG_UPDATE_INTERVAL = 60 #Seconds, in channel list.
@@ -235,10 +305,10 @@ PROGRESS_TIMER = 1000*60 #Update progress in infobar.
 PROGRESS_SIZE = 500
 ARCHIVE_TIME_FIX = 5 #sec. When archive paused, we could miss some video
 AUTO_AUDIOSELECT = True
+UPDATE_ON_TOGGLE = True #In video list, when genre selected
 USE_VIRTUAL_KB = 1 #XXX: not used!
-POSTER_CACHE = 0
-POSTER_PATH = '/hdd/'
-
+POSTER_CACHE = 0  #TODO:
+POSTER_PATH = '/hdd/' #TODO: TODO
 	
 def setServ():
 	global SERVICE_KARTINA
@@ -249,7 +319,7 @@ def setServ():
 
 def fakeReference(cid):
 	sref = eServiceReference(4112, 0, '') #these are fake references;) #always 4112 because of parental control
-	if iName == "RodnoeTV":
+	if Ktv.iName == "RodnoeTV":
 		sref.setData(6, 1)
 	sref.setData(7, int(str(cid), 16) )
 	return sref
@@ -303,6 +373,7 @@ class MyInfoBarShowHide:
 			self.hideTimer.stop()
 		elif self.__state == self.STATE_HIDDEN:
 			self.show()
+	
 	def lockShow(self):
 		self.__locked = self.__locked + 1
 		if self.execing:
@@ -313,12 +384,16 @@ class MyInfoBarShowHide:
 		self.__locked = self.__locked - 1
 		if self.execing:
 			self.startHideTimer()
+	
 
 class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExtensions, InfoBarAudioSelection, MyInfoBarShowHide, InfoBarSubtitleSupport, InfoBarNotifications, InfoBarSeek):
 	
 	subtitles_enabled = False
 	ALLOW_SUSPEND = True
+	
 	instance = None
+	
+	NOCURR = -1
 	
 	def __init__(self, session):
 		KartinaPlayer.instance = self
@@ -331,11 +406,252 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		InfoBarSubtitleSupport.__init__(self)
 		InfoBarNotifications.__init__(self)
 		MyInfoBarShowHide.__init__(self) #Use myInfoBar because image developers modify InfoBarGenerics
-		InfoBarSeek.__init__(self)
 		
-		self.setTitle(iName)
+		self.setTitle(Ktv.iName)
+		self["channelName"] = Label("") #Main label on infobar for all cases.
 		
-		self["channelName"] = Label("")
+		self.__event_tracker = ServiceEventTracker(screen=self, eventmap=
+			{
+				iPlayableService.evUpdatedInfo: self.audioSelect
+			})
+		self.__audioSelected = False
+		
+		self.__running = False
+		#TODO: actionmap add help.
+		
+		#disable/enable action map. This method used by e2 developers...
+		self["actions"] = ActionMap(["OkCancelActions", "InfobarActions"], 
+		{
+			"cancel": self.hide, 
+			"ok" : self.toggleShow,
+			"showTv" : self.exit,
+			"showMovies" : self.nextAPI
+		}, -1)
+		
+		self.oldService = self.session.nav.getCurrentlyPlayingServiceReference()
+		
+		#Standby notifier!!
+		config.misc.standbyCounter.addNotifier(self.standbyCountChanged, initial_call = False)
+		
+		#XXX:
+		self.onClose.append(self.__onClose)
+		self.onShown.append(self.start)
+
+
+	def standbyCountChanged(self, configElement):
+		from Screens.Standby import inStandby
+		#FIXME: this is hack!!!
+		self.inStandby_cached = inStandby #inStanby resets to None before our onClose :(
+		#TODO: think more when run.
+		print "[KaritinaTV] add standby callback"
+		inStandby.onClose.append(self.leaveStandby)
+	
+	#you can use this function to handle standby events ;)
+	def leaveStandby(self):	
+		#next calls of inStandby.close() should not try to run KartinaPlayer.play() 
+		print "[KartinaTV] debug:", self.inStandby_cached.onClose
+		self.inStandby_cached.onClose.pop()
+		
+	
+	def __onClose(self):
+		KartinaPlayer.instance = None
+		print "[KartinaTV] set instance to None"
+	
+	#this function overided to work when we want.
+	#XXX:
+#	def getSeek(self):
+#		seek = InfoBarSeek.getSeek(self)
+#		if self.videomode:
+#			return seek
+#		else:
+#			return None
+	
+	def start(self):		
+		if self.start in self.onShown:
+			self.onShown.remove(self.start)		
+		#If start failed open config dialog
+		if not self.go():
+			askForRetry(self.session)
+	
+	def is_runnig(self):
+		print "[KartinaTV] Check if we running", self.__running
+		return self.__running
+		
+	def go(self):
+		self.__running = False			
+		self.current = self.NOCURR
+		self.oldcid = None
+		
+		#TODO: think more..
+		setServ()
+		print "[KartinaTV] Using service:", SERVICE_KARTINA
+		
+		global ktv
+		ktv = Ktv(cfg_prov.login.value, cfg_prov.password.value)
+		
+		#XXX:
+		global bouquet
+		bouquet = BouquetManager()
+		try: #TODO: handle different exceptions
+			#XXX: This is critical for api developers!!!
+			ktv.start()
+			self.safeGo()
+		except Exception as e:
+			print "[KartinaTV] ERROR login/init failed!"
+			print e
+			return False	
+		self.doGo()
+		self.__running = True
+		return True
+		
+			
+	def safeGo(self):
+		#Do some init functions which require exceptions handling
+		pass
+	
+	def doGo(self):
+		#Do other init functions in the end of go()
+		pass
+						
+	#History and channel switching could be usefull in videothek, because they deals with bouquet. 
+	def nextChannel(self):
+		self.current = bouquet.goNext()
+		bouquet.historyAppend()
+		self.switchChannel()		
+	
+	def previousChannel(self):
+		self.current = bouquet.goPrev()
+		bouquet.historyAppend()
+		self.switchChannel()
+	
+	#FIXME: history and channel zapping forget archive position!   
+	def historyNext(self):
+		if bouquet.historyNext():
+			self.current = bouquet.getCurrent()
+			self.switchChannel()
+	
+	def historyBack(self):
+		if bouquet.historyPrev():
+			self.current = bouquet.getCurrent()
+			self.switchChannel()
+		
+	def play(self): #check parental control	here	
+		print "[KartinaTV] access channel id=", self.current 
+		cid = self.current
+		#if cid not changed (probably we are in  archive)
+		if cid == self.oldcid:
+			self.startPlay() 
+			return
+		self.session.nav.stopService()
+		
+		#Use many hacks, because it's no possibility to change enigma :(
+		#fake reference has no path and used for parental control
+		fakeref = fakeReference(cid)
+		print fakeref.toCompareString()
+		if parentalControl.isServicePlayable(fakeref, boundFunction(self.startPlay)):
+			self.startPlay()
+		else:
+			self["channelName"].setText(ktv.channels[cid].name)
+			self.epgEvent()	
+
+	def startPlay(self, **kwargs): #TODO: think more..
+		print "[KartinaTV] play channel id=", self.current 
+		self.oldcid = self.current
+		self.__audioSelected = False
+				
+
+#TODO: Try pause when exit.
+#		FIXME: This feature is brocken
+#			self.videomode = False
+#			if ktv.aTime:
+#				self.playpauseArchive()
+#			else:
+#				self.play()
+			
+	def switchChannel(self):
+		pass
+	
+	def showList(self): #Open channels or videos
+		pass
+	
+	def showListCB(self, changed=False):
+		if changed:
+			self.current = bouquet.getCurrent()
+			bouquet.historyAppend()
+			self.switchChannel()
+		elif bouquet.current.type == Bouquet.TYPE_MENU:
+			self.exit()
+			
+	def errorCB(self, edit = False):
+		if edit:
+			self.kartinaConfig()
+		else:
+			self.exit()
+
+	def restart(self):
+		self.session.nav.stopService()
+		self.start()
+
+	def exit(self):
+		self.session.nav.playService(self.oldService)
+		#XXX:
+		if bouquet:
+			cfg.lastroot.value = str(bouquet.getPath())
+			cfg.lastcid.value = self.current
+			print "[KartinaTV] save path", cfg.lastroot.value, cfg.lastcid.value
+			cfg.lastroot.save()
+			cfg.lastcid.save()
+			cfg.favourites.value = str(favouritesList)
+			cfg.favourites.save()
+			if Ktv.MODE == MODE_VIDEOS: #FIXME: this is hack.
+				cfg.numsonpage.save()
+			else:
+				cfg.sortkey.save()
+		print "[KartinaTV] exiting"
+		self.close()
+	
+	def doExit(self):
+		pass
+	
+	def nextAPI(self):
+		if Ktv.NEXT_API:
+			runManager.run(Ktv.NEXT_API)
+	
+	def generate_error(self):
+		print "[KartinaTV] User generate error for debug"
+		raise Exception("User generate error to view log")
+	
+	#Override and do it safe
+	def runPlugin(self, plugin):
+		try: 
+			plugin(session = self.session)
+		except:
+			self.session.open(MessageBox, _("You can't run this plugin in KartinaTV mode"), MessageBox.TYPE_ERROR)
+	
+	def audioSelect(self):
+		print "[KartinaTV] event audio select"
+		if self.__audioSelected or not AUTO_AUDIOSELECT: return
+		self.__audioSelected = True
+		service = self.session.nav.getCurrentService()
+		audio = service and service.audioTracks()
+		n = audio and audio.getNumberOfTracks() or 0
+		if n > 0:
+			selectedAudio = audio.getCurrentTrack()
+			for x in range(n):
+				language = audio.getTrackInfo(x).getLanguage()
+				print "[KartinaTV] scan langstr:", x, language
+				if language.find('rus') > -1 and x != selectedAudio:
+					if self.session.nav.getCurrentService().audioTracks().getNumberOfTracks() > x:
+						audio.selectTrack(x)
+						break
+
+
+class KartinaStreamPlayer(KartinaPlayer):
+	
+	def __init__(self, session):	
+		KartinaPlayer.__init__(self, session)
+		
+		#Epg widgets
 		self["currentName"] = Label("")
 		self["nextName"] = Label("")
 		self["currentTime"] = Label("")
@@ -344,103 +660,70 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		self["nextDuration"] = Label("")
 		self["progressBar"] = Slider(0, PROGRESS_SIZE)
 		
+		#TODO: think more
 		self["archiveDate"] = Label("")
-		self["playPause"] = Label("")
+		self["state"] = Label("")
 		self["KartinaInArchive"] = Boolean(False)
 		
-		self.__event_tracker = ServiceEventTracker(screen=self, eventmap=
-			{
-				iPlayableService.evUpdatedInfo: self.audioSelect
-			})
-		self.__audioSelected = False
-		
-		#TODO: actionmap add help.
-		
-		#TODO: split and disable/enable action map
-		self["actions"] = ActionMap(["OkCancelActions", "ColorActions", "ChannelSelectEPGActions", "InfobarChannelSelection", "InfobarActions"], 
+		self["live_actions"] = ActionMap(["OkCancelActions", "ColorActions", "ChannelSelectEPGActions", "InfobarChannelSelection", "InfobarActions"], 
 		{
-			"cancel": self.hide, 
-			"green" : self.kartinaConfig,
-			"red" : self.archivePvr,
-			"yellow" : self.playpauseArchive,
+			"red" : self.showEpg,
 			"zapUp" : self.previousChannel,
 			"zapDown" : self.nextChannel, 
-			"ok" : self.toggleShow,
 			"switchChannelUp" : self.showList,  
 			"switchChannelDown" : self.showList, 
 			"openServiceList" : self.showList,  
 			"historyNext" : self.historyNext, 
 			"historyBack" : self.historyBack,
-			"showEPGList" : self.showEpg,
-			"showTv" : self.exit,
-			"showMovies" : self.showVideoList
+			"showEPGList" : self.showEpg
+		}, -1)
+		
+		self["archive_actions"] = ActionMap(["OkCancelActions", "ColorActions", "ChannelSelectEPGActions", "InfobarChannelSelection", "InfobarActions"], 
+		{
+			"red" : self.switchChannel,
+			"yellow" : self.playpauseArchive,
+			"zapUp" : self.archiveSeekRwd,
+			"zapDown" : self.archiveSeekFwd, 
+			"switchChannelUp" : self.showList,  
+			"switchChannelDown" : self.showList, 
+			"openServiceList" : self.showList,  
+			"historyNext" : self.historyNext, 
+			"historyBack" : self.historyBack,
+			"showEPGList" : self.showEpg
 		}, -1)
 		
 		self["NumberActions"] = NumberActionMap(["NumberActions"],
-			{
-				"1": self.keyNumberGlobal,
-				"2": self.keyNumberGlobal,
-				"3": self.keyNumberGlobal,
-				"4": self.keyNumberGlobal,
-				"5": self.keyNumberGlobal,
-				"6": self.keyNumberGlobal,
-				"7": self.keyNumberGlobal,
-				"8": self.keyNumberGlobal,
-				"9": self.keyNumberGlobal,
-				"0": self.keyNumberGlobal,
-			})
-		
-		self["NumberActions"].setEnabled(False)
-			
-		self.setTitle(iName)		
-		
-		self.oldService = self.session.nav.getCurrentlyPlayingServiceReference()
+		{
+			"1": self.keyNumberGlobal,
+			"2": self.keyNumberGlobal,
+			"3": self.keyNumberGlobal,
+			"4": self.keyNumberGlobal,
+			"5": self.keyNumberGlobal,
+			"6": self.keyNumberGlobal,
+			"7": self.keyNumberGlobal,
+			"8": self.keyNumberGlobal,
+			"9": self.keyNumberGlobal,
+			"0": self.keyNumberGlobal,
+		})
 		
 		self.epgTimer = eTimer()
 		self.epgProgressTimer = eTimer()
 		self.epgTimer.callback.append(self.epgEvent)
 		self.epgProgressTimer.callback.append(self.epgUpdateProgress)
 		
-		#Standby notifier!!
-		config.misc.standbyCounter.addNotifier(self.standbyCountChanged, initial_call = False)
-		
-		self.onClose.append(self.__onClose)
-		self.onShown.append(self.start)
-
-
-	def standbyCountChanged(self, configElement):
-		from Screens.Standby import inStandby
-		if bouquet and ktv.SID:
-			inStandby.onClose.append(self.play) #in standby stream stops, so we need reconnect..
-	
-	def __onClose(self):
-		KartinaPlayer.instance = None
-		print "[KartinaTV] set instance to None"
-	
-	def start(self):		
-		if self.start in self.onShown:
-			self.onShown.remove(self.start)		
-		setServ()
-		
 		self.archive_pause = 0
-		self.current = 0
-		self.oldcid = None
-		
-		print "[KartinaTV] Using service:", SERVICE_KARTINA
-		
-		global ktv
-		ktv = Ktv(cfg.login.value, cfg.password.value)
-		global bouquet
-		bouquet = BouquetManager()
-		try: #TODO: handle different exceptions
-			ktv.start()
-			ktv.setTimeShift(cfg.timeshift.value)
-			ktv.setChannelsList()
-		except:
-			print "[KartinaTV] ERROR login/init failed!"
-			self.session.openWithCallback(self.errorCB, MessageBox, _("Login or initialization failed!\nEdit options?"), type = MessageBox.TYPE_YESNO)
-			return
-
+				
+	def leaveStandby(self):
+		KartinaPlayer.leaveStandby(self)
+		#TODO: think more about if check
+		if bouquet and ktv.SID and KartinaPlayer.instance: #Don't run if plugin closed
+			self.play() #in standby stream stops, so we need reconnect..
+	
+	def safeGo(self):
+		ktv.setTimeShift(cfg.timeshift.value)
+		ktv.setChannelsList()
+	
+	def doGo(self):
 		#init bouquets
 		print "[KartinaTV] Favourites ids", favouritesList
 		fav = Bouquet(Bouquet.TYPE_MENU, 'favourites')
@@ -478,7 +761,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			print "[KartinaTV] protect", sref.toCompareString()
 			parentalControl.protectService(sref.toCompareString())
 		
-		#startup service
+		#startup service	
 		print "[KartinaTV] set path to", cfg.lastroot.value, cfg.lastcid.value
 		bouquet.setPath(eval(cfg.lastroot.value), cfg.lastcid.value)
 		print "[KartinaTV] now bouquet.current is", bouquet.current.name 
@@ -488,107 +771,57 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			self.current = bouquet.getCurrent()
 			bouquet.historyAppend()
 			self.play()
-
-	def nextChannel(self):
-		if ktv.aTime:
-			self.session.openWithCallback(self.fwdSeekTo, MinuteInput)
-		elif ktv.videomode:
-			pass
-		else:
-			self.current = bouquet.goNext()
-			bouquet.historyAppend()
-			self.switchChannel()
+	
+	def archiveSeekFwd(self):
+		self.session.openWithCallback(self.fwdJumpTo, MinuteInput)
 			
-	def previousChannel(self):
-		if ktv.aTime:
-			self.session.openWithCallback(self.rwdSeekTo, MinuteInput)
-		elif ktv.videomode:
-			pass
-		else:
-			self.current = bouquet.goPrev()
-			bouquet.historyAppend()
-			self.switchChannel()
+	def archiveSeekRwd(self):
+		self.session.openWithCallback(self.rwdJumpTo, MinuteInput)
 	
-	#FIXME: history and channel zapping forget archive position!   
-	def historyNext(self):
-		if ktv.videomode:
-			return
-		if bouquet.historyNext():
-			self.current = bouquet.getCurrent()
-			self.switchChannel()
-	
-	def historyBack(self):
-		if ktv.videomode:
-			pass
-		if bouquet.historyPrev():
-			self.current = bouquet.getCurrent()
-			self.switchChannel()
-	
-	def fwdSeekTo(self, minutes):
+	def fwdJumpTo(self, minutes):
 		print "[KartinaTV] Seek", minutes, "minutes forward"
 		ktv.aTime += minutes*60
+		#TODO: if aTime > 0:
+		print ktv.aTime
 		self.play()
 
-	def rwdSeekTo(self, minutes):
+	def rwdJumpTo(self, minutes):
 		print "[KartinaTV] rwdSeekTo", minutes
 		ktv.aTime -= minutes*60
 		self.play()
 		
 	def playpauseArchive(self):
-		if ktv.aTime: #Check if we in archive #TODO: Enable and disable play-pause action map on starting and stoping archive 
-			if self.archive_pause: #do unpause
-				ktv.aTime -= tdSec(syncTime()-self.archive_pause)-ARCHIVE_TIME_FIX 
-				self.archive_pause = None
-				self.play()
-			else: #do pause
-				self.archive_pause = syncTime()
-				self.session.nav.stopService()
-		elif ktv.videomode:
-			#TODO: implement pause
-			pass
-		else:
+		if self.archive_pause: #do unpause
+			ktv.aTime -= tdSec(syncTime()-self.archive_pause)-ARCHIVE_TIME_FIX 
 			self.archive_pause = None
+			self.play()
+			self.unlockShow()
+		else: #do pause
+			self.archive_pause = syncTime()
+			self.session.nav.stopService()
+			self.lockShow()
 	
-	def play(self): #check parental control		
-		print "[KartinaTV] access channel id=", self.current 
-		cid = self.current
-		#if cid not changed (probably we are in  archive)
-		if cid == self.oldcid:
-			self.startPlay() 
-			return
-		self.session.nav.stopService()
-		
-		#Use many hacks, because it's no possibility to change enigma :(
-		#fake reference has no path and used for parental control
-		fakeref = fakeReference(cid)
-		print fakeref.toCompareString()
-		if parentalControl.isServicePlayable(fakeref, boundFunction(self.startPlay)):
-			self.startPlay()
-		else:
-			self["channelName"].setText(ktv.channels[cid].name)
-			self.epgEvent()	
-
 	def startPlay(self, **kwargs):
-		print "[KartinaTV] play channel id=", self.current 
+		KartinaPlayer.startPlay(self)
+		
 		cid = self.current
-		self.oldcid = cid
 		try:
 			uri = ktv.getStreamUrl(cid)
 		except:
 			print "[KartinaTV] Error: getting stream uri failed!"
 			self.session.open(MessageBox, _("Error while getting stream uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
 			return -1
+		
 		srv = SERVICE_KARTINA
 		if not uri.startswith('http://'):
 			srv = 4097
 		sref = eServiceReference(srv, 0, uri) 
 		sref.setData(7, int(str(cid), 16) ) #picon hack.
-		if iName == "RodnoeTV":
+		if Ktv.iName == "RodnoeTV":
 			sref.setData(6,1) #again hack;)	
 		
-		#self.session.nav.stopService() #FIXME: do we need it?? some bugs in servicets?
 		self.session.nav.playService(sref) 
-		self.__audioSelected = False
+		
 		self["channelName"].setText(ktv.channels[cid].name)
 		self.epgEvent()	
 
@@ -599,8 +832,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		self.epgProgressTimer.stop()
 		cid = self.current
 		
-		#EPG is valid only if bouth tstart and tend specified!!! Check API.
-		
+		#EPG is valid only if bouth tstart and tend specified!!! Check API.		
 		def setEpgCurrent():
 			if ktv.aTime:
 				if not ktv.channels[cid].hasAEpg(ktv.aTime): return False
@@ -664,126 +896,42 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		self["progressBar"].setValue(PROGRESS_SIZE * self.currentEpg.getTimePass(ktv.aTime) / self.currentEpg.duration)
 		self.epgProgressTimer.start(PROGRESS_TIMER)
 	
-	
-	def archivePvr(self):
-		if ktv.aTime:
-			self.switchChannel()
-		elif ktv.videomode:
-			ktv.videomode = False
-			if ktv.aTime:
-				self.playpauseArchive()
-			else:
-				self.play()
+	def setArchivemode(self, aTime):
+		if aTime:
+			ktv.aTime = aTime
+			self.archive_pause = None
+			self["live_actions"].setEnabled(0)
+			self["archive_actions"].setEnabled(1)
+			self["KartinaInArchive"].setBoolean(True)
 		else:
-			return #Videothek disabled now
-			ktv.videomode = True
-			if ktv.videomode: #Api can not allow to set videomode, because it isn't available. 
-				self.showVideoList()
+			self["archive_actions"].setEnabled(0)
+			self["live_actions"].setEnabled(1)
+			self["KartinaInArchive"].setBoolean(False)
 
-	def showVideoList(self):
-		self.session.openWithCallback(self.showVideoCB, KartinaVideoList)
-	
-	def switchChannel(self):
-		self["KartinaInArchive"].setBoolean(False)
-		ktv.aTime = 0
-		self.play()
-	
-	def showList(self):
-		if ktv.videomode:
-			self.showVideoList()
-		else:	
-			self.session.openWithCallback(self.showListCB, KartinaChannelSelection)
-	
-	def showListCB(self, changed=False, time = None):
-		if time:
-			print "[KartinaTV] list returned archive" 
-			self.showEpgCB(time)
-			return
-		elif changed:
-			self.current = bouquet.getCurrent()
-			bouquet.historyAppend()
-			self.switchChannel()
-			
-	def errorCB(self, edit = False):
-		if edit:
-			self.kartinaConfig()
-		else:
-			self.exit()
-			
 	def showEpg(self):
 		self.session.openWithCallback(self.showEpgCB, KartinaEpgList, self.current)
 	
 	def showEpgCB(self, time= None):
 		if time:
 			self.current = bouquet.getCurrent()
-			ktv.aTime = tdSec(time-syncTime()) #aTime < 0
-			self["KartinaInArchive"].setBoolean(True)
+			self.setArchivemode(tdSec(time-syncTime())) #aTime < 0
 			self.play()
 	
-	def showVideoCB(self, vid= None):
-		if vid:
-			ktv.videomode = True
-			if ktv.aTime:
-				self.playpauseArchive()
-			else:
-				pass #stop stream
-			self.vid = vid
-			self.playVideo()
+	def showList(self):
+		self.session.openWithCallback(self.showListCB, KartinaChannelSelection)
+	
+	def showListCB(self, changed=False, time = None):
+		if time:
+			print "[KartinaTV] list returned archive" 
+			self.showEpgCB(time)
+			return
 		else:
-			ktv.videomode = False
+			return KartinaPlayer.showListCB(self, changed)
 	
-	def playVideo(self):
-		print "[KartinaTV] play video id=", self.vid 
-		vid = self.vid
-		#TODO: seeking in c++ part
-		try:
-			uri = ktv.getVideoUrl(vid)
-		except:
-			print "[KartinaTV] Error: getting video uri failed!"
-			self.session.open(MessageBox, _("Error while getting video uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
-			return -1
-		sref = eServiceReference(4097, 0, uri) #TODO: 4112 
-		#self.session.nav.stopService() #FIXME: do we need it?? some bugs in servicets?
-		self.session.nav.playService(sref)
-		self["channelName"].setText(ktv.filmFiles[vid]['title'])
-	
-	def kartinaConfig(self):
-		self.session.openWithCallback(self.restart, KartinaConfig)
-
-	def restart(self, config_changed):
-		if config_changed:
-			self.session.nav.stopService()
-			self.start()
-		elif not ktv.SID:
-			self.exit()
-	
-	def exit(self):
-		self.session.nav.stopService()
-		self.session.nav.playService(self.oldService)
-		if bouquet:
-			cfg.lastroot.value = str(bouquet.getPath())
-			cfg.lastcid.value = self.current
-			print "[KartinaTV] save path", cfg.lastroot.value, cfg.lastcid.value
-			cfg.lastroot.save()
-			cfg.lastcid.save()
-			cfg.favourites.value = str(favouritesList)
-			cfg.favourites.save()
-			cfg.sortkey.save()
-			if iName == "KartinaTV":
-				cfg.numsonpage.save()
-		print "[KartinaTV] exiting"
-		self.close()
-	
-	def generate_error(self):
-		print "[KartinaTV] User generate error for debug"
-		raise Exception("User generate error to view log")
-	
-	def runPlugin(self, plugin):
-		try:
-			plugin(session = self.session)
-		except:
-			self.session.open(MessageBox, _("You can't run this plugin in KartinaTV mode"), MessageBox.TYPE_ERROR)
-	
+	def switchChannel(self):
+		self.setArchivemode(0)
+		self.play()
+		
 	def keyNumberGlobal(self, number):
 		self.session.openWithCallback(self.numberEntered, NumberZap, number)
 	
@@ -800,32 +948,56 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 				bouquet.historyAppend()
 				self.switchChannel()
 			else:
-				bouquet.current = lastroot
+				bouquet.current = lastroot	
+
+
+
+class KartinaVideoPlayer(KartinaPlayer):
+	def __init__(self, session):
+		KartinaPlayer.__init__(self, session)
+			
+		self["video_actions"] = ActionMap(["OkCancelActions", "ColorActions", "ChannelSelectEPGActions", "InfobarChannelSelection", "InfobarActions"], 
+		{
+			"zapUp" : self.previousChannel,
+			"zapDown" : self.nextChannel, 
+			"switchChannelUp" : self.showList,  
+			"switchChannelDown" : self.showList, 
+			"openServiceList" : self.showList,  
+			"showMovies" : self.nextAPI
+		}, -1)
+		
+		InfoBarSeek.__init__(self)
 	
-	def audioSelect(self):
-		print "[KartinaTV] event audio select"
-		if self.__audioSelected or not AUTO_AUDIOSELECT: return
-		self.__audioSelected = True
-		service = self.session.nav.getCurrentService()
-		audio = service and service.audioTracks()
-		n = audio and audio.getNumberOfTracks() or 0
-		if n > 0:
-			selectedAudio = audio.getCurrentTrack()
-			for x in range(n):
-				language = audio.getTrackInfo(x).getLanguage()
-				print "[KartinaTV] scan langstr:", x, language
-				if language.find('rus') > -1 and x != selectedAudio:
-					if self.session.nav.getCurrentService().audioTracks().getNumberOfTracks() > x:
-						audio.selectTrack(x)
-						break
-										
+	def startPlay(self, **kwargs):
+		KartinaPlayer.startPlay(self)
+		
+		cid = self.current
+		try:
+			uri = ktv.getVideoUrl(cid)
+		except:
+			print "[KartinaTV] Error: getting video uri failed!"
+			self.session.open(MessageBox, _("Error while getting video uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
+			return -1
+		
+		sref = eServiceReference(4097, 0, uri) #TODO: think about serviceID
+		self.session.nav.playService(sref)
+		self["channelName"].setText(ktv.filmFiles[cid]['name'])
+	
+	def showList(self):
+		self.session.openWithCallback(self.showListCB, KartinaVideoList)
+	
+	def switchChannel(self):
+		self.play()
+		
+	def doGo(self):
+		self.showList()									
 
 				
 #TODO: BouquetManager guiContent. Don't recreate and refill ChannelSelection if possible
 class ChannelList(MenuList):
 	
 	def __init__(self):
-		MenuList.__init__(self, [], content = eListboxPythonMultiContent)
+		MenuList.__init__(self, [], content = eListboxPythonMultiContent, enableWrapAround=True)
 		self.col = {}
 		
 		self.pixmapProgressBar = None
@@ -997,8 +1169,9 @@ class KartinaChannelSelection(Screen):
 		self["epgNextDiscription"]=Label()
 		
 		self["packetExpire"] = Label()
-		if ktv.packet_expire:
-			self["packetExpire"].setText(_("Expire on")+" "+ktv.packet_expire.strftime('%d.%m %H:%M'))		
+		#XXX:
+		#if ktv.packet_expire:
+		#	self["packetExpire"].setText(_("Expire on")+" "+ktv.packet_expire.strftime('%d.%m %H:%M'))		
 		
 		self["actions"] = ActionMap(["OkCancelActions", "ChannelSelectBaseActions", "DirectionActions", "ChannelSelectEditActions", "ChannelSelectEPGActions"], 
 		{
@@ -1047,14 +1220,8 @@ class KartinaChannelSelection(Screen):
 	
 	def exit(self):
 		self.list.onSelectionChanged.pop() #Do it before close, else event happed while close.
-		if self.lastroot.type == Bouquet.TYPE_MENU:
-			self.showAll()
-			bouquet.goIn() #FIXME: if user really want select None
-			print "[KartinaTV] ChannelSelection selected None so set default"
-			self.close(True)
-		else:
-			bouquet.current = self.lastroot
-			self.close(False)
+		bouquet.current = self.lastroot
+		self.close(False)
 	
 	def fillList(self):
 		#FIXME: optimizations? Autoupdate.
@@ -1072,7 +1239,7 @@ class KartinaChannelSelection(Screen):
 			except:
 				print "[KartinaTV] failed to get epg for uplist"
 		
-		self.setTitle(iName+" / "+" / ".join(map(_, bouquet.getPathName())) )
+		self.setTitle(Ktv.iName+" / "+" / ".join(map(_, bouquet.getPathName())) )
 	
 		self.fillingList = True #simple hack
 		if bouquet.current.name == 'favourites':
@@ -1130,18 +1297,19 @@ class KartinaChannelSelection(Screen):
 		if self.editMode: return
 		global favouritesList
 		bouquet.setIndex(self.list.getSelectionIndex())
-		curr = bouquet.getCurrentSel()
-		if curr:
-			(cid, type) = curr
-			if bouquet.getCurrent() == 'favourites':
-				bouquet.current.remove()
-				favouritesList.remove(cid)
-				self.showFavourites()
-			else:
-				if type == Bouquet.TYPE_SERVICE:
-					favouritesList += [cid]
-					bouquet.root.content[2].append(Bouquet(Bouquet.TYPE_SERVICE, cid))
-			print "[KartinaTV] Now favouritesList is:", favouritesList
+		c = bouquet.getCurrentSel()
+		if not c:
+			return
+		cid = c.name
+		if bouquet.getCurrent() == 'favourites':
+			bouquet.current.remove()
+			favouritesList.remove(cid)
+			self.showFavourites()
+		else:
+			if c.type == Bouquet.TYPE_SERVICE:
+				favouritesList += [cid]
+				bouquet.root.content[2].append(Bouquet(Bouquet.TYPE_SERVICE, cid))
+		print "[KartinaTV] Now favouritesList is:", favouritesList
 		
 	def selectionChanged(self):
 		if self.fillingList: return			#simple hack
@@ -1159,11 +1327,9 @@ class KartinaChannelSelection(Screen):
 				
 	def updateEpgInfo(self):		
 		print "[KartinaTV]", bouquet.current.index, bouquet.current.name
-		curr = bouquet.getCurrentSel()
-		type = None
-		if curr:
-			(cid, type) = curr
-		if type == Bouquet.TYPE_SERVICE:
+		c = bouquet.getCurrentSel()
+		if c and c.type == Bouquet.TYPE_SERVICE:
+			cid = c.name
 			self["channelName"].setText(ktv.channels[cid].name)
 			self["channelName"].show()
 			if ktv.channels[cid].hasEpg():
@@ -1210,9 +1376,9 @@ class KartinaChannelSelection(Screen):
 		if bouquet.current.name != 'favourites':
 			lst += [(_("Sort by name"), 1),
 				   (_("Sort by default"), 2)]
-		curr = bouquet.getCurrentSel()
-		if curr and curr[1] == Bouquet.TYPE_SERVICE and config.ParentalControl.configured.value:
-			cid = curr[0]
+		c = bouquet.getCurrentSel()
+		if c and c.type == Bouquet.TYPE_SERVICE and config.ParentalControl.configured.value:
+			cid = c.name
 			if parentalControl.getProtectionLevel(fakeReference(cid).toCompareString()) == -1:
 				lst += [( _("add to parental protection"), 'add')]
 			else:
@@ -1241,10 +1407,10 @@ class KartinaChannelSelection(Screen):
 	
 			self.fillList()
 		elif entry == 'add':
-			service = fakeReference(bouquet.getCurrentSel()[0])
+			service = fakeReference(bouquet.getCurrentSel().name)
 			parentalControl.protectService(service.toCompareString())
 		elif entry ==  'rm':
-			service = fakeReference(bouquet.getCurrentSel()[0])
+			service = fakeReference(bouquet.getCurrentSel().name)
 			self.session.openWithCallback(
 			  boundFunction(self.pinEntered, service.toCompareString()), PinInput, pinList =
 			  [config.ParentalControl.servicepin[0].value], triesEntry = config.ParentalControl.retries.servicepin, title = _("Enter the service pin"),
@@ -1267,9 +1433,9 @@ class KartinaChannelSelection(Screen):
 	
 	def showEpgList(self):
 		if self.editMode: return
-		(id, type) =  bouquet.getCurrentSel()
-		if type == Bouquet.TYPE_SERVICE:
-			self.session.openWithCallback(self.showEpgCB, KartinaEpgList, id)
+		c =  bouquet.getCurrentSel()
+		if c.type == Bouquet.TYPE_SERVICE:
+			self.session.openWithCallback(self.showEpgCB, KartinaEpgList, c.name)
 	
 	def showEpgCB(self, time=None):
 		print "[KartinaTV] showEpgCB", time
@@ -1424,6 +1590,31 @@ class KartinaEpgList(Screen):
 		self.epgDownloaded = False
 		self.fillList()
 
+class WeatherIcon(Pixmap): #Pixmap class by Dr.Best. A bit "long" code IMHO:) Has autoresize feature!
+	def __init__(self):
+		Pixmap.__init__(self)
+		self.IconFileName = ""
+		self.picload = ePicLoad()
+		self.picload.PictureData.get().append(self.paintIconPixmapCB)
+
+	def onShow(self):
+		Pixmap.onShow(self)
+		sc = AVSwitch().getFramebufferScale()
+		self.picload.setPara((self.instance.size().width(), self.instance.size().height(), sc[0], sc[1], 0, 0, '#00000000'))
+
+	def paintIconPixmapCB(self, picInfo=None):
+		ptr = self.picload.getData()
+		if ptr != None:
+			self.instance.setPixmap(ptr.__deref__())
+
+	def updateIcon(self, filename):
+		new_IconFileName = filename
+		if (self.IconFileName != new_IconFileName):
+			self.IconFileName = new_IconFileName
+			self.picload.startDecode(self.IconFileName)
+		else:
+			print "already shown", filename
+
 class multiListHandler():
     def __init__(self, menu_lists):
 	self.count = len(menu_lists)
@@ -1449,22 +1640,22 @@ class multiListHandler():
 	}, -2)
     
     def doNothing(self): #moves away annoing messages in log
-	pass
+		return
     
     def selectList(self, curr):
-	self.curr = curr
-	for i in self.lists:
-	    self[i].selectionEnabled(0)
-	self[self.curr].selectionEnabled(1)
-	self.is_selection = isinstance(self[self.curr], SelectionList)
-	print "[KartinaTV] select list", self.curr, "selection", self.is_selection
+		self.curr = curr
+		for i in self.lists:
+			self[i].selectionEnabled(0)
+		self[self.curr].selectionEnabled(1)
+		self.is_selection = isinstance(self[self.curr], SelectionList)
+		print "[KartinaTV] select list", self.curr, "selection", self.is_selection
     
     def ok(self): #returns if selection action applied
-	if self.is_selection:
-	    self[self.curr].toggleSelection()
-	    return True
-	return False
-    
+	    if self.is_selection:
+	        self[self.curr].toggleSelection()
+	        return True
+	    return False
+	    
     def down(self):
 	    self[self.curr].down()
     
@@ -1477,6 +1668,58 @@ class multiListHandler():
     def pageUp(self):
 	    self[self.curr].pageUp()
 
+class DownloadThread(Thread):
+	def __init__(self):
+		Thread.__init__(self)
+		self.messagePump = ePythonMessagePump()
+		self.__cancel = False
+		self.__newTask = False
+		self.__lock = Lock()
+		self._lastposter = ""
+		self.cnd = Condition(self.__lock)
+		
+	def nextTask(self, url, filename):
+		self.cnd.acquire()
+		self.url = url
+		self.filename = filename
+		self.__newTask = True
+		self.cnd.notify()
+		self.cnd.release()
+	
+	def stopTasks(self):
+		self.__cancel = True
+		self.cnd.acquire()
+		self.cnd.notify()
+		self.cnd.release()
+	
+	def getLastposter(self):
+		self.cnd.acquire()
+		tmp = self._lastposter
+		self.cnd.release()
+		return tmp
+	
+	lastposter = property(getLastposter)
+	
+	def run(self):
+		while True:
+			self.cnd.acquire()
+			while not self.__newTask:
+				self.cnd.wait()
+			self.__newTask = False
+			tmpurl = self.url
+			tmpfilename = self.filename
+			self.cnd.release()
+			if self.__cancel:
+				break
+			urlretrieve(tmpurl, tmpfilename)
+			print "downloaded", tmpfilename
+			self.cnd.acquire()
+			self._lastposter = tmpfilename
+			self.cnd.release()
+			self.messagePump.send(0)
+			#TODO: send event.
+		print "stopped"
+			
 
 class KartinaVideoList(Screen, multiListHandler):
 	
@@ -1507,9 +1750,6 @@ class KartinaVideoList(Screen, multiListHandler):
 		self["description"] = Label()
 		self["year"] = Label()
 		
-		self["sname"] = Label()
-		self["sdescription"] = Label()
-		self["syear"] = Label()
 		self["rate1"] = Slider(0, 100) 
 		self["rate2"] = Slider(0, 100)
 		self["rate1_back"] = Pixmap()
@@ -1517,7 +1757,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		self["rate1_text"] = Label("IMDB")
 		self["rate2_text"] = Label("Kinopoisk")
 		self["moreinfo"] = Label()
-		self["poster"] = Pixmap() 
+		self["poster"] = WeatherIcon() 
 		
 		self["pages"] = Label()
 		self["genres"] = Label()
@@ -1542,44 +1782,53 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.query = ''
 		self.mode = self.MODE_MAIN
 		
+		self.lastroot = bouquet.current
+		
 		self.list.onSelectionChanged.append(self.selectionChanged)
 		self.editMode = False
 		self.editMoving = False
 		self.onShown.append(self.start)
 		
-		global vid_bouquet
-		vid_bouquet = BouquetManager()
+		self.download = DownloadThread()
+		self.download.messagePump.recv_msg.get().append(self.startPosterDecode)#TODO..
+		self.download.start()
+		self.onClose.append(self.disconnectPump)
+		self.onClose.append(self.download.stopTasks)		
+	
+	def disconnectPump(self):
+		self.download.messagePump.recv_msg.get().remove(self.startPosterDecode)
 		
 	def start(self):
 		if self.start in self.onShown:
 			self.onShown.remove(self.start)
 		
-		self.endSelectGenres()
-		
-		#try:
-		self.count = ktv.getVideos(self.stype, self.page, self.genres, cfg.numsonpage.value, self.query)
-		
-		#except:
-		#	print "[KartinaTV] load videos failed!!!"
-		#	self.session.openWithCallback(self.exit, MessageBox, _("Get videos failed!"))
-		#	return
+		try:
+			self.count = ktv.getVideos(self.stype, self.page, self.genres, cfg.numsonpage.value, self.query)
+		except Exception as e:
+			print "[KartinaTV] load videos failed!!!"
+			print e
+			self.session.openWithCallback(self.exit, MessageBox, _("Get videos failed!"))
+			self.close(False)
+			return
 		print "[KartinaTV] total videos", self.count
-		vid_bouquet.current = vid_bouquet.root
-		if vid_bouquet.getList():
-			vid_bouquet.root.remove()
+		bouquet.current = bouquet.root
+		if bouquet.getList():
+			bouquet.root.remove()
 			print 'clear bouquet'
-		vid_bouquet.appendRoot(ktv.buildVideoBouquet())
-		vid_bouquet.goIn()
+		bouquet.appendRoot(ktv.buildVideoBouquet())
+		bouquet.goIn()
 		
 		self.fillList()		
 		#buildVideoBouqet already return list sorted by server.. #TODO: Think about local sort.
-		#vid_bouquet.current.sortByKey(self.sortkey) 
+		#bouquet.current.sortByKey(self.sortkey) 
 	
 	def kartinaVideoEntry(self, entry):
 		vid = entry.name
+		self.number_number +=1
 		res = [
 			(vid),
-			(eListboxPythonMultiContent.TYPE_TEXT, 2, 2, 580, 24, 0, RT_HALIGN_LEFT, ktv.videos[vid].name )
+			(eListboxPythonMultiContent.TYPE_TEXT, 0, 2, 50, 24, 0, RT_HALIGN_LEFT, str(self.number_number) ),
+			(eListboxPythonMultiContent.TYPE_TEXT, 55, 2, 450, 24, 0, RT_HALIGN_LEFT, ktv.videos[vid].name )
 		]
 		return res
 
@@ -1590,46 +1839,51 @@ class KartinaVideoList(Screen, multiListHandler):
 		print ktv.filmFiles[fid]['title']
 		res = [
 			(fid),
-			(eListboxPythonMultiContent.TYPE_TEXT, 20, 2, 580, 24, 0, RT_HALIGN_LEFT, ktv.filmFiles[fid]['title'])
+			(eListboxPythonMultiContent.TYPE_TEXT, 2, 2, 504, 24, 0, RT_HALIGN_LEFT, ktv.filmFiles[fid]['title'])
 		]
 		return res
 	
 	def fillList(self):			
 		print "[KartinaTV] fill video list"
 		self.fillingList = True
-		self.list.setList(map(self.kartinaVideoEntry, vid_bouquet.getList() ))	
-		self.list.moveToIndex(vid_bouquet.current.index)
+		
+		self.number_number = (self.page-1)*cfg.numsonpage.value #number_number.. What for??
+		
+		self.list.setList(map(self.kartinaVideoEntry, bouquet.getList() ))	
+		self.list.moveToIndex(bouquet.current.index)
 		self.fillingList = False
 		
-		self.setTitle(iName+" / Films / "+_(self.stype)+" "+self.query)
+		self.setTitle(Ktv.iName+" / "+_(self.stype)+" "+self.query)
 		pages = (self.count)/cfg.numsonpage.value
 		if self.count % cfg.numsonpage.value != 0:
 			pages += 1
-		self["pages"].setText("%d / %d" % (self.page,  pages))
+	
+		self["pages"].setText("%s %d / %d" % (_("page"), self.page, pages))
 		self.hideLabels('s%s')
 		self.selectionChanged()
 	
 	def fillSingle(self):
-		t = vid_bouquet.getCurrentSel()
-		if not t:
+		c = bouquet.getCurrentSel()
+		if not c:
 			return
-		vid = t[0]
+		cid = c.name
 		#try:
-		ktv.getVideoInfo(vid)
+		ktv.getVideoInfo(cid)
 		#except:
 		#	print "[KartinaTV] load videos failed!!!"
 		#	self.session.openWithCallback(self.exit, MessageBox, _("Get videos failed!"))
 		#	return
-		vid_bouquet.goIn()
-		for e in ktv.buildEpisodesBouquet(vid).getContent():
-			vid_bouquet.current.append(e)
-		print vid_bouquet.getList()
+		bouquet.goIn()
+		for episode in ktv.buildEpisodesBouquet(cid).getContent():
+			bouquet.current.append(episode)
+		#print bouquet.getList()
 				
 		self.fillingList = True
-		self.list.setList(map(self.kartinaVideoSEntry, vid_bouquet.getList() ))	
+		self.list.setList(map(self.kartinaVideoSEntry, bouquet.getList() ))
+		self.list.moveToIndex(bouquet.current.index)	
 		self.fillingList = False
 		
-		self.setTitle(iName+" / Films / "+ktv.videos[vid].name)
+		self.setTitle(Ktv.iName+" / "+ktv.videos[cid].name)
 		self.hideLabels('%s')
 		self.selectionChanged()
 	
@@ -1651,8 +1905,12 @@ class KartinaVideoList(Screen, multiListHandler):
 		#for button click
 		if self.mode == self.MODE_GENRES:
 			self.endSelectGenres()
+			self.page = 1
 			self.start()
-			return
+		elif self.mode == self.MODE_MAIN:
+			self.startSelectGenres()
+	
+	def startSelectGenres(self):
 		#main code
 		if not len(self.glist.list):
 			ktv.getVideoGenres()
@@ -1667,69 +1925,95 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.hideLabels('%s')
 		self.mode = self.MODE_GENRES
 	
+	#separate this code to not duplicate
 	def endSelectGenres(self):
 		self["key_green"].setText(_("Genres"))
 		self.selectList("list")
+		self.glist.hide()
+		self.mode = self.MODE_MAIN
+		self.updateGenres()
+	
+	def updateGenres(self):
 		self.genres = [item[1] for item in self.glist.getSelectionsList()]
 		genrestxt = [item[0] for item in self.glist.getSelectionsList()]
-		self.glist.hide()
 		if len(genrestxt):
 			self["genres"].setText(_("Genres: ")+', '.join(genrestxt))
 		else:
 			self["genres"].setText(_("Genres: ")+_("all"))
-		self.mode = self.MODE_MAIN
 	
 	def selectionChanged(self):
+		if self.mode != self.MODE_MAIN: return
+	
 		if self.fillingList: return			#simple hack
 		idx = self.list.getSelectionIndex()
 		if self.editMoving and self.lastIndex != idx:
 			print "[KartinaTV] moving entry", idx
 			if self.lastIndex > idx:
-				vid_bouquet.current.moveOneUp()
+				bouquet.current.moveOneUp()
 			else:
-				vid_bouquet.current.moveOneDown()
+				bouquet.current.moveOneDown()
 			self.lastIndex = idx
 			self.fillList() #TODO: optimize!!!
-		vid_bouquet.setIndex(self.list.getSelectionIndex())
+		bouquet.setIndex(self.list.getSelectionIndex())
 		self.updateInfo()
 	
-	def updateInfo(self):
-		curr = vid_bouquet.getCurrentSel()
-		print 'selection=', curr
-		type = None
-		if curr:
-			(cid, type) = curr
-		#some specific here
-		if type == Bouquet.TYPE_MENU:
-			s = "%s"
-			pass
-		elif type == Bouquet.TYPE_SERVICE:
-			s = "s%s"
-			cid = vid_bouquet.current.name
-			pass
+	def updateInfo(self):	
+		c = bouquet.getCurrentSel()
+		print 'selection=', c
+		if c:
+			cid = c.name
+			#some specific here
+			if c.type == Bouquet.TYPE_MENU:
+				s = "%s"
+				self["moreinfo"].setText('\n'.join([ktv.videos[cid].country, ktv.videos[cid].genre]))
+				pass
+			elif c.type == Bouquet.TYPE_SERVICE:
+				s = "s%s"
+				fid = cid
+				cid = bouquet.current.name
+				self["moreinfo"].setText('\n'.join([
+					"%s format" % ktv.filmFiles[fid]["format"],
+					ktv.filmFiles[fid]["length"] and "%d min" % ktv.filmFiles[fid]["length"] or "",
+					ktv.videos[cid].director,
+					ktv.videos[cid].actors
+				] ))
 		else:
-			s = "%s"	
-			self[s % "name"].setText("")
-			self[s % "year"].setText("")
-			self[s % "description"].setText("")
+			s = "%s"
+			self["name"].setText("")
+			self["year"].setText("")
+			self["description"].setText("")
+			self["moreinfo"].setText("")
 			self["rate1"].setValue(0)
 			self["rate2"].setValue(0)
 			return
 		
 		self["rate1"].setValue(ktv.videos[cid].rate_imdb)
 		self["rate2"].setValue(ktv.videos[cid].rate_kinopoisk)
-		self[s % "name"].setText(ktv.videos[cid].name)
-		self[s % "year"].setText(ktv.videos[cid].year)
-		self[s % "description"].setText(ktv.videos[cid].descr)
-		self[s % "name"].show()
-		self[s % "year"].show()
-		self[s % "description"].show()
+		self["name"].setText(ktv.videos[cid].name)
+		self["year"].setText(ktv.videos[cid].year)
+		self["description"].setText(ktv.videos[cid].descr)
+		self["name"].show()
+		self["year"].show()
+		self["description"].show()
 		self["rate1"].show()
 		self["rate2"].show()
 		self["rate1_back"].show()
 		self["rate2_back"].show()
 		self["rate1_text"].show()
 		self["rate2_text"].show()
+		self["moreinfo"].show()
+		self["poster"].show()		
+		
+		#TODO: check if updateNeeded.
+		self.poster_path = '/tmp/'+ktv.getPosterPath(cid, local = True)
+		print "need", self.poster_path
+		self.download.nextTask(ktv.getPosterPath(cid), self.poster_path)
+		#urlretrieve(ktv.getPosterPath(cid), local_path)
+	
+	def startPosterDecode(self, msg):
+		print "recv_event"
+		if self.download.lastposter == self.poster_path:
+			self["poster"].updateIcon(self.poster_path)
 	
 	def showLast(self):
 		self.stype = 'last'
@@ -1755,17 +2039,19 @@ class KartinaVideoList(Screen, multiListHandler):
 	def hideLabels(self, s = "%s"):
 		#FIXME: non-readable code
 		print "hide", s
-		self[s % "name"].hide()
-		self[s % "year"].hide()
-		self[s % "description"].hide()
+		self["name"].hide()
+		self["year"].hide()
+		self["description"].hide()
 		self["rate1"].hide()
 		self["rate2"].hide()
 		self["rate1_back"].hide()
 		self["rate2_back"].hide()
 		self["rate1_text"].hide()
 		self["rate2_text"].hide()
+		self["moreinfo"].hide()
+		self["poster"].hide()
 		
-	def showElements(self,element_list,hide=False):
+	def showElements(self, element_list, hide=False):
 		#TODO: use it!!
 		if hide:
 			for e in element_list:
@@ -1776,29 +2062,80 @@ class KartinaVideoList(Screen, multiListHandler):
 		return		
 	
 	def ok(self):
-		if multiListHandler.ok(self):
+		if multiListHandler.ok(self): #This indicate that we are in SelectionList
+			if UPDATE_ON_TOGGLE:
+				self.updateGenres()
+				self.page = 1
+				self.start()
 			return
-		t = vid_bouquet.getCurrentSel()
-		if not t:
+		c = bouquet.getCurrentSel()
+		if not c:
 			return
-		(vid, type) = t
-		print 'type', type, 'file', vid
-		if type == Bouquet.TYPE_MENU:
+		print 'type', c.type, 'file', c.name
+		if c.type == Bouquet.TYPE_MENU:
 			self.fillSingle()
-		elif type == Bouquet.TYPE_SERVICE:
+		elif c.type == Bouquet.TYPE_SERVICE:
+			bouquet.goIn()
 			self.list.onSelectionChanged.pop() #Do it before close, else event happed while close.
-			self.close(vid)
+			self.close(True)
 	
 	def exit(self):
-		if vid_bouquet.getCurrentSel()[1] == Bouquet.TYPE_SERVICE:
-			vid_bouquet.goOut()
+		if bouquet.getCurrentSel().type == Bouquet.TYPE_SERVICE:
+			bouquet.goOut()
 			self.fillList()
 		else:
 			self.list.onSelectionChanged.pop() #Do it before close, else event happed while close.
-			self.close()
+			bouquet.current = self.lastroot
+			self.close(False)
 	
 		
 #----------Config Class----------
+#TODO: boundFunction are looking bad. Global variables also bad idea.
+#So we need to implement some class..
+
+def selectConfig(session, **kwargs):
+	l = [(a,a) for a in apis.keys()] #boundFunction is used to tell session variable
+	session.openWithCallback(boundFunction(configSelected, session), ChoiceBox, _("Select service to configure"), l)
+
+def configSelected(session, answer):
+	if answer == None: return
+	aname = answer[1]
+	startConifg(session, aname)
+	
+def startConifg(session, aname):
+	print "[KartinaTV] open config for", aname
+	session.openWithCallback(boundFunction(configEnded, session, aname), KartinaConfig, aname)
+
+def configEnded(session, aname, changed = False):
+	print "[KartinaTV] config ended for", aname
+	
+	if KartinaPlayer.instance and (Ktv.iName == aname or Ktv.iProvider == apis[aname][1]):
+		#We are telling KartinaPlayer to restart if config changed
+		#If it fails, we are asking for next try.
+		if changed:
+			print "[KartinaTV] restarting"
+			#KartinaPlayer.instance.show() #FIXME: lockShow() or something to indicate restart
+			if not KartinaPlayer.instance.go():
+				askForRetry(session)		
+		#If kartinatv not running (failed last start)
+		#then we exit it. If it is allready running do nothing
+		elif not KartinaPlayer.instance.is_runnig():
+			KartinaPlayer.instance.exit()
+	else:
+		print "[KartinaTV] player not running do nothing"
+
+def askForRetry(session):
+	print "[KartinaTV] start failed. Configure again?"
+	session.openWithCallback(editConfig, MessageBox, _("Login or initialization failed!\nEdit options?"))
+	
+def editConfig(edit):
+	#If we went here, then KartinaPlayer is started for shure.
+	if edit:
+		startConifg(KartinaPlayer.instance.session, Ktv.iName)
+	else:
+		configEnded(KartinaPlayer.instance.session, Ktv.iName, changed=False)
+
+
 class KartinaConfig(ConfigListScreen, Screen):
 	skin = """
 		<screen name="KartinaConfig" position="center,center" size="550,250" title="IPTV">
@@ -1809,8 +2146,7 @@ class KartinaConfig(ConfigListScreen, Screen):
 			<widget name="key_green" position="140,200" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
 		</screen>"""
 	
-	def __init__(self, session):
-		self.session = session
+	def __init__(self, session, aname):
 		Screen.__init__(self, session)
 		
 		self["actions"] = NumberActionMap(["SetupActions", "ColorActions"],
@@ -1819,30 +2155,29 @@ class KartinaConfig(ConfigListScreen, Screen):
 			"red": self.keyCancel,
 			"cancel": self.keyCancel
 		}, -2)
+		
+		self.aname = aname
+		self.aprov = apis[aname][1]
 
 		self["key_red"] = Button(_("Cancel"))
 		self["key_green"] = Button(_("OK"))
 
 		cfglist = [
-			getConfigListEntry(_("login"), cfg.login),
-			getConfigListEntry(_("password"), cfg.password),
-			getConfigListEntry(_("Timeshift"), cfg.timeshift),
-			getConfigListEntry(_("Show in mainmenu"), cfg.in_mainmenu), 
-			getConfigListEntry(_("Use servicets instead of Gstreamer"), cfg.usesrvicets),
+			getConfigListEntry(_("login"), config.iptvdream[self.aprov].login),
+			getConfigListEntry(_("password"), config.iptvdream[self.aprov].password),
+			getConfigListEntry(_("Show in mainmenu"), config.iptvdream[aname].in_mainmenu), 
+			getConfigListEntry(_("Use servicets instead of Gstreamer"), config.iptvdream[aname].usesrvicets),
 			getConfigListEntry(_("Buffering time, milliseconds"), config.plugins.KartinaTv.buftime)
 		]
+		if apis[aname][0].MODE == MODE_STREAM:
+			cfglist.append(getConfigListEntry(_("Timeshift"), config.iptvdream[aname].timeshift))
 			
 		ConfigListScreen.__init__(self, cfglist, session)
-		self.setTitle(iName)
+		self.setTitle(_("Configuration of ")+aname)
 	
 	def keySave(self):
 		self.saveAll()
 		self.close(True)
-	
-	def keyCancel(self):
-		for x in self["config"].list:
-			x[1].cancel()
-		self.close(False)
 
 #gettext HACK:
 [_("Jan"), _("Feb"), _("Mar"), _("Apr"), _("May"), _("Jun"), _("Jul"), _("Aug"), _("Sep"), _("Oct"), _("Nov") ] 
