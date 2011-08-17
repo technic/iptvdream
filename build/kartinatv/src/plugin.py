@@ -966,6 +966,8 @@ class KartinaVideoPlayer(KartinaPlayer):
 			"showMovies" : self.nextAPI
 		}, -1)
 		
+		self["poster"] = WeatherIcon()
+		
 		InfoBarSeek.__init__(self)
 	
 	def startPlay(self, **kwargs):
