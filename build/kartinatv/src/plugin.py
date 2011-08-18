@@ -433,11 +433,10 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		#Standby notifier!!
 		config.misc.standbyCounter.addNotifier(self.standbyCountChanged, initial_call = False)
 		
-		#XXX:
 		self.onClose.append(self.__onClose)
 		self.onShown.append(self.start)
 
-
+	#TODO: Standby should be out of Player class
 	def standbyCountChanged(self, configElement):
 		from Screens.Standby import inStandby
 		#FIXME: this is hack!!!
@@ -449,22 +448,14 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 	#you can use this function to handle standby events ;)
 	def leaveStandby(self):	
 		#next calls of inStandby.close() should not try to run KartinaPlayer.play() 
-		print "[KartinaTV] debug:", self.inStandby_cached.onClose
 		self.inStandby_cached.onClose.pop()
+		print "[KartinaTV] debug:", self.inStandby_cached.onClose
 		
 	
 	def __onClose(self):
+		config.misc.standbyCounter.notifiers.remove(self.standbyCountChanged)
 		KartinaPlayer.instance = None
 		print "[KartinaTV] set instance to None"
-	
-	#this function overided to work when we want.
-	#XXX:
-#	def getSeek(self):
-#		seek = InfoBarSeek.getSeek(self)
-#		if self.videomode:
-#			return seek
-#		else:
-#			return None
 	
 	def start(self):		
 		if self.start in self.onShown:
@@ -967,6 +958,7 @@ class KartinaVideoPlayer(KartinaPlayer):
 		}, -1)
 		
 		self["poster"] = WeatherIcon()
+		self["description"] = Label()
 		
 		InfoBarSeek.__init__(self)
 	
