@@ -706,7 +706,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 				
 	def leaveStandby(self):
 		KartinaPlayer.leaveStandby(self)
-		#TODO: think more about when check
+		#TODO: think more about if check
 		if bouquet and ktv.SID and KartinaPlayer.instance: #Don't run if plugin closed
 			self.play() #in standby stream stops, so we need reconnect..
 	
@@ -975,7 +975,11 @@ class KartinaVideoPlayer(KartinaPlayer):
 		
 		sref = eServiceReference(4097, 0, uri) #TODO: think about serviceID
 		self.session.nav.playService(sref)
-		self["channelName"].setText(ktv.filmFiles[cid]['name'])
+		self["channelName"].setText(ktv.filmFiles[cid]['name']) #FIXME: videos dict could be cleaned empty o_O
+		vid = bouquet.current.parent.name #Video is parent, episode is current
+		self["description"].setText(ktv.videos[vid].descr)
+		poster_path = '/tmp/'+ktv.getPosterPath(vid, local = True)
+		self["poster"].updateIcon(poster_path)
 	
 	def showList(self):
 		self.session.openWithCallback(self.showListCB, KartinaVideoList)
@@ -1163,9 +1167,8 @@ class KartinaChannelSelection(Screen):
 		self["epgNextDiscription"]=Label()
 		
 		self["packetExpire"] = Label()
-		#XXX:
-		#if ktv.packet_expire:
-		#	self["packetExpire"].setText(_("Expire on")+" "+ktv.packet_expire.strftime('%d.%m %H:%M'))		
+		if ktv.packet_expire:
+			self["packetExpire"].setText(_("Expire on")+" "+ktv.packet_expire.strftime('%d.%m %H:%M'))		
 		
 		self["actions"] = ActionMap(["OkCancelActions", "ChannelSelectBaseActions", "DirectionActions", "ChannelSelectEditActions", "ChannelSelectEPGActions"], 
 		{
