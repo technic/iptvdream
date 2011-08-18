@@ -706,7 +706,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 				
 	def leaveStandby(self):
 		KartinaPlayer.leaveStandby(self)
-		#TODO: think more about if check
+		#TODO: think more about when check
 		if bouquet and ktv.SID and KartinaPlayer.instance: #Don't run if plugin closed
 			self.play() #in standby stream stops, so we need reconnect..
 	
