@@ -888,8 +888,8 @@ class KartinaStreamPlayer(KartinaPlayer):
 		self.epgProgressTimer.start(PROGRESS_TIMER)
 	
 	def setArchivemode(self, aTime):
+		ktv.aTime = aTime
 		if aTime:
-			ktv.aTime = aTime
 			self.archive_pause = None
 			self["live_actions"].setEnabled(0)
 			self["archive_actions"].setEnabled(1)
