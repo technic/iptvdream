@@ -217,24 +217,17 @@ class Ktv(KartinaAPI):
 	def getChannelsEpg(self, cids):
 		if len(cids) == 1:
 			return self.epgNext(cids[0])
-		params = {"m" : "channels",
-				  "act" : "get_info_xml",
-				  "cids" : str(cids).replace(" ","")[1:-1]}
-		root = self.getData("/?"+urllib.urlencode(params), "getting epg of cids = %s" % cids)
-		for channel in root:
-			id = int(channel.attrib.get("id").encode("utf-8"))
-			prog = channel.attrib.get("programm")
-			if prog:
-				prog = prog.encode("utf-8").replace("&quot;", "\"")
-				t_str = channel.attrib.get("sprog").encode("utf-8")
-				t_start = datetime.datetime.strptime(t_str, "%b %d, %Y %H:%M:%S")
-				t_str = channel.attrib.get("eprog") and channel.attrib.get("eprog").encode("utf-8")
-				t_end = datetime.datetime.strptime(t_str, "%b %d, %Y %H:%M:%S")
-				self.channels[id].epg = EpgEntry(prog, t_start, t_end)
-			else:
-				#print "[KartinaTV] INFO there is no epg for id=%d on ktv-server" % id
-				self.channels[id].lastUpdateFailed = True
-				pass 
+		params = {"cids" : ",".join(map(str, cids))}
+		root = self.getData("/api/xml/epg_current?"+urllib.urlencode(params), "getting epg of cids = %s" % cids)
+		for channel in root.find('epg'):
+			id = int(channel.findtext("cid").encode("utf-8"))
+			e = channel.find("epg")
+			t = int(e.findtext('epg_start').encode("utf-8"))
+			t_start = datetime.datetime.fromtimestamp(t)
+			t = int(e.findtext('epg_end').encode("utf-8"))
+			t_end = datetime.datetime.fromtimestamp(t)
+			prog = e.findtext('epg_progname').encode('utf-8')
+			self.channels[id].epg = EpgEntry(prog, t_start, t_end)
 	
 	def getGmtEpg(self, id):
 		params = {"m" : "channels",
@@ -292,9 +285,5 @@ if __name__ == "__main__":
 	#ktv.setTimeShift(0)
 	#ktv.setChannelsList()
 	print ktv.getStreamUrl(39)
-	x = ktv.getVideos()
-	print ktv.videos.keys()
-	x = ktv.getVideoInfo(407)
-	print ktv.getVideoUrl(ktv.videos[407].files[0])
-	print ktv.getPosterPath(2011)
-	ktv.getVideoInfo(2011)
+	ktv.setChannelsList()
+	ktv.getChannelsEpg(ktv.channels.keys())
