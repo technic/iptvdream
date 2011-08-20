@@ -975,6 +975,7 @@ class KartinaVideoPlayer(KartinaPlayer):
 		
 		sref = eServiceReference(4097, 0, uri) #TODO: think about serviceID
 		self.session.nav.playService(sref)
+		
 		self["channelName"].setText(ktv.filmFiles[cid]['name']) #FIXME: videos dict could be cleaned empty o_O
 		vid = bouquet.current.parent.name #Video is parent, episode is current
 		self["description"].setText(ktv.videos[vid].descr)
@@ -988,7 +989,11 @@ class KartinaVideoPlayer(KartinaPlayer):
 		self.play()
 		
 	def doGo(self):
-		self.showList()									
+		self.showList()
+	
+	def doEofInternal(self, playing):
+		#TODO: we can't figure out is it serial.
+		self.showList()
 
 				
 #TODO: BouquetManager guiContent. Don't recreate and refill ChannelSelection if possible
@@ -1772,14 +1777,10 @@ class KartinaVideoList(Screen, multiListHandler):
 			"prevBouquet" :self.prevPage
 		}, -1)
 		
-		self.page = 1
-		self.genres = []
-		self.count = 0
-		self.stype = 'last'
-		self.query = ''
 		self.mode = self.MODE_MAIN
 		
 		self.lastroot = bouquet.current
+		bouquet.saveDbselectVal()
 		
 		self.list.onSelectionChanged.append(self.selectionChanged)
 		self.editMode = False
@@ -1798,16 +1799,21 @@ class KartinaVideoList(Screen, multiListHandler):
 	def start(self):
 		if self.start in self.onShown:
 			self.onShown.remove(self.start)
+			#On first fill...
+			if bouquet.current.type == Bouquet.TYPE_SERVICE:
+				bouquet.goOut()
+				self.fillSingle()
+				return
 		
 		try:
-			self.count = ktv.getVideos(self.stype, self.page, self.genres, cfg.numsonpage.value, self.query)
+			bouquet.count = ktv.getVideos(bouquet.stype, bouquet.page, bouquet.genres, cfg.numsonpage.value, bouquet.query)
 		except Exception as e:
 			print "[KartinaTV] load videos failed!!!"
 			print e
 			self.session.openWithCallback(self.exit, MessageBox, _("Get videos failed!"))
 			self.close(False)
 			return
-		print "[KartinaTV] total videos", self.count
+		print "[KartinaTV] total videos", bouquet.count
 		bouquet.current = bouquet.root
 		if bouquet.getList():
 			bouquet.root.remove()
@@ -1844,35 +1850,35 @@ class KartinaVideoList(Screen, multiListHandler):
 		print "[KartinaTV] fill video list"
 		self.fillingList = True
 		
-		self.number_number = (self.page-1)*cfg.numsonpage.value #number_number.. What for??
+		self.number_number = (bouquet.page-1)*cfg.numsonpage.value #number_number.. What for??
 		
 		self.list.setList(map(self.kartinaVideoEntry, bouquet.getList() ))	
 		self.list.moveToIndex(bouquet.current.index)
 		self.fillingList = False
 		
-		self.setTitle(Ktv.iName+" / "+_(self.stype)+" "+self.query)
-		pages = (self.count)/cfg.numsonpage.value
-		if self.count % cfg.numsonpage.value != 0:
+		self.setTitle(Ktv.iName+" / "+_(bouquet.stype)+" "+bouquet.query)
+		pages = (bouquet.count)/cfg.numsonpage.value
+		if bouquet.count % cfg.numsonpage.value != 0:
 			pages += 1
 	
-		self["pages"].setText("%s %d / %d" % (_("page"), self.page, pages))
+		self["pages"].setText("%s %d / %d" % (_("page"), bouquet.page, pages))
 		self.hideLabels('s%s')
 		self.selectionChanged()
 	
 	def fillSingle(self):
-		c = bouquet.getCurrentSel()
-		if not c:
-			return
-		cid = c.name
-		#try:
+		cid = bouquet.current.name
+	
+		#try: #TODO: do it safe
 		ktv.getVideoInfo(cid)
 		#except:
 		#	print "[KartinaTV] load videos failed!!!"
 		#	self.session.openWithCallback(self.exit, MessageBox, _("Get videos failed!"))
 		#	return
-		bouquet.goIn()
-		for episode in ktv.buildEpisodesBouquet(cid).getContent():
-			bouquet.current.append(episode)
+		
+		#fill list if necessary
+		if not len(bouquet.current.content):
+			for episode in ktv.buildEpisodesBouquet(cid).getContent():
+				bouquet.current.append(episode)
 		#print bouquet.getList()
 				
 		self.fillingList = True
@@ -1885,24 +1891,24 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.selectionChanged()
 	
 	def nextPage(self):
-		self.page += 1
-		if  (self.page-1)*cfg.numsonpage.value > self.count:
-			self.page = 1
+		bouquet.page += 1
+		if  (bouquet.page-1)*cfg.numsonpage.value > bouquet.count:
+			bouquet.page = 1
 		self.start()
 	
 	def prevPage(self):
-		self.page -= 1
-		if self.page == 0:
-			self.page = self.count / cfg.numsonpage.value
-			if self.count % cfg.numsonpage.value != 0:
-				self.page += 1
+		bouquet.page -= 1
+		if bouquet.page == 0:
+			bouquet.page = bouquet.count / cfg.numsonpage.value
+			if bouquet.count % cfg.numsonpage.value != 0:
+				bouquet.page += 1
 		self.start()
 	
 	def selectGenres(self):
 		#for button click
 		if self.mode == self.MODE_GENRES:
 			self.endSelectGenres()
-			self.page = 1
+			bouquet.page = 1
 			self.start()
 		elif self.mode == self.MODE_MAIN:
 			self.startSelectGenres()
@@ -1931,7 +1937,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.updateGenres()
 	
 	def updateGenres(self):
-		self.genres = [item[1] for item in self.glist.getSelectionsList()]
+		bouquet.genres = [item[1] for item in self.glist.getSelectionsList()]
 		genrestxt = [item[0] for item in self.glist.getSelectionsList()]
 		if len(genrestxt):
 			self["genres"].setText(_("Genres: ")+', '.join(genrestxt))
@@ -1940,8 +1946,8 @@ class KartinaVideoList(Screen, multiListHandler):
 	
 	def selectionChanged(self):
 		if self.mode != self.MODE_MAIN: return
-	
 		if self.fillingList: return			#simple hack
+		
 		idx = self.list.getSelectionIndex()
 		if self.editMoving and self.lastIndex != idx:
 			print "[KartinaTV] moving entry", idx
@@ -2013,13 +2019,13 @@ class KartinaVideoList(Screen, multiListHandler):
 			self["poster"].updateIcon(self.poster_path)
 	
 	def showLast(self):
-		self.stype = 'last'
-		self.page = 1
+		bouquet.stype = 'last'
+		bouquet.page = 1
 		self.start() 
 		
 	def showBest(self):
-		self.stype = 'best'
-		self.page = 1
+		bouquet.stype = 'best'
+		bouquet.page = 1
 		self.start()
 	
 	def search(self):
@@ -2027,10 +2033,10 @@ class KartinaVideoList(Screen, multiListHandler):
 	
 	def searchCB(self, text):
 		if text:
-			self.stype = 'text'
-			self.query = text
+			bouquet.stype = 'text'
+			bouquet.query = text
 			print "[KartinaTV] searching for", text
-			self.page = 1
+			bouquet.page = 1
 			self.start()	
 		
 	def hideLabels(self, s = "%s"):
@@ -2062,7 +2068,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		if multiListHandler.ok(self): #This indicate that we are in SelectionList
 			if UPDATE_ON_TOGGLE:
 				self.updateGenres()
-				self.page = 1
+				bouquet.page = 1
 				self.start()
 			return
 		c = bouquet.getCurrentSel()
@@ -2070,6 +2076,7 @@ class KartinaVideoList(Screen, multiListHandler):
 			return
 		print 'type', c.type, 'file', c.name
 		if c.type == Bouquet.TYPE_MENU:
+			bouquet.goIn()
 			self.fillSingle()
 		elif c.type == Bouquet.TYPE_SERVICE:
 			bouquet.goIn()
@@ -2083,6 +2090,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		else:
 			self.list.onSelectionChanged.pop() #Do it before close, else event happed while close.
 			bouquet.current = self.lastroot
+			bouquet.restoreDbselectVal()
 			self.close(False)
 	
 		
