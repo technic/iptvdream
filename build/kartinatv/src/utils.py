@@ -180,6 +180,19 @@ class BouquetManager():
 		self.historyId = -1
 		self.historyEnd = -1
 		
+		self.page = 1
+		self.genres = []
+		self.count = 0
+		self.stype = 'last'
+		self.query = ''
+		self.saveDbselectVal()
+	
+	def saveDbselectVal(self):
+		self._dbval_stored = (self.page, self.genres, self.count, self.stype, self.query)
+	
+	def restoreDbselectVal(self):
+		(self.page, self.genres, self.count, self.stype, self.query) = self._dbval_stored
+		
 	def appendRoot(self, entry):
 		self.root.append(entry)
 	
@@ -210,6 +223,8 @@ class BouquetManager():
 	
 	def goOut(self):
 		if self.current.parent:
+			#FIXME: optimizations?? store parent_index in current?
+			self.current.parent.index = self.current.parent.content.index(self.current)
 			self.current = self.current.parent
 			print "[KartinaTV] bouquet Out", self.current.name, self.current.index
 		#return self.getList()
@@ -286,7 +301,7 @@ class BouquetManager():
 		else:
 			self.history += [h]
 		self.historyEnd = self.historyId
-		#print "[KartinaTV]", self.history, self.historyId
+		#print "[KartinaTV]", self.history, self.historyId		
 		
 class Video():
 	def __init__(self, name):
