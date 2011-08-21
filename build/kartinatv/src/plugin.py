@@ -37,7 +37,7 @@ from Components.AVSwitch import AVSwitch
 from urllib import urlretrieve
 from Components.ParentalControl import parentalControl
 from threading import Thread, Lock, Condition
-from enigma import ePythonMessagePump, PSignal0V
+from enigma import ePythonMessagePump, eBackgroundFileEraser
 from Tools.LoadPixmap import LoadPixmap
 #from Components.Pixmap import Pixmap
 from skin import loadSkin, parseFont, colorNames, SkinError
@@ -307,8 +307,8 @@ ARCHIVE_TIME_FIX = 5 #sec. When archive paused, we could miss some video
 AUTO_AUDIOSELECT = True
 UPDATE_ON_TOGGLE = True #In video list, when genre selected
 USE_VIRTUAL_KB = 1 #XXX: not used!
-POSTER_CACHE = 0  #TODO:
-POSTER_PATH = '/hdd/' #TODO: TODO
+CLEAN_POSTER_CACHE = 15 #Max posters count to save on hdd. 0 - unlimited 
+POSTER_PATH = '/tmp/'
 	
 def setServ():
 	global SERVICE_KARTINA
@@ -979,7 +979,7 @@ class KartinaVideoPlayer(KartinaPlayer):
 		self["channelName"].setText(ktv.filmFiles[cid]['name']) #FIXME: videos dict could be cleaned empty o_O
 		vid = bouquet.current.parent.name #Video is parent, episode is current
 		self["description"].setText(ktv.videos[vid].descr)
-		poster_path = '/tmp/'+ktv.getPosterPath(vid, local = True)
+		poster_path = POSTER_PATH + ktv.getPosterPath(vid, local = True)
 		self["poster"].updateIcon(poster_path)
 	
 	def showList(self):
@@ -1679,6 +1679,8 @@ class DownloadThread(Thread):
 		self.__lock = Lock()
 		self._lastposter = ""
 		self.cnd = Condition(self.__lock)
+		self.clean_list = []
+		self.downloaded_count = 0
 		
 	def nextTask(self, url, filename):
 		self.cnd.acquire()
@@ -1719,10 +1721,14 @@ class DownloadThread(Thread):
 			self._lastposter = tmpfilename
 			self.cnd.release()
 			self.messagePump.send(0)
-			#TODO: send event.
-		print "stopped"
 			
-
+			self.downloaded_count += 1
+			self.clean_list += [tmpfilename]
+			if self.downloaded_count > CLEAN_POSTER_CACHE:
+				eBackgroundFileEraser.getInstance().erase(self.clean_list.pop(0))
+				self.downloaded_count -= 1
+		print "[KartinaTV]: downloadThread stopped"
+			
 class KartinaVideoList(Screen, multiListHandler):
 	
 	MODE_MAIN = 0 
@@ -2008,7 +2014,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		self["poster"].show()		
 		
 		#TODO: check if updateNeeded.
-		self.poster_path = '/tmp/'+ktv.getPosterPath(cid, local = True)
+		self.poster_path = POSTER_PATH + ktv.getPosterPath(cid, local = True)
 		print "need", self.poster_path
 		self.download.nextTask(ktv.getPosterPath(cid), self.poster_path)
 		#urlretrieve(ktv.getPosterPath(cid), local_path)
@@ -2021,11 +2027,13 @@ class KartinaVideoList(Screen, multiListHandler):
 	def showLast(self):
 		bouquet.stype = 'last'
 		bouquet.page = 1
+		bouquet.query = ''
 		self.start() 
 		
 	def showBest(self):
 		bouquet.stype = 'best'
 		bouquet.page = 1
+		bouquet.query = ''
 		self.start()
 	
 	def search(self):
