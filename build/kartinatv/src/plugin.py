@@ -37,7 +37,7 @@ from Components.AVSwitch import AVSwitch
 from urllib import urlretrieve
 from Components.ParentalControl import parentalControl
 from threading import Thread, Lock, Condition
-from enigma import ePythonMessagePump, eBackgroundFileEraser
+from enigma import ePythonMessagePump, eBackgroundFileEraser, eAVSwitch
 from Tools.LoadPixmap import LoadPixmap
 #from Components.Pixmap import Pixmap
 from skin import loadSkin, parseFont, colorNames, SkinError
@@ -112,7 +112,7 @@ class ConfigNumberText(ConfigText):
 			
 config.iptvdream = ConfigSubDict()
 #Import apis
-from os import path as os_path, listdir as os_listdir
+from os import path as os_path, listdir as os_listdir, mkdir as os_mkdir
 from Tools.Import import my_import
 from api.abstract_api import MODE_VIDEOS, MODE_STREAM
 PLUGIN_PREFIX = 'Plugins.Extensions.KartinaTV'
@@ -307,8 +307,11 @@ ARCHIVE_TIME_FIX = 5 #sec. When archive paused, we could miss some video
 AUTO_AUDIOSELECT = True
 UPDATE_ON_TOGGLE = True #In video list, when genre selected
 USE_VIRTUAL_KB = 1 #XXX: not used!
-CLEAN_POSTER_CACHE = 15 #Max posters count to save on hdd. 0 - unlimited 
-POSTER_PATH = '/tmp/'
+CLEAN_POSTER_CACHE = 10 #Max posters count to save on hdd. 0 - unlimited 
+POSTER_PATH = '/tmp/iptvdream/'
+
+if not os_path.exists(POSTER_PATH):
+	os_mkdir(POSTER_PATH)
 	
 def setServ():
 	global SERVICE_KARTINA
@@ -707,7 +710,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 	def leaveStandby(self):
 		KartinaPlayer.leaveStandby(self)
 		#TODO: think more about if check
-		if bouquet and ktv.SID and KartinaPlayer.instance: #Don't run if plugin closed
+		if bouquet and KartinaPlayer.instance: #Don't run if plugin closed
 			self.play() #in standby stream stops, so we need reconnect..
 	
 	def safeGo(self):
@@ -976,6 +979,8 @@ class KartinaVideoPlayer(KartinaPlayer):
 		sref = eServiceReference(4097, 0, uri) #TODO: think about serviceID
 		self.session.nav.playService(sref)
 		
+		#eAVSwitch.getInstance().setAspectRatio(2)
+		
 		self["channelName"].setText(ktv.filmFiles[cid]['name']) #FIXME: videos dict could be cleaned empty o_O
 		vid = bouquet.current.parent.name #Video is parent, episode is current
 		self["description"].setText(ktv.videos[vid].descr)
@@ -993,7 +998,9 @@ class KartinaVideoPlayer(KartinaPlayer):
 	
 	def doEofInternal(self, playing):
 		#TODO: we can't figure out is it serial.
-		self.showList()
+		print "[KartinaTV] EOF. playing", playing
+		#self.session.nav.playService(self.oldService)
+		#self.showList()
 
 				
 #TODO: BouquetManager guiContent. Don't recreate and refill ChannelSelection if possible
@@ -1618,57 +1625,77 @@ class WeatherIcon(Pixmap): #Pixmap class by Dr.Best. A bit "long" code IMHO:) Ha
 			print "already shown", filename
 
 class multiListHandler():
-    def __init__(self, menu_lists):
-	self.count = len(menu_lists)
-	self.curr = menu_lists[0]
-	self.lists = menu_lists
-	self.is_selection = False
+	def __init__(self, menu_lists):
+		self.count = len(menu_lists)
+		self.lists = menu_lists
+		self.is_selection = False
+		self.is_fakepage = False
 	
-	self["multiActions"] = ActionMap(["DirectionActions"], 
-	{
-	    "right": self.doNothing,
-	    "rightRepeated": self.doNothing,
-	    "rightUp": self.pageDown,
-	    "left": self.doNothing,
-	    "leftRepeated": self.doNothing,
-	    "leftUp": self.pageUp,
-	    
-	    "up": self.up,
-	    "upRepeated": self.up,
-	    "upUp": self.doNothing,
-	    "down": self.down,
-	    "downRepeated": self.down,
-	    "downUp": self.doNothing,
-	}, -2)
-    
-    def doNothing(self): #moves away annoing messages in log
+		self["multiActions"] = ActionMap(["DirectionActions"], 
+		{
+			"right": self.doNothing,
+			"rightRepeated": self.doNothing,
+			"rightUp": self.pageDown,
+			"left": self.doNothing,
+			"leftRepeated": self.doNothing,
+			"leftUp": self.pageUp,
+			
+			"up": self.up,
+			"upRepeated": self.up,
+			"upUp": self.doNothing,
+			"down": self.down,
+			"downRepeated": self.down,
+			"downUp": self.doNothing,
+		}, -2)
+		self.selectList(self.lists[0])
+	
+	def doNothing(self): #moves away annoing messages in log
 		return
-    
-    def selectList(self, curr):
+	
+	def selectList(self, curr):
 		self.curr = curr
 		for i in self.lists:
 			self[i].selectionEnabled(0)
 		self[self.curr].selectionEnabled(1)
 		self.is_selection = isinstance(self[self.curr], SelectionList)
-		print "[KartinaTV] select list", self.curr, "selection", self.is_selection
-    
-    def ok(self): #returns if selection action applied
-	    if self.is_selection:
-	        self[self.curr].toggleSelection()
-	        return True
-	    return False
-	    
-    def down(self):
-	    self[self.curr].down()
-    
-    def up(self):
-	    self[self.curr].up()
-    
-    def pageDown(self):
-	    self[self.curr].pageDown()
-    
-    def pageUp(self):
-	    self[self.curr].pageUp()
+		self.is_fakepage = hasattr(self[self.curr], 'fake_page')
+		print "[KartinaTV] select list", self.curr, "selection", self.is_selection, self.is_fakepage
+	
+	def ok(self): #returns if selection action applied
+		if self.is_selection:
+			self[self.curr].toggleSelection()
+			return True
+		return False
+		
+	def down(self):
+		if self.is_fakepage:
+			oldidx = self[self.curr].getSelectionIndex()
+			self[self.curr].down()
+			if oldidx == self[self.curr].getSelectionIndex():
+				self.pageDown()
+		else:
+			self[self.curr].down()
+	
+	def up(self):
+		if self.is_fakepage:
+			oldidx = self[self.curr].getSelectionIndex()
+			self[self.curr].up()
+			if oldidx == self[self.curr].getSelectionIndex():
+				self.pageUp()
+		else:
+			self[self.curr].up()
+	
+	def pageDown(self):
+		if self.is_fakepage:
+			self.nextPage()
+		else:
+			self[self.curr].pageDown()	
+
+	def pageUp(self):
+		if self.is_fakepage:
+			self.prevPage()
+		else:
+			self[self.curr].pageUp()
 
 class DownloadThread(Thread):
 	def __init__(self):
@@ -1679,8 +1706,8 @@ class DownloadThread(Thread):
 		self.__lock = Lock()
 		self._lastposter = ""
 		self.cnd = Condition(self.__lock)
-		self.clean_list = []
-		self.downloaded_count = 0
+		self.clean_list = os_listdir(POSTER_PATH)
+		self.downloaded_count = len(self.clean_list)
 		
 	def nextTask(self, url, filename):
 		self.cnd.acquire()
@@ -1741,17 +1768,19 @@ class KartinaVideoList(Screen, multiListHandler):
 		self["key_green"] = Button(_("Genres"))
 		self["key_yellow"] = Button(_("Search"))
 		self["key_blue"] = Button(_("Best"))
-		self.list = MenuList([], enableWrapAround=True, content = eListboxPythonMultiContent)
+		self.list = MenuList([], enableWrapAround=False, content = eListboxPythonMultiContent)
 		self.list.l.setFont(0, gFont("Regular", 20))
 		self.list.l.setItemHeight(28)
 		self["list"] = self.list
+		
+		self.list.fake_page = True
 		
 		self.glist = SelectionList()
 		self.glist.l.setFont(0, gFont("Regular", 20))
 		self.glist.l.setItemHeight(28)
 		self["glist"] = self.glist
-		self.currList = "list"
 		
+		print "OLOLO", hasattr(self["list"], 'fake_page')
 		multiListHandler.__init__(self, ["list", "glist"])
 		
 		self["name"] = Label()
@@ -1862,6 +1891,8 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.list.moveToIndex(bouquet.current.index)
 		self.fillingList = False
 		
+		self.is_fakepage = True 
+		
 		self.setTitle(Ktv.iName+" / "+_(bouquet.stype)+" "+bouquet.query)
 		pages = (bouquet.count)/cfg.numsonpage.value
 		if bouquet.count % cfg.numsonpage.value != 0:
@@ -1872,6 +1903,8 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.selectionChanged()
 	
 	def fillSingle(self):
+		self.is_fakepage = False
+		
 		cid = bouquet.current.name
 	
 		#try: #TODO: do it safe
@@ -1962,13 +1995,13 @@ class KartinaVideoList(Screen, multiListHandler):
 			else:
 				bouquet.current.moveOneDown()
 			self.lastIndex = idx
-			self.fillList() #TODO: optimize!!!
-		bouquet.setIndex(self.list.getSelectionIndex())
+			self.fillList() #TODO: optimize!!!  maybe cpp part...
+			
+		bouquet.setIndex(idx)
 		self.updateInfo()
 	
 	def updateInfo(self):	
 		c = bouquet.getCurrentSel()
-		print 'selection=', c
 		if c:
 			cid = c.name
 			#some specific here
