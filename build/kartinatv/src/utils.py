@@ -224,7 +224,11 @@ class BouquetManager():
 	def goOut(self):
 		if self.current.parent:
 			#FIXME: optimizations?? store parent_index in current?
-			self.current.parent.index = self.current.parent.content.index(self.current)
+			try:
+				idx = self.current.parent.content.index(self.current)
+			except ValueError:
+				idx = 0
+			self.current.parent.index = idx
 			self.current = self.current.parent
 			print "[KartinaTV] bouquet Out", self.current.name, self.current.index
 		#return self.getList()
