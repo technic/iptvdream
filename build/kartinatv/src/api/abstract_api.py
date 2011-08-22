@@ -18,11 +18,13 @@ class AbstractAPI:
 	iProvider = "free"
 	iName = "example"
 	NEXT_API = None 
+	NUMBER_PASS = False
 	
 	def __init__(self, username, password):
 		self.username = username
 		self.password = password
 		self.SID = False
+		self.packet_expire = None
 	
 	def start(self):
 		pass
