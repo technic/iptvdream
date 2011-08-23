@@ -1171,12 +1171,12 @@ class KartinaChannelSelection(Screen):
 		
 		self["epgName"]=Label("")
 		self["epgTime"]=Label("")
-		self["epgDiscription"] = Label("")
+		self["epgDescription"] = Label("")
 		self["channelName"]=Label()
 		self["epgProgress"]=Slider(0, 100)
 		self["epgNextTime"]=Label()
 		self["epgNextName"]=Label()
-		self["epgNextDiscription"]=Label()
+		self["epgNextDescription"]=Label()
 		
 		self["packetExpire"] = Label()
 		if ktv.packet_expire:
@@ -1349,18 +1349,18 @@ class KartinaChannelSelection(Screen):
 				self["epgTime"].show()
 				self["epgProgress"].setValue(100*curr.getTimePass(0) / curr.duration) #Not ktv.aTime but zero
 				self["epgProgress"].show()
-				self["epgDiscription"].setText(curr.progDescr)
-				self["epgDiscription"].show()
+				self["epgDescription"].setText(curr.progDescr)
+				self["epgDescription"].show()
 			else:
 				self.hideEpgLabels()
 			if ktv.channels[cid].hasEpgNext():
 				curr = ktv.channels[cid].nepg
 				self["epgNextTime"].setText("%s - %s" % (curr.tstart.strftime("%H:%M"), curr.tend.strftime("%H:%M")))
 				self["epgNextName"].setText(curr.progName)
-				self["epgDiscription"].setText(curr.progDescr)
+				self["epgDescription"].setText(curr.progDescr)
 				self["epgNextName"].show()
 				self["epgNextTime"].show()
-				self["epgDiscription"].show()
+				self["epgDescription"].show()
 			else:
 				self.hideEpgNextLabels()
 			
@@ -1374,7 +1374,7 @@ class KartinaChannelSelection(Screen):
 		self["epgTime"].hide()
 		#self["channelName"].hide()
 		self["epgProgress"].hide()
-		self["epgDiscription"].hide()
+		self["epgDescription"].hide()
 	
 	def hideEpgNextLabels(self):
 		self["epgNextName"].hide()
@@ -1467,12 +1467,12 @@ class KartinaEpgList(Screen):
 		self.list.l.setItemHeight(28)
 		self["list"] = self.list
 		self["epgName"] = Label()
-		self["epgDiscription"] = Label()
+		self["epgDescription"] = Label()
 		self["epgTime"] = Label()
 		self["epgDuration"] = Label()
 		
 		self["sepgName"] = Label()
-		self["sepgDiscription"] = Label()
+		self["sepgDescription"] = Label()
 		self["sepgTime"] = Label()
 		self["sepgDuration"] = Label()
 		
@@ -1545,8 +1545,8 @@ class KartinaEpgList(Screen):
 			entry = self.list.list[idx][0]
 			self[s % "epgName"].setText(entry[1])
 			self[s % "epgTime"].setText(entry[0].strftime("%d.%m %H:%M"))
-			self[s % "epgDiscription"].setText(entry[2])
-			self[s % "epgDiscription"].show()
+			self[s % "epgDescription"].setText(entry[2])
+			self[s % "epgDescription"].show()
 			self[s % "epgName"].show()
 			self[s % "epgTime"].show()
 			if len(self.list.list) > idx+1:
@@ -1561,7 +1561,7 @@ class KartinaEpgList(Screen):
 		self[s % "epgName"].hide()
 		self[s % "epgTime"].hide()
 		self[s % "epgDuration"].hide()
-		self[s % "epgDiscription"].hide()
+		self[s % "epgDescription"].hide()
 		
 	def showSingle(self):
 		if not self.single:
