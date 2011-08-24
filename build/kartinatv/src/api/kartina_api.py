@@ -12,7 +12,7 @@ from abstract_api import MODE_STREAM, AbstractAPI
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 import datetime
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel
+from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities
 
 #TODO: GLOBAL: add private! Get values by properties.
 
@@ -102,6 +102,8 @@ class KartinaAPI(AbstractAPI):
 			reply = self.opener.open(url).read()
 			if ((reply.find("code_login") != -1)and(reply.find("code_pass") != -1)):
 				raise Exception("Failed to get %s:\n%s" % (name, reply))
+		
+		reply = unescapeEntities(reply)
 		try:
 			root = fromstring(reply)
 		except:
@@ -236,7 +238,7 @@ class Ktv(KartinaAPI):
 				  "gmt": (syncTime() + secTd(self.aTime)).strftime("%s"),
 				  "just_info" : 1 }
 		root = self.getData("/?"+urllib.urlencode(params), "URL of stream %s" % id)
-		prog = root.attrib.get("programm").encode("utf-8").replace("&quot;", "\"")
+		prog = root.attrib.get("programm").encode("utf-8")
 		tstart = datetime.datetime.fromtimestamp( int(root.attrib.get("start").encode("utf-8")) ) #unix
 		tend = datetime.datetime.fromtimestamp( int(root.attrib.get("next").encode("utf-8")) )
 		self.channels[id].aepg = EpgEntry(prog, tstart,  tend)
@@ -256,8 +258,8 @@ class Ktv(KartinaAPI):
 		for program in root:
 			t = int(program.attrib.get("t_start").encode("utf-8"))
 			time = datetime.datetime.fromtimestamp(t)
-			progname = program.attrib.get("progname").encode("utf-8").replace("&quot;", "\"")
-			pdescr =  program.attrib.get("pdescr").encode("utf-8").replace("&quot;", "\"")
+			progname = program.attrib.get("progname").encode("utf-8")
+			pdescr =  program.attrib.get("pdescr").encode("utf-8")
 			epglist += [(time, progname, pdescr)]
 		return epglist
 	
