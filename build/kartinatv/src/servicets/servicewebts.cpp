@@ -39,7 +39,6 @@
 
 int VPID = 0;
 int PID_SET = 0;
-int APID = 0;
 int H264=0;
 
 
@@ -320,7 +319,6 @@ RESULT eServiceTS::stop()
 	}
 	m_decodedemux->flush();
 	m_audioInfo = 0;
-	APID = 0;
 	VPID = 0;
 	PID_SET = 0;
 	H264 = 0;
@@ -346,7 +344,11 @@ void eServiceTS::recv_event(int evt)
 		break;
 	case eStreamThread::evtStreamInfo:
 		m_streamthread->getAudioInfo(m_audioInfo);
-		if (PID_SET == 0 && APID != 0)
+		if (this->getCurrentTrack() == -1) {
+			eDebug("[ServiceTS] audiostreams changed");
+			PID_SET = 0;
+		}
+		if (PID_SET == 0)
 		{
 			PID_SET = 1;
 			m_decodedemux->flush();
@@ -728,23 +730,24 @@ bool eStreamThread::scanAudioInfo(unsigned char buf[], int len)
 		case 2: // MPEG Video
 			//addVideo(pid, "MPEG2");
 			H264 = 0;
-			if (VPID == 0)
-				VPID= pid;
+			if (VPID != pid) {
+				VPID = pid;
+				PID_SET = 0;
+			}
 			break;
-
 		case 0x1B: // H.264 Video
 			//addVideo(pid, "H.264");
 			H264 = 1;
-			if (VPID == 0)
+			if (VPID != pid) {
 				VPID= pid;
-			break;
+				PID_SET = 0;
+			}
+			break; 
 		case 3:
 		case 4: // MPEG Audio
-			if (APID == 0)
-				APID =pid;
 			lang = getDescriptor(pmt+b+5, pmt[b+4], LANGUAGE_DESCRIPTOR);
 			ainfo->addAudio(pid, lang, "MPEG", eDVBAudio::aMPEG);
-			//printf("addAudio %d MPEG", pid);
+			//eDebug("addAudio %d MPEG\n", pid);
 			break;
 
 		case 0x80:
@@ -757,8 +760,6 @@ bool eStreamThread::scanAudioInfo(unsigned char buf[], int len)
 			//if (lang.length() != 0)
 			//{
 				ainfo->addAudio(pid, lang, "AC3", eDVBAudio::aAC3);
-				if (APID == 0)
-					APID =pid;
 			//}
 			break;
 		case 0x82:
@@ -771,17 +772,12 @@ bool eStreamThread::scanAudioInfo(unsigned char buf[], int len)
 			//if (lang.length() != 0)
 			//{
 				ainfo->addAudio(pid, lang, "AC3", eDVBAudio::aAC3);
-				if (APID == 0)
-					APID =pid;
 			//}
 			break;
 		case 0x0F:  // MPEG 2 AAC
-			if (APID == 0)
-				APID =pid;
 			lang = getDescriptor(pmt+b+5, pmt[b+4], LANGUAGE_DESCRIPTOR);	
 			ainfo->addAudio(pid, lang, "AAC", eDVBAudio::aAAC);
-			//printf("addAudio %d AAC", pid);
-		}
+			}
 		b += 4 + pmt[b+4];
 	}
 	if (ainfo->audioStreams.size() > 0) {
