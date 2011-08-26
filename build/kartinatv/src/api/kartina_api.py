@@ -103,7 +103,6 @@ class KartinaAPI(AbstractAPI):
 			if ((reply.find("code_login") != -1)and(reply.find("code_pass") != -1)):
 				raise Exception("Failed to get %s:\n%s" % (name, reply))
 		
-		reply = unescapeEntities(reply)
 		try:
 			root = fromstring(reply)
 		except:

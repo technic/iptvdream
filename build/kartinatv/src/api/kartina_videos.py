@@ -14,7 +14,7 @@ from kartina_api import KartinaAPI
 import urllib #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 import datetime
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, syncTime, Bouquet, Video
+from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, syncTime, Bouquet, Video, unescapeEntities
 
 VIDEO_CACHING = True #TODO: cache...??
 
@@ -52,7 +52,7 @@ class Ktv(KartinaAPI):
 			name = v.findtext('name').encode('utf-8')
 			video = Video(name)
 			video.name_orig = v.findtext('name_orig').encode('utf-8')
-			video.descr = v.findtext('description').encode('utf-8')
+			video.descr = unescapeEntities(v.findtext('description')).encode('utf-8')
 			video.image = v.findtext('poster')
 			video.year = v.findtext('year')
 			video.rate_imdb = floatConvert(v.findtext('rate_imdb'))
@@ -71,7 +71,7 @@ class Ktv(KartinaAPI):
 		video = Video(name)
 		
 		video.name_orig = v.findtext('name_orig').encode('utf-8')
-		video.descr = v.findtext('description').encode('utf-8')
+		video.descr = unescapeEntities(v.findtext('description')).encode('utf-8')
 		video.image = v.findtext('poster')
 		video.year = v.findtext('year')
 		video.rate_imdb = floatConvert(v.findtext('rate_imdb'))
