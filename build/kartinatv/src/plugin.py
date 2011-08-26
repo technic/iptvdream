@@ -164,6 +164,7 @@ for afile in os_listdir(API_PREFIX + API_DIR):
 			config.iptvdream[aname].sortkey["By group"] = ConfigInteger(1, (1,2))
 			config.iptvdream[aname].sortkey["in group"] = ConfigInteger(1,(1,2))
 		elif _api.MODE == MODE_VIDEOS:
+			config.iptvdream[aname].lastpos = ConfigInteger(0, (0,30000))
 			config.iptvdream[aname].numsonpage = ConfigInteger(18,(1,100))
 		print "[KartinaTV] import api %s:%s" % (aprov, aname)
 
@@ -483,7 +484,6 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		global ktv
 		ktv = Ktv(cfg_prov.login.value, cfg_prov.password.value)
 		
-		#XXX:
 		global bouquet
 		bouquet = BouquetManager()
 		try: #TODO: handle different exceptions
@@ -601,6 +601,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 				cfg.numsonpage.save()
 			else:
 				cfg.sortkey.save()
+			self.doExit()
 		print "[KartinaTV] exiting"
 		self.close()
 	
@@ -775,8 +776,8 @@ class KartinaStreamPlayer(KartinaPlayer):
 	def fwdJumpTo(self, minutes):
 		print "[KartinaTV] Seek", minutes, "minutes forward"
 		ktv.aTime += minutes*60
-		#TODO: if aTime > 0:
-		print ktv.aTime
+		if aTime > 0:
+			self.setArchivemode(0)
 		self.play()
 
 	def rwdJumpTo(self, minutes):
@@ -809,6 +810,11 @@ class KartinaStreamPlayer(KartinaPlayer):
 		srv = SERVICE_KARTINA
 		if not uri.startswith('http://'):
 			srv = 4097
+		if uri.startswith('mms://'):
+			print "[KartinaTV] Warning: mms:// protocol turned off"
+			self.session.open(MessageBox, _("mms:// protocol turned off"), type = MessageBox.TYPE_ERROR, timeout = 5)
+			return -1
+			
 		sref = eServiceReference(srv, 0, uri) 
 		sref.setData(7, int(str(cid), 16) ) #picon hack.
 		if Ktv.iName == "RodnoeTV":
@@ -994,7 +1000,10 @@ class KartinaVideoPlayer(KartinaPlayer):
 		self.play()
 		
 	def doGo(self):
-		self.showList()
+		if cfg.lastpos.value:
+			pass
+		else:
+			self.showList()
 	
 	def doEofInternal(self, playing):
 		#TODO: we can't figure out is it serial.
@@ -1813,6 +1822,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		}, -1)
 		
 		self.mode = self.MODE_MAIN
+		self.fillingList = True
 		
 		self.lastroot = bouquet.current
 		bouquet.saveDbselectVal()
@@ -1823,7 +1833,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.onShown.append(self.start)
 		
 		self.download = DownloadThread()
-		self.download.messagePump.recv_msg.get().append(self.startPosterDecode)#TODO..
+		self.download.messagePump.recv_msg.get().append(self.startPosterDecode)
 		self.download.start()
 		self.onClose.append(self.disconnectPump)
 		self.onClose.append(self.download.stopTasks)		
@@ -1845,7 +1855,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		except Exception as e:
 			print "[KartinaTV] load videos failed!!!"
 			print e
-			self.session.openWithCallback(self.exit, MessageBox, _("Get videos failed!"))
+			self.session.open(MessageBox, _("Get videos failed!"), MessageBox.TYPE_ERROR)
 			self.close(False)
 			return
 		print "[KartinaTV] total videos", bouquet.count
@@ -1907,12 +1917,12 @@ class KartinaVideoList(Screen, multiListHandler):
 		
 		cid = bouquet.current.name
 	
-		#try: #TODO: do it safe
-		ktv.getVideoInfo(cid)
-		#except:
-		#	print "[KartinaTV] load videos failed!!!"
-		#	self.session.openWithCallback(self.exit, MessageBox, _("Get videos failed!"))
-		#	return
+		try: #TODO: do it safe
+			ktv.getVideoInfo(cid)
+		except:
+			print "[KartinaTV] load videos failed!!!"
+			self.session.open(MessageBox, _("Get videos failed!"), MessageBox.TYPE_ERROR)
+			return
 		
 		#fill list if necessary
 		if not len(bouquet.current.content):
@@ -1930,12 +1940,14 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.selectionChanged()
 	
 	def nextPage(self):
+		if bouquet.getCurrentSel().type == Bouquet.TYPE_SERVICE: return
 		bouquet.page += 1
 		if  (bouquet.page-1)*cfg.numsonpage.value > bouquet.count:
 			bouquet.page = 1
 		self.start()
 	
 	def prevPage(self):
+		if bouquet.getCurrentSel().type == Bouquet.TYPE_SERVICE: return
 		bouquet.page -= 1
 		if bouquet.page == 0:
 			bouquet.page = bouquet.count / cfg.numsonpage.value
@@ -2046,14 +2058,12 @@ class KartinaVideoList(Screen, multiListHandler):
 		self["moreinfo"].show()
 		self["poster"].show()		
 		
-		#TODO: check if updateNeeded.
 		self.poster_path = POSTER_PATH + ktv.getPosterPath(cid, local = True)
 		print "need", self.poster_path
-		self.download.nextTask(ktv.getPosterPath(cid), self.poster_path)
-		#urlretrieve(ktv.getPosterPath(cid), local_path)
+		if self["poster"].IconFileName != self.poster_path:
+			self.download.nextTask(ktv.getPosterPath(cid), self.poster_path)
 	
 	def startPosterDecode(self, msg):
-		print "recv_event"
 		if self.download.lastposter == self.poster_path:
 			self["poster"].updateIcon(self.poster_path)
 	
@@ -2115,7 +2125,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		c = bouquet.getCurrentSel()
 		if not c:
 			return
-		print 'type', c.type, 'file', c.name
+		print "[KartinaTV] ok pressed. type", c.type, 'file', c.name
 		if c.type == Bouquet.TYPE_MENU:
 			bouquet.goIn()
 			self.fillSingle()
