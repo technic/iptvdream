@@ -66,7 +66,7 @@ class Ktv(AbstractAPI):
 		if fd.readline().rstrip() != "#EXTM3U":
 			raise Exception("Wrong header. #EXTM3U expected")
 		
-		default_group = FILENAME
+		default_group = FILENAME.split('/')[-1]
 		needinfo = True
 		cid = 0
 		gid = 0
