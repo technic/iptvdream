@@ -882,7 +882,10 @@ class KartinaStreamPlayer(KartinaPlayer):
 		
 		if not setEpgNext():
 			try:
-				ktv.epgNext(cid)
+				if ktv.aTime:
+					pass
+				else:
+					ktv.epgNext(cid)
 			except:
 				print "[KartinaTV] load epg next failed!"
 			if not setEpgNext():

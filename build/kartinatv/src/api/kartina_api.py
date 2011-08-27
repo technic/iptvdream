@@ -207,7 +207,7 @@ class Ktv(KartinaAPI):
 		params["protect_code"] = self.password
 		root = self.getData("/?"+urllib.urlencode(params), "URL of stream %s" % id)
 		if self.aTime:
-			prog = root.attrib.get("programm")
+			prog = unescapeEntities(root.attrib.get("programm"))
 			if prog:
 				prog = prog.encode("utf-8")
 				tstart = datetime.datetime.fromtimestamp( int(root.attrib.get("start").encode("utf-8")) ) #unix
@@ -236,7 +236,7 @@ class Ktv(KartinaAPI):
 				  "cid" : id,
 				  "gmt": (syncTime() + secTd(self.aTime)).strftime("%s"),
 				  "just_info" : 1 }
-		root = self.getData("/?"+urllib.urlencode(params), "URL of stream %s" % id)
+		root = self.getData("/?"+urllib.urlencode(params), "get GmtEpg of stream %s" % id)
 		prog = unescapeEntities(root.attrib.get("programm")).encode("utf-8")
 		tstart = datetime.datetime.fromtimestamp( int(root.attrib.get("start").encode("utf-8")) ) #unix
 		tend = datetime.datetime.fromtimestamp( int(root.attrib.get("next").encode("utf-8")) )

@@ -1,15 +1,15 @@
 <skin>
-    <screen backgroundColor="#ff000000" flags="wfNoBorder" name="KartinaStreamPlayer" position="center,540" size="1180,170" title="IPTV">
-      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/infobar.png" position="0,0" size="1180,170" zPosition="-5" />
-      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/logo_iptv.png" position="1086,79" size="52,34" zPosition="3" />
+    <screen backgroundColor="#ff000000" flags="wfNoBorder" name="KartinaStreamPlayer" position="center,540" size="1182,172" title="IPTV">
+      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/infobar.png" position="0,0" size="1182,172" zPosition="-5" />
+      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/logo_iptv.png" position="1071,76" size="52,34" zPosition="3" />
       <widget backgroundColor="#00343c4f" font="Regular; 24" foregroundColor="#00f23d21" halign="center" position="54,127" render="FixedLabel" shadowColor="#00f23d21" size="70,26" source="KartinaInArchive" text="A" transparent="1" zPosition="5">
         <convert type="ConditionalShowHide">Blink</convert>
       </widget>
-      <widget backgroundColor="#2518252e" font="Regular;18" halign="right" position="1059,42" render="Label" shadowColor="#00389416" shadowOffset="-1,-1" size="45,22" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
+      <widget backgroundColor="#2518252e" font="Regular;18" halign="right" position="1047,42" render="Label" shadowColor="#00389416" shadowOffset="-1,-1" size="45,22" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
         <convert type="ServiceInfo">VideoWidth</convert>
       </widget>
-      <eLabel backgroundColor="#00000000" font="Regular;18" halign="center" position="1104,42" shadowColor="#00389416" shadowOffset="-1,-1" size="15,22" text="x" transparent="1" />
-      <widget backgroundColor="#2518252e" font="Regular;18" halign="left" position="1121,42" render="Label" shadowColor="#00389416" shadowOffset="-1,-1" size="42,22" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
+      <eLabel backgroundColor="#00000000" font="Regular;18" halign="center" position="1093,42" shadowColor="#00389416" shadowOffset="-1,-1" size="15,22" text="x" transparent="1" />
+      <widget backgroundColor="#2518252e" font="Regular;18" halign="left" position="1109,42" render="Label" shadowColor="#00389416" shadowOffset="-1,-1" size="42,22" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
         <convert type="ServiceInfo">VideoHeight</convert>
       </widget>
       <widget backgroundColor="#00333333" font="Regular;26" foregroundColor="#00ffffff" halign="center" position="53,18" render="Label" shadowColor="#00e5b243" shadowOffset="-1,-1" size="83,26" source="global.CurrentTime" transparent="1">
@@ -30,8 +30,8 @@
       <widget backgroundColor="#00343c4f" font="Regular;25" foregroundColor="#00bbbbbb" halign="left" name="nextName" noWrap="1" position="243,94" size="663,30" transparent="1" zPosition="21" />
       <widget backgroundColor="#00343c4f" font="Regular;22" foregroundColor="#00bbbbbb" halign="right" name="nextDuration" position="919,95" size="106,26" transparent="1" />
     </screen>
-    <screen backgroundColor="#ff000000" flags="wfNoBorder" name="KartinaVideoPlayer" position="center,540" size="1180,170" title="IPTV">
-      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/infobar.png" position="0,0" size="1180,170" zPosition="-5" />
+    <screen backgroundColor="#ff000000" flags="wfNoBorder" name="KartinaVideoPlayer" position="center,540" size="1182,172" title="IPTV">
+      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/infobar.png" position="0,0" size="1182,172" zPosition="-5" />
       <ePixmap alphatest="blend" pixmap="KartinaTV_skin/logo_iptv.png" position="61,68" size="52,34" zPosition="3" />
       <widget backgroundColor="#2518252e" font="Regular;18" halign="right" position="34,120" render="Label" shadowColor="#00389416" shadowOffset="-1,-1" size="45,22" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
         <convert type="ServiceInfo">VideoWidth</convert>
