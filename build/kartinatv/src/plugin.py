@@ -776,7 +776,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 	def fwdJumpTo(self, minutes):
 		print "[KartinaTV] Seek", minutes, "minutes forward"
 		ktv.aTime += minutes*60
-		if aTime > 0:
+		if ktv.aTime > 0:
 			self.setArchivemode(0)
 		self.play()
 
@@ -1670,6 +1670,9 @@ class multiListHandler():
 		self.is_fakepage = hasattr(self[self.curr], 'fake_page')
 		print "[KartinaTV] select list", self.curr, "selection", self.is_selection, self.is_fakepage
 	
+	def setFakepage(self, is_fake):
+		self.is_fakepage = hasattr(self[self.curr], 'fake_page') and is_fake
+	
 	def ok(self): #returns if selection action applied
 		if self.is_selection:
 			self[self.curr].toggleSelection()
@@ -1789,7 +1792,6 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.glist.l.setItemHeight(28)
 		self["glist"] = self.glist
 		
-		print "OLOLO", hasattr(self["list"], 'fake_page')
 		multiListHandler.__init__(self, ["list", "glist"])
 		
 		self["name"] = Label()
@@ -1901,7 +1903,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.list.moveToIndex(bouquet.current.index)
 		self.fillingList = False
 		
-		self.is_fakepage = True 
+		self.setFakepage(True)
 		
 		self.setTitle(Ktv.iName+" / "+_(bouquet.stype)+" "+bouquet.query)
 		pages = (bouquet.count)/cfg.numsonpage.value
@@ -1913,7 +1915,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.selectionChanged()
 	
 	def fillSingle(self):
-		self.is_fakepage = False
+		self.setFakepage(False)
 		
 		cid = bouquet.current.name
 	

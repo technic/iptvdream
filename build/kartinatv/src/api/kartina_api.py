@@ -237,7 +237,7 @@ class Ktv(KartinaAPI):
 				  "gmt": (syncTime() + secTd(self.aTime)).strftime("%s"),
 				  "just_info" : 1 }
 		root = self.getData("/?"+urllib.urlencode(params), "URL of stream %s" % id)
-		prog = root.attrib.get("programm").encode("utf-8")
+		prog = unescapeEntities(root.attrib.get("programm")).encode("utf-8")
 		tstart = datetime.datetime.fromtimestamp( int(root.attrib.get("start").encode("utf-8")) ) #unix
 		tend = datetime.datetime.fromtimestamp( int(root.attrib.get("next").encode("utf-8")) )
 		self.channels[id].aepg = EpgEntry(prog, tstart,  tend)
@@ -257,8 +257,8 @@ class Ktv(KartinaAPI):
 		for program in root:
 			t = int(program.attrib.get("t_start").encode("utf-8"))
 			time = datetime.datetime.fromtimestamp(t)
-			progname = program.attrib.get("progname").encode("utf-8")
-			pdescr =  program.attrib.get("pdescr").encode("utf-8")
+			progname = unescapeEntities(program.attrib.get("progname")).encode("utf-8")
+			pdescr =  unescapeEntities(program.attrib.get("pdescr")).encode("utf-8")
 			epglist += [(time, progname, pdescr)]
 		return epglist
 	
