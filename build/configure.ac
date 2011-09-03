@@ -63,6 +63,7 @@ kartinatv/src/api/Makefile
 kartinatv/skin/Makefile
 kartinatv/skin/menu/Makefile
 kartinatv/skin/buttons/Makefile
+kartinatv/skin/sd/Makefile
 kartinatv/meta/Makefile
 ])
 AC_OUTPUT

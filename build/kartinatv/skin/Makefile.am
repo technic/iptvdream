@@ -1,4 +1,4 @@
-SUBDIRS = buttons menu
+SUBDIRS = buttons menu sd
 
 installdir = $(datadir)/enigma2/KartinaTV_skin
 
