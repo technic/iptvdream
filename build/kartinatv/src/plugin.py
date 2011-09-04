@@ -74,8 +74,10 @@ SKIN_PATH = '/usr/share/enigma2/KartinaTV_skin'
 
 if skinHD:
 	loadSkin(SKIN_PATH + '/kartina_skin.xml')
+	NUMS_ON_PAGE = 18
 else:
 	loadSkin(SKIN_PATH + '/kartina_skinsd.xml')
+	NUMS_ON_PAGE = 12
 
 
 #text that contain only 0-9 characters..	
@@ -165,7 +167,6 @@ for afile in os_listdir(API_PREFIX + API_DIR):
 			config.iptvdream[aname].sortkey["in group"] = ConfigInteger(1,(1,2))
 		elif _api.MODE == MODE_VIDEOS:
 			config.iptvdream[aname].lastpos = ConfigInteger(0, (0,30000))
-			config.iptvdream[aname].numsonpage = ConfigInteger(18,(1,100))
 		print "[KartinaTV] import api %s:%s" % (aprov, aname)
 
 #buftime is general
@@ -310,6 +311,12 @@ UPDATE_ON_TOGGLE = True #In video list, when genre selected
 USE_VIRTUAL_KB = 1 #XXX: not used!
 CLEAN_POSTER_CACHE = 10 #Max posters count to save on hdd. 0 - unlimited 
 POSTER_PATH = '/tmp/iptvdream/'
+#Manual change aspect ratio in stream player.
+#Replace "None" with "0", "1", "2" or else...
+#example:
+#MANUAL_ASPECT_RATIO = 2
+
+MANUAL_ASPECT_RATIO = None
 
 if not os_path.exists(POSTER_PATH):
 	os_mkdir(POSTER_PATH)
@@ -433,6 +440,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		}, -1)
 		
 		self.oldService = self.session.nav.getCurrentlyPlayingServiceReference()
+		self.oldAspectRatio = ({"4_3_letterbox": 0, "4_3_panscan": 1, "16_9": 2, "16_9_always": 3, "16_10_letterbox": 4, "16_10_panscan": 5, "16_9_letterbox" : 6}[config.av.aspectratio.value])
 		
 		#Standby notifier!!
 		config.misc.standbyCounter.addNotifier(self.standbyCountChanged, initial_call = False)
@@ -587,6 +595,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		self.start()
 
 	def exit(self):
+		eAVSwitch.getInstance().setAspectRatio(self.oldAspectRatio)
 		self.session.nav.playService(self.oldService)
 		#XXX:
 		if bouquet:
@@ -598,7 +607,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			cfg.favourites.value = str(favouritesList)
 			cfg.favourites.save()
 			if Ktv.MODE == MODE_VIDEOS: #FIXME: this is hack.
-				cfg.numsonpage.save()
+				pass
 			else:
 				cfg.sortkey.save()
 			self.doExit()
@@ -988,7 +997,8 @@ class KartinaVideoPlayer(KartinaPlayer):
 		sref = eServiceReference(4097, 0, uri) #TODO: think about serviceID
 		self.session.nav.playService(sref)
 		
-		#eAVSwitch.getInstance().setAspectRatio(2)
+		if MANUAL_ASPECT_RATIO is not None:
+			eAVSwitch.getInstance().setAspectRatio(MANUAL_ASPECT_RATIO)
 		
 		self["channelName"].setText(ktv.filmFiles[cid]['name']) #FIXME: videos dict could be cleaned empty o_O
 		vid = bouquet.current.parent.name #Video is parent, episode is current
@@ -1642,7 +1652,8 @@ class multiListHandler():
 		self.lists = menu_lists
 		self.is_selection = False
 		self.is_fakepage = False
-	
+		self.goto_end = False
+		
 		self["multiActions"] = ActionMap(["DirectionActions"], 
 		{
 			"right": self.doNothing,
@@ -1766,7 +1777,7 @@ class DownloadThread(Thread):
 			
 			self.downloaded_count += 1
 			self.clean_list += [tmpfilename]
-			if self.downloaded_count > CLEAN_POSTER_CACHE:
+			if self.downloaded_count > CLEAN_POSTER_CACHE and CLEAN_POSTER_CACHE != 0:
 				eBackgroundFileEraser.getInstance().erase(self.clean_list.pop(0))
 				self.downloaded_count -= 1
 		print "[KartinaTV]: downloadThread stopped"
@@ -1801,7 +1812,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		self["description"] = Label()
 		self["year"] = Label()
 		
-		self["rate1"] = Slider(0, 100) 
+		self["rate1"] = Slider(0, 100)
 		self["rate2"] = Slider(0, 100)
 		self["rate1_back"] = Pixmap()
 		self["rate2_back"] = Pixmap()
@@ -1856,7 +1867,7 @@ class KartinaVideoList(Screen, multiListHandler):
 				return
 		
 		try:
-			bouquet.count = ktv.getVideos(bouquet.stype, bouquet.page, bouquet.genres, cfg.numsonpage.value, bouquet.query)
+			bouquet.count = ktv.getVideos(bouquet.stype, bouquet.page, bouquet.genres, NUMS_ON_PAGE, bouquet.query)
 		except Exception as e:
 			print "[KartinaTV] load videos failed!!!"
 			print e
@@ -1900,17 +1911,19 @@ class KartinaVideoList(Screen, multiListHandler):
 		print "[KartinaTV] fill video list"
 		self.fillingList = True
 		
-		self.number_number = (bouquet.page-1)*cfg.numsonpage.value #number_number.. What for??
+		self.number_number = (bouquet.page-1)*NUMS_ON_PAGE #number_number.. What for??
 		
 		self.list.setList(map(self.kartinaVideoEntry, bouquet.getList() ))	
+		if self.goto_end:
+			bouquet.setIndex(NUMS_ON_PAGE-1)
 		self.list.moveToIndex(bouquet.current.index)
 		self.fillingList = False
 		
-		self.setFakepage(True)
+		self.setFakepage(self.mode == MODE_MAIN)
 		
 		self.setTitle(Ktv.iName+" / "+_(bouquet.stype)+" "+bouquet.query)
-		pages = (bouquet.count)/cfg.numsonpage.value
-		if bouquet.count % cfg.numsonpage.value != 0:
+		pages = (bouquet.count)/NUMS_ON_PAGE
+		if bouquet.count % NUMS_ON_PAGE != 0:
 			pages += 1
 	
 		self["pages"].setText("%s %d / %d" % (_("page"), bouquet.page, pages))
@@ -1947,17 +1960,19 @@ class KartinaVideoList(Screen, multiListHandler):
 	def nextPage(self):
 		if bouquet.getCurrentSel().type == Bouquet.TYPE_SERVICE: return
 		bouquet.page += 1
-		if  (bouquet.page-1)*cfg.numsonpage.value > bouquet.count:
+		if  (bouquet.page-1)*NUMS_ON_PAGE > bouquet.count:
 			bouquet.page = 1
+		self.goto_end = False
 		self.start()
 	
 	def prevPage(self):
 		if bouquet.getCurrentSel().type == Bouquet.TYPE_SERVICE: return
 		bouquet.page -= 1
 		if bouquet.page == 0:
-			bouquet.page = bouquet.count / cfg.numsonpage.value
-			if bouquet.count % cfg.numsonpage.value != 0:
+			bouquet.page = bouquet.count / NUMS_ON_PAGE
+			if bouquet.count % NUMS_ON_PAGE != 0:
 				bouquet.page += 1
+		self.goto_end = True
 		self.start()
 	
 	def selectGenres(self):
