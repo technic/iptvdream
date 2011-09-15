@@ -142,6 +142,7 @@ private:
 	int m_vpid, m_apid;
 	int m_destfd;
 	int m_buffer_time;
+	int m_vfd, m_afd, m_vfd_demux, m_afd_demux;
 	ePtr<iDVBDemux> m_decodedemux;
 	ePtr<iTSMPEGDecoder> m_decoder;
 	ePtr<eStreamThread> m_streamthread;
@@ -153,6 +154,7 @@ private:
 	Signal2<void,iPlayableService*,int> m_event;
 	eFixedMessagePump<int> m_pump;
 	void recv_event(int evt);
+	int my_setState();
 	void setAudioPid(int pid, int type);
 	
 	ePtr<eConnection> m_video_event_connection;
