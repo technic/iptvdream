@@ -1,4 +1,4 @@
-//rev119
+
 /*******************************************************************************
  VLC Player Plugin by A. Lätsch 2007
 
@@ -251,8 +251,8 @@ int eServiceTS::openHttpConnection(std::string url)
 	int statuscode = 0;
 	char statusmsg[100];
 	rc = sscanf(linebuf, "%99s %d %99s", proto, &statuscode, statusmsg);
-	if (rc < 2 || !((statuscode == 200) || (statuscode == 302)) ) {
-		eDebug("wrong response: \"200 or 302\" expected.\n %d --- %d", rc, statuscode);
+	if (rc < 2 || !((statuscode == 200) || (statuscode == 302) || (statuscode == 206)) ) { //FIXME: 2** regexp
+		eDebug("wrong response: \"200 or 206 or 302\" expected.\n %d --- %d", rc, statuscode);
 		free(linebuf);
 		close(fd);
 		return -1;

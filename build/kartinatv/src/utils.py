@@ -108,7 +108,7 @@ class Bouquet():
 		self.name = name
 		self.key1 = key1
 		self.key2 = key2
-		self.sortedkey = 0
+		self.sortedkey = -1 #XXX: Think more!!!
 		self.index = 0
 	
 	def append(self, entry):
@@ -168,7 +168,7 @@ class Bouquet():
 		return self.__content
 	
 	content = property(getContent)
-
+	
 class BouquetManager():
 	
 	history_len = 10
@@ -179,6 +179,19 @@ class BouquetManager():
 		self.history = []
 		self.historyId = -1
 		self.historyEnd = -1
+		
+		self.page = 1
+		self.genres = []
+		self.count = 0
+		self.stype = 'last'
+		self.query = ''
+		self.saveDbselectVal()
+	
+	def saveDbselectVal(self):
+		self._dbval_stored = (self.page, self.genres, self.count, self.stype, self.query)
+	
+	def restoreDbselectVal(self):
+		(self.page, self.genres, self.count, self.stype, self.query) = self._dbval_stored
 		
 	def appendRoot(self, entry):
 		self.root.append(entry)
@@ -210,6 +223,12 @@ class BouquetManager():
 	
 	def goOut(self):
 		if self.current.parent:
+			#FIXME: optimizations?? store parent_index in current?
+			try:
+				idx = self.current.parent.content.index(self.current)
+			except ValueError:
+				idx = 0
+			self.current.parent.index = idx
 			self.current = self.current.parent
 			print "[KartinaTV] bouquet Out", self.current.name, self.current.index
 		#return self.getList()
@@ -219,7 +238,7 @@ class BouquetManager():
 	
 	def getCurrentSel(self):
 		if len(self.current.content):
-			return (self.current.content[self.current.index].name, self.current.content[self.current.index].type)
+			return self.current.content[self.current.index]
 	
 	def getCurrent(self):
 		return self.current.name
@@ -286,4 +305,34 @@ class BouquetManager():
 		else:
 			self.history += [h]
 		self.historyEnd = self.historyId
-		#print "[KartinaTV]", self.history, self.historyId
+		#print "[KartinaTV]", self.history, self.historyId		
+		
+class Video():
+	def __init__(self, name):
+		self.name = name
+		self.year = None
+		#TODO: set ALL fields!
+		return
+
+import re, htmlentitydefs
+
+def unescapeEntities(text):
+    def fixup(m):
+        text = m.group(0)
+        if text[:2] == "&#":
+            # character reference
+            try:
+                if text[:3] == "&#x":
+                    return unichr(int(text[3:-1], 16))
+                else:
+                    return unichr(int(text[2:-1]))
+            except ValueError:
+                pass
+        else:
+            # named entity
+            try:
+                text = unichr(htmlentitydefs.name2codepoint[text[1:-1]])
+            except KeyError:
+                pass
+        return text # leave as is
+    return re.sub("&#?\w+;", fixup, text)

@@ -1,4 +1,4 @@
-AC_INIT([enigma2-kartinatv],[1.6.0])
+AC_INIT([enigma2-plugin-extensions-kartinatv],[1.7.0])
 AM_INIT_AUTOMAKE([dist-bzip2 foreign no-define tar-pax])
 AC_CONFIG_HEADERS([enigma2-plugins-config.h])
 
@@ -62,9 +62,11 @@ kartinatv/Makefile
 kartinatv/po/Makefile
 kartinatv/src/Makefile
 kartinatv/src/servicets/Makefile
+kartinatv/src/api/Makefile
 kartinatv/skin/Makefile
 kartinatv/skin/menu/Makefile
 kartinatv/skin/buttons/Makefile
+kartinatv/skin/sd/Makefile
 kartinatv/meta/Makefile
 ])
 AC_OUTPUT
