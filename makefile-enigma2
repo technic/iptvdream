@@ -83,4 +83,9 @@ $(appsdir)/build/config.status:
 
 do_compile: build/config.status
 		cd $(appsdir)/build && \
-		$(MAKE) all	
+		$(MAKE) all
+
+distclean:
+	cd $(appsdir)/build && \
+	$(MAKE) distclean
+		
