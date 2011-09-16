@@ -1,4 +1,4 @@
-AC_INIT([enigma2-plugin-extensions-kartinatv],[1.7.0])
+AC_INIT([enigma2-plugin-extensions-kartinatv],[1.9.0])
 AM_INIT_AUTOMAKE([dist-bzip2 foreign no-define tar-pax])
 AC_CONFIG_HEADERS([enigma2-plugins-config.h])
 
@@ -23,7 +23,6 @@ AX_PTHREAD
 TUXBOX_APPS_DVB
 
 PKG_CHECK_MODULES(ENIGMA2, enigma2)
-PKG_CHECK_MODULES(GSTREAMER, gstreamer-0.10 gstreamer-pbutils-0.10)
 PKG_CHECK_MODULES(LIBCRYPTO, libcrypto)
 
 AC_ARG_WITH(debug,

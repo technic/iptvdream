@@ -1,11 +1,12 @@
-
 /*******************************************************************************
+ IPtvDream plugin by technic 2011
  VLC Player Plugin by A. Lätsch 2007
 
  Modified by Dr. Best
  Modified by technic
  	-KartinaTV & RodnoeTV compatibility
  	-Ring buffer now!!!
+ 	-SuperH (sh4) architecture support
 
  This is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free
