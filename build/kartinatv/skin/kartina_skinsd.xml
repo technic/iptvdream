@@ -82,7 +82,7 @@
   <widget backgroundColor="#0038435a" font="Regular; 16" foregroundColor="#00e5b243" halign="center" name="epgName" position="405,245" size="220,45" transparent="1" />
   <widget backgroundColor="#0038435a" font="Regular; 16" name="epgTime" position="405,295" size="81,16" transparent="1" />
   <widget backgroundColor="#0038435a" borderColor="#00bbbbbb" borderWidth="1" name="epgProgress" position="490,299" size="78,9" transparent="1" />
-  <widget backgroundColor="#0038435a" font="Regular; 18" foregroundColor="#00bbbbbb" name="epgDiscription" position="405,318" size="220,115" transparent="1" />
+  <widget backgroundColor="#0038435a" font="Regular; 18" foregroundColor="#00bbbbbb" name="epgDescription" position="405,318" size="220,115" transparent="1" />
   <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/red.png" position="10,447" size="21,21" />
   <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/green.png" position="181,447" size="21,21" />
   <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/yellow.png" position="center,447" size="21,21" />
@@ -109,13 +109,13 @@
   <widget backgroundColor="#0038435a" font="Regular; 16" foregroundColor="#00e5b243" halign="center" name="epgName" position="405,245" size="220,40" transparent="1" />
   <widget backgroundColor="#0038435a" font="Regular; 16" name="epgTime" position="405,290" size="81,17" transparent="1" />
   <widget backgroundColor="#0038435a" font="Regular; 16" name="epgDuration" position="544,290" size="81,17" transparent="1" />
-  <widget backgroundColor="#0038435a" font="Regular; 14" foregroundColor="#00bbbbbb" name="epgDiscription" position="406,315" size="220,108" transparent="1" />
+  <widget backgroundColor="#0038435a" font="Regular; 14" foregroundColor="#00bbbbbb" name="epgDescription" position="406,315" size="220,108" transparent="1" />
   <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/red.png" position="138,447" size="21,21" />
   <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/green.png" position="352,447" size="21,21" />
   <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_red" position="166,449" size="100,18" transparent="1" zPosition="1" />
   <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_green" position="380,449" size="100,18" transparent="1" zPosition="1" />
   <widget backgroundColor="#0038435a" font="Regular; 20" halign="center" name="sepgName" position="6,60" size="388,30" transparent="1" />
-  <widget backgroundColor="#00343c4f" font="Regular; 18" foregroundColor="#00e5b243" halign="left" name="sepgDiscription" position="6,90" size="388,290" transparent="1" />
+  <widget backgroundColor="#00343c4f" font="Regular; 18" foregroundColor="#00e5b243" halign="left" name="sepgDescription" position="6,90" size="388,290" transparent="1" />
   <widget backgroundColor="#0038435a" font="Regular; 18" foregroundColor="#00e5b243" halign="left" name="sepgTime" position="6,380" size="168,20" transparent="1" />
   <widget backgroundColor="#0038435a" font="Regular; 18" foregroundColor="#00e5b243" halign="rigth" name="sepgDuration" position="225,380" size="168,20" transparent="1" />
 </screen>
