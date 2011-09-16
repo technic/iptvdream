@@ -1241,7 +1241,10 @@ class KartinaChannelSelection(Screen):
 			self.editMoving = not self.editMoving
 			self.lastIndex = self.list.getSelectionIndex()
 			return
-		bouquet.goIn()
+		try:
+			bouquet.goIn()
+		except IndexError:
+			print "[KartinaTV] selection empty!"
 		if bouquet.current.type == Bouquet.TYPE_SERVICE:
 			print "[KartinaTV] ChannelSelection close"
 			self.list.onSelectionChanged.pop() #Do it before close, else event happed while close.
@@ -1276,7 +1279,6 @@ class KartinaChannelSelection(Screen):
 		if bouquet.current.name == 'favourites':
 			self["key_yellow"].setText(_("Delete"))
 			self.list.setEnumerated(1)
-			self.list.setList(bouquet.getList())
 		else:
 			self["key_yellow"].setText(_("Add"))
 			n = bouquet.current.name
@@ -1285,7 +1287,7 @@ class KartinaChannelSelection(Screen):
 			else:
 				bouquet.current.sortByKey(cfg.sortkey['in group'].value)
 			self.list.setEnumerated(0)
-			self.list.setList(bouquet.getList())
+		self.list.setList(bouquet.getList())
 		self.list.moveToIndex(bouquet.current.index)
 		self.fillingList = False
 		self.selectionChanged()
@@ -1898,9 +1900,6 @@ class KartinaVideoList(Screen, multiListHandler):
 
 	def kartinaVideoSEntry(self, entry):
 		fid = entry.name
-		print 'file id', fid
-		print ktv.filmFiles[fid]
-		print ktv.filmFiles[fid]['title']
 		res = [
 			(fid),
 			(eListboxPythonMultiContent.TYPE_TEXT, 2, 2, 504, 24, 0, RT_HALIGN_LEFT, ktv.filmFiles[fid]['title'])
@@ -1915,11 +1914,11 @@ class KartinaVideoList(Screen, multiListHandler):
 		
 		self.list.setList(map(self.kartinaVideoEntry, bouquet.getList() ))	
 		if self.goto_end:
-			bouquet.setIndex(NUMS_ON_PAGE-1)
+			bouquet.setIndex(len(bouquet.getList())-1)
 		self.list.moveToIndex(bouquet.current.index)
 		self.fillingList = False
 		
-		self.setFakepage(self.mode == MODE_MAIN)
+		self.setFakepage(self.mode == self.MODE_MAIN)
 		
 		self.setTitle(Ktv.iName+" / "+_(bouquet.stype)+" "+bouquet.query)
 		pages = (bouquet.count)/NUMS_ON_PAGE
@@ -2157,6 +2156,7 @@ class KartinaVideoList(Screen, multiListHandler):
 	def exit(self):
 		if bouquet.getCurrentSel().type == Bouquet.TYPE_SERVICE:
 			bouquet.goOut()
+			self.goto_end = False
 			self.fillList()
 		else:
 			self.list.onSelectionChanged.pop() #Do it before close, else event happed while close.
