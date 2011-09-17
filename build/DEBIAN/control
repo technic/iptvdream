@@ -1,0 +1,9 @@
+Package: enigma2-plugin-extensions-kartinatv-sh
+Version: 1.9.2-r1
+Description: enigma2 iptv plugin for KartinaTV & RodnoeTV
+Section: extra
+Priority: optional
+Maintainer: Alex Maystrenko <alexeytech@gmail.com>
+License: GNU GPLv2
+Architecture: sh4
+Homepage: http://code.google.com/p/kartinatv-dm/

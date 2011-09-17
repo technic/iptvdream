@@ -39,6 +39,10 @@ CPPFLAGS += -I$(enigmadir) -I$(enigmadir)/include
 
 PATH := $(hostprefix)/ccache-bin:$(crossprefix)/bin:$(PATH):/usr/sbin
 
+ifndef TOPDIR
+TOPDIR=$(CURDIR)/
+endif
+
 all: do_compile
 
 $(appsdir)/build/config.status:
@@ -88,4 +92,25 @@ do_compile: build/config.status
 distclean:
 	cd $(appsdir)/build && \
 	$(MAKE) distclean
-		
+
+install: do_compile
+	cd $(appsdir)/build && \
+	$(MAKE) install DESTDIR=$(TOPDIR)/staging
+
+uninstall:
+	cd $(appsdir)/build && \
+	$(MAKE) uninstall
+
+buildpkg: buildpkg-clean install
+	cd $(TOPDIR); \
+	if ! test -d packages; \
+		then mkdir packages; fi; \
+	dpkg-deb -b staging packages;
+	cd packages; \
+	for file in `ls |grep deb`; do \
+		mv $$file `echo $$file |sed s/deb/ipk/`; \
+	done
+
+buildpkg-clean:
+	cd $(TOPDIR)
+	rm -rf staging
