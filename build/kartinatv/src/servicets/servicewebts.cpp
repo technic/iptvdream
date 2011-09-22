@@ -279,12 +279,15 @@ RESULT eServiceTS::start()
 {
 	ePtr<eDVBResourceManager> rmgr;
 	eDVBResourceManager::getInstance(rmgr);
-	eUsePtr<iDVBPVRChannel> dvbChannel;
-	rmgr->allocatePVRChannel(dvbChannel);
-	if (dvbChannel->getDemux(m_decodedemux, 1) != 0) {
-		eDebug("Cannot allocate decode-demux");
-		return -1;
-	}
+	//eUsePtr<iDVBPVRChannel> dvbChannel;
+	//rmgr->allocatePVRChannel(dvbChannel);
+	//m_destfd = -1;
+	//if (dvbChannel->getDemux(m_decodedemux, 1) != 0) {
+	//	eDebug("Cannot allocate decode-demux");
+	//	return -1;
+	//}
+	m_decodedemux = new eDVBDemux(0, 0);
+	m_decodedemux->setSourcePVR(0);
 	if (m_decodedemux->getMPEGDecoder(m_decoder, 1) != 0) {
 		eDebug("Cannot allocate MPEGDecoder");
 		return -1;
@@ -293,7 +296,7 @@ RESULT eServiceTS::start()
 	{
 		char dvrDev[128];
 		int dvrIndex = rmgr->m_adapter.begin()->getNumDemux() - 1;
-		//dvrIndex = 0;
+		dvrIndex = 0;
 		sprintf(dvrDev, "/dev/dvb/adapter0/dvr%d", dvrIndex);
 		m_destfd = open(dvrDev, O_WRONLY);
 		eDebug("open dvr device %s", dvrDev);
@@ -360,6 +363,7 @@ void eServiceTS::recv_event(int evt)
 					m_decoder->setVideoPID(VPID, eDVBVideo::MPEG4_H264);
 				else
 					m_decoder->setVideoPID(VPID, eDVBVideo::MPEG2);
+				m_decoder->setSyncPCR(VPID);
 			} else {
 				std::string radio_pic;
 				if (!ePythonConfigQuery::getConfigValue("config.misc.radiopic", radio_pic))
@@ -840,7 +844,7 @@ void eStreamThread::thread() {
 			is_end = false;		
 			if (get > put) {
 				avail = size - get -1;
-				if (avail < predone) is_end = true;
+				if (avail <= predone) is_end = true;
 			} else {
 				avail = put - get - 1;
 			}
@@ -935,6 +939,7 @@ void eStreamThread::thread() {
 		if (time(0) >= next_scantime && (get+rc) >= blocksize) {
 			if (scanAudioInfo(buf+get+rc-blocksize, blocksize)) {
 				m_messagepump.send(evtStreamInfo);
+				eDebug("found after get=%d", get);
 				next_scantime = time(0) + 1;
 			}
 		}

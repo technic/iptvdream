@@ -1,5 +1,5 @@
-Package: enigma2-plugin-extensions-kartinatv-sh
-Version: 1.9.2-r1
+Package: enigma2-plugin-extensions-kartinatv
+Version: 1.9.3-r0
 Description: enigma2 iptv plugin for KartinaTV & RodnoeTV
 Section: extra
 Priority: optional
