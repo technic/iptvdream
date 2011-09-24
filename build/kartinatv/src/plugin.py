@@ -816,7 +816,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 			uri = ktv.getStreamUrl(cid)
 		except:
 			print "[KartinaTV] Error: getting stream uri failed!"
-			self.session.open(MessageBox, _("Error while getting stream uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
+			#self.session.open(MessageBox, _("Error while getting stream uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
 			return -1
 		
 		srv = SERVICE_KARTINA
@@ -1959,7 +1959,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.selectionChanged()
 	
 	def nextPage(self):
-		if bouquet.getCurrentSel().type == Bouquet.TYPE_SERVICE: return
+		if not bouquet.getCurrentSel() or bouquet.getCurrentSel().type == Bouquet.TYPE_SERVICE: return
 		bouquet.page += 1
 		if  (bouquet.page-1)*NUMS_ON_PAGE > bouquet.count:
 			bouquet.page = 1
@@ -1967,7 +1967,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.start()
 	
 	def prevPage(self):
-		if bouquet.getCurrentSel().type == Bouquet.TYPE_SERVICE: return
+		if not bouquet.getCurrentSel() or bouquet.getCurrentSel().type == Bouquet.TYPE_SERVICE: return
 		bouquet.page -= 1
 		if bouquet.page == 0:
 			bouquet.page = bouquet.count / NUMS_ON_PAGE
