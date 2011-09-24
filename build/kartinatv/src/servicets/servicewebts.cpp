@@ -1,5 +1,5 @@
-
 /*******************************************************************************
+ IPtvDream plugin by technic 2011
  VLC Player Plugin by A. Lätsch 2007
 
  Modified by Dr. Best
