@@ -1,12 +1,11 @@
+
 /*******************************************************************************
- IPtvDream plugin by technic 2011
  VLC Player Plugin by A. Lätsch 2007
 
  Modified by Dr. Best
  Modified by technic
  	-KartinaTV & RodnoeTV compatibility
  	-Ring buffer now!!!
- 	-SuperH (sh4) architecture support
 
  This is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free
@@ -212,7 +211,7 @@ int eServiceTS::openHttpConnection(std::string url)
 	addr.sin_addr.s_addr = *((in_addr_t*)h->h_addr_list[0]);
 	addr.sin_port = htons(port);
 
-	eDebug("connecting to %s:%d", host.c_str(), port);
+	eDebug("connecting to %s:%d, %d", host.c_str(), port, time(0));
 
 	if (connect(fd, (sockaddr*)&addr, sizeof(addr)) == -1) {
 		std::string msg = "connect failed for: " + url;
@@ -358,7 +357,6 @@ void eServiceTS::recv_event(int evt)
 					m_decoder->setVideoPID(VPID, eDVBVideo::MPEG4_H264);
 				else
 					m_decoder->setVideoPID(VPID, eDVBVideo::MPEG2);
-				m_decoder->setSyncPCR(VPID);
 			} else {
 				std::string radio_pic;
 				if (!ePythonConfigQuery::getConfigValue("config.misc.radiopic", radio_pic))
