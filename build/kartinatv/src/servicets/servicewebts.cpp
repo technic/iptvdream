@@ -211,7 +211,7 @@ int eServiceTS::openHttpConnection(std::string url)
 	addr.sin_addr.s_addr = *((in_addr_t*)h->h_addr_list[0]);
 	addr.sin_port = htons(port);
 
-	eDebug("connecting to %s:%d, %d", host.c_str(), port, time(0));
+	eDebug("connecting to %s:%d", host.c_str(), port);
 
 	if (connect(fd, (sockaddr*)&addr, sizeof(addr)) == -1) {
 		std::string msg = "connect failed for: " + url;
@@ -357,6 +357,7 @@ void eServiceTS::recv_event(int evt)
 					m_decoder->setVideoPID(VPID, eDVBVideo::MPEG4_H264);
 				else
 					m_decoder->setVideoPID(VPID, eDVBVideo::MPEG2);
+				m_decoder->setSyncPCR(VPID);
 			} else {
 				std::string radio_pic;
 				if (!ePythonConfigQuery::getConfigValue("config.misc.radiopic", radio_pic))
