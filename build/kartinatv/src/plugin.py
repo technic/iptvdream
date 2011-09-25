@@ -344,6 +344,13 @@ class MyInfoBarShowHide:
 	
 	def __init__(self):
 		self.__state = self.STATE_SHOWN
+		
+		self["ShowHideActions"] = ActionMap( ["InfobarShowHideActions"] ,
+			{
+				"toggleShow": self.toggleShow,
+				"hide": self.hide,
+			}, 1) # lower prio to make it possible to override ok and cancel..
+
 
 		self.hideTimer = eTimer()
 		self.hideTimer.callback.append(self.doTimerHide)
@@ -435,8 +442,6 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		#disable/enable action map. This method used by e2 developers...
 		self["actions"] = ActionMap(["OkCancelActions", "InfobarActions"], 
 		{
-			"cancel": self.hide, 
-			"ok" : self.toggleShow,
 			"showTv" : self.exit,
 			"showMovies" : self.nextAPI
 		}, -1)
