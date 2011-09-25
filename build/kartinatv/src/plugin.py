@@ -862,7 +862,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 			self["currentName"].setText(curr.name)
 			self["currentTime"].setText(curr.tstart.strftime("%H:%M"))
 			self["nextTime"].setText(curr.tend.strftime("%H:%M"))
-			self.epgTimer.start(curr.getTimeLeft(ktv.aTime)*1000 ) #milliseconds
+			self.epgTimer.start(curr.getTimeLeftmsec(ktv.aTime) ) #milliseconds
 			self["currentDuration"].setText("+%d min" % (curr.getTimeLeft(ktv.aTime) / 60) )
 			self["progressBar"].setValue(PROGRESS_SIZE * curr.getTimePass(ktv.aTime) / curr.duration)
 			self.epgProgressTimer.start(PROGRESS_TIMER)
