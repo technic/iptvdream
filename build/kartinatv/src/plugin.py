@@ -435,7 +435,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		{
 			"cancel": self.hide, 
 			"ok" : self.toggleShow,
-			"showTv" : self.exit,
+			"toogleTvRadio" : self.exit,
 			"showMovies" : self.nextAPI
 		}, -1)
 		
