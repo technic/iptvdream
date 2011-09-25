@@ -1,162 +1,162 @@
 <skin>
     <screen backgroundColor="#ff000000" flags="wfNoBorder" name="KartinaStreamPlayer" position="center,405" size="620,140" title="IPTV">
-  <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/infobar.png" position="0,0" size="620,140" zPosition="-5" />
-  <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/logo_iptv.png" position="550,70" size="35,24" zPosition="3" />
-  <widget backgroundColor="#00343c4f" font="Regular;14" foregroundColor="#00f23d21" halign="center" position="31,106" render="FixedLabel" shadowColor="#00f23d21" size="39,16" source="KartinaInArchive" text="A" transparent="1" zPosition="5">
-    <convert type="ConditionalShowHide">Blink</convert>
-  </widget>
-  <widget backgroundColor="#2518252e" font="Regular;14" halign="right" position="540,40" render="Label" shadowColor="#00389416" shadowOffset="-1,-1" size="25,14" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
-    <convert type="ServiceInfo">VideoWidth</convert>
-  </widget>
-  <eLabel backgroundColor="#00000000" font="Regular;14" halign="center" position="566,40" shadowColor="#00389416" shadowOffset="-1,-1" size="8,14" text="x" transparent="1" />
-  <widget backgroundColor="#2518252e" font="Regular;14" halign="left" position="575,40" render="Label" shadowColor="#00389416" shadowOffset="-1,-1" size="23,14" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
-    <convert type="ServiceInfo">VideoHeight</convert>
-  </widget>
-  <widget backgroundColor="#00333333" font="Regular;16" foregroundColor="#00ffffff" halign="center" position="29,18" render="Label" shadowColor="#00e5b243" shadowOffset="-1,-1" size="46,16" source="global.CurrentTime" transparent="1">
-    <convert type="ClockToText">Default</convert>
-  </widget>
-  <widget backgroundColor="#0038435a" font="Regular;18" foregroundColor="#00e5b243" halign="center" name="channelName" position="91,15" size="452,20" transparent="1" />
-  <widget backgroundColor="#00000000" font="Regular;14" foregroundColor="#00ffffff" halign="right" position="474,105" render="Label" size="110,16" source="Title" transparent="1" />
-  <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/frame.png" position="15,40" size="80,61" zPosition="1" />
-  <widget alphatest="blend" position="20,43" render="Picon" size="70,53" source="session.CurrentService" transparent="1" zPosition="3">
-    <convert type="ServiceName">Reference</convert>
-  </widget>
-  <widget backgroundColor="#00343c4f" font="Regular;14" foregroundColor="#45ffffff" halign="left" name="currentTime" position="97,40" size="37,16" transparent="1" />
-  <widget backgroundColor="#00343c4f" font="Regular;16" foregroundColor="#45ffffff" halign="left" name="currentName" noWrap="1" position="139,40" size="330,18" transparent="1" zPosition="21" />
-  <widget backgroundColor="#00343c4f" font="Regular;14" foregroundColor="#45ffffff" halign="right" name="currentDuration" position="474,40" size="59,16" transparent="1" />
-  <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/slider_back.png" position="97,65" size="420,2" zPosition="1" />
-  <widget name="progressBar" pixmap="KartinaTV_skin/slider.png" position="97,65" size="420,2" transparent="1" zPosition="2" />
-  <widget backgroundColor="#00343c4f" font="Regular;14" foregroundColor="#00bbbbbb" halign="left" name="nextTime" position="97,76" size="37,16" transparent="1" />
-  <widget backgroundColor="#00343c4f" font="Regular;16" foregroundColor="#00bbbbbb" halign="left" name="nextName" noWrap="1" position="141,76" size="330,18" transparent="1" zPosition="21" />
-  <widget backgroundColor="#00343c4f" font="Regular;14" foregroundColor="#00bbbbbb" halign="right" name="nextDuration" position="476,76" size="59,16" transparent="1" />
-</screen>
+      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/infobar.png" position="0,0" size="620,140" zPosition="-5" />
+      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/logo_iptv.png" position="550,70" size="35,24" zPosition="3" />
+      <widget backgroundColor="#00343c4f" font="Regular;14" foregroundColor="#00f23d21" halign="center" position="30,107" render="FixedLabel" shadowColor="#00f23d21" size="39,14" source="KartinaInArchive" text="A" transparent="1" zPosition="5">
+        <convert type="ConditionalShowHide">Blink</convert>
+      </widget>
+      <widget backgroundColor="#2518252e" font="Regular;14" halign="right" position="522,46" render="Label" shadowColor="#00389416" shadowOffset="-1,-1" size="35,14" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
+        <convert type="ServiceInfo">VideoWidth</convert>
+      </widget>
+      <eLabel backgroundColor="#00000000" font="Regular;14" halign="center" position="558,46" shadowColor="#00389416" shadowOffset="-1,-1" size="8,14" text="x" transparent="1" />
+      <widget backgroundColor="#2518252e" font="Regular;14" halign="left" position="567,46" render="Label" shadowColor="#00389416" shadowOffset="-1,-1" size="35,14" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
+        <convert type="ServiceInfo">VideoHeight</convert>
+      </widget>
+      <widget backgroundColor="#00333333" font="Regular;16" foregroundColor="#00ffffff" halign="center" position="29,17" render="Label" shadowColor="#00e5b243" shadowOffset="-1,-1" size="46,16" source="global.CurrentTime" transparent="1">
+        <convert type="ClockToText">Default</convert>
+      </widget>
+      <widget backgroundColor="#0038435a" font="Regular;18" foregroundColor="#00e5b243" halign="center" name="channelName" position="90,16" size="480,18" transparent="1" />
+      <widget backgroundColor="#00000000" font="Regular;14" foregroundColor="#00ffffff" halign="right" position="485,107" render="Label" size="100,15" source="Title" transparent="1" />
+      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/frame.png" position="15,40" size="79,61" zPosition="1" />
+      <widget alphatest="blend" position="20,44" render="Picon" size="70,53" source="session.CurrentService" transparent="1" zPosition="3">
+        <convert type="ServiceName">Reference</convert>
+      </widget>
+      <widget backgroundColor="#00343c4f" font="Regular;14" foregroundColor="#45ffffff" halign="left" name="currentTime" position="96,46" size="40,14" transparent="1" />
+      <widget backgroundColor="#00343c4f" font="Regular;16" foregroundColor="#45ffffff" halign="left" name="currentName" noWrap="1" position="138,45" size="325,16" transparent="1" zPosition="21" />
+      <widget backgroundColor="#00343c4f" font="Regular;14" foregroundColor="#45ffffff" halign="right" name="currentDuration" position="465,46" size="56,14" transparent="1" />
+      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/slider_back.png" position="104,70" size="420,2" zPosition="1" />
+      <widget name="progressBar" pixmap="KartinaTV_skin/slider.png" position="104,70" size="420,2" transparent="1" zPosition="2" />
+      <widget backgroundColor="#00343c4f" font="Regular;14" foregroundColor="#00bbbbbb" halign="left" name="nextTime" position="96,81" size="40,14" transparent="1" />
+      <widget backgroundColor="#00343c4f" font="Regular;16" foregroundColor="#00bbbbbb" halign="left" name="nextName" noWrap="1" position="138,80" size="325,16" transparent="1" zPosition="21" />
+      <widget backgroundColor="#00343c4f" font="Regular;14" foregroundColor="#00bbbbbb" halign="right" name="nextDuration" position="465,81" size="59,14" transparent="1" />
+    </screen>
     <screen backgroundColor="#ff000000" flags="wfNoBorder" name="KartinaVideoPlayer" position="center,405" size="620,140" title="IPTV">
-  <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/infobar.png" position="0,0" size="620,140" zPosition="-5" />
-  <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/logo_iptv.png" position="35,66" size="35,24" zPosition="3" />
-  <widget backgroundColor="#2518252e" font="Regular;14" halign="right" position="34,107" render="Label" shadowColor="#00389416" shadowOffset="-1,-1" size="25,14" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
-    <convert type="ServiceInfo">VideoWidth</convert>
-  </widget>
-  <eLabel backgroundColor="#00000000" font="Regular;14" halign="center" position="60,107" shadowColor="#00389416" shadowOffset="-1,-1" size="8,14" text="x" transparent="1" />
-  <widget backgroundColor="#2518252e" font="Regular;14" halign="left" position="69,107" render="Label" shadowColor="#00389416" shadowOffset="-1,-1" size="23,14" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
-    <convert type="ServiceInfo">VideoHeight</convert>
-  </widget>
-  <widget backgroundColor="#00333333" font="Regular;16" foregroundColor="#00ffffff" halign="center" position="30,17" render="Label" shadowColor="#00e5b243" shadowOffset="-1,-1" size="46,16" source="global.CurrentTime" transparent="1">
-    <convert type="ClockToText">Default</convert>
-  </widget>
-  <widget backgroundColor="#0038435a" font="Regular;18" foregroundColor="#00e5b243" halign="center" name="channelName" position="81,15" size="340,18" transparent="1" />
-  <widget backgroundColor="#00000000" font="Regular;14" foregroundColor="#00ffffff" halign="center" position="432,17" render="Label" size="90,16" source="Title" text="&#1042;&#1080;&#1076;&#1077;&#1086;&#1090;&#1077;&#1082;&#1072;" transparent="1" />
-  <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/mp_buttons.png" position="112,107" size="164,16" />
-  <widget backgroundColor="#004e5a74" font="Regular;14" halign="left" position="71,40" render="Label" size="45,16" source="session.CurrentService" transparent="1" valign="center">
-    <convert type="ServicePosition">Length</convert>
-  </widget>
-  <widget backgroundColor="#0006224f" font="Regular;14" halign="right" position="18,40" render="Label" shadowColor="#1d354c" shadowOffset="-1,-1" size="45,16" source="session.CurrentService" transparent="1" valign="center">
-    <convert type="ServicePosition">Position</convert>
-  </widget>
-  <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/mpslider.png" position="121,43" size="350,16" zPosition="3" />
-  <widget backgroundColor="#0006224f" font="Regular;14" halign="center" position="475,40" render="Label" shadowColor="#1d354c" shadowOffset="-1,-1" size="45,16" source="session.CurrentService" transparent="1" valign="center">
-    <convert type="ServicePosition">Remaining</convert>
-  </widget>
-  <widget pointer="KartinaTV_skin/sd/pointer.png:13,3" position="121,43" render="PositionGauge" size="350,16" source="session.CurrentService" zPosition="2">
-    <convert type="ServicePosition">Gauge</convert>
-  </widget>
-  <widget name="poster" position="526,9" size="64,120" transparent="1" zPosition="3" />
-  <eLabel backgroundColor="#0006224f" font="Regular;14" halign="center" position="63,40" size="8,16" text="/" transparent="1" />
-  <widget font="Regular; 12" foregroundColor="#00bbbbbb" name="description" position="86,62" size="430,37" transparent="1" zPosition="1" />
-  <ePixmap name="new ePixmap" pixmap="KartinaTV_skin/sd/frame2.png" position="523,20" size="71,97" />
-</screen>
+      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/infobar.png" position="0,0" size="620,140" zPosition="-5" />
+      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/logo_iptv.png" position="25,70" size="35,24" zPosition="3" />
+      <widget backgroundColor="#2518252e" font="Regular;14" halign="right" position="32,107" render="Label" shadowColor="#00389416" shadowOffset="-1,-1" size="35,14" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
+        <convert type="ServiceInfo">VideoWidth</convert>
+      </widget>
+      <eLabel backgroundColor="#00000000" font="Regular;14" halign="center" position="68,107" shadowColor="#00389416" shadowOffset="-1,-1" size="8,14" text="x" transparent="1" />
+      <widget backgroundColor="#2518252e" font="Regular;14" halign="left" position="77,107" render="Label" shadowColor="#00389416" shadowOffset="-1,-1" size="35,14" source="session.CurrentService" transparent="1" valign="top" zPosition="1">
+        <convert type="ServiceInfo">VideoHeight</convert>
+      </widget>
+      <widget backgroundColor="#00333333" font="Regular;16" foregroundColor="#00ffffff" halign="center" position="29,17" render="Label" shadowColor="#00e5b243" shadowOffset="-1,-1" size="46,16" source="global.CurrentTime" transparent="1">
+        <convert type="ClockToText">Default</convert>
+      </widget>
+      <widget backgroundColor="#0038435a" font="Regular;18" foregroundColor="#00e5b243" halign="center" name="channelName" position="81,16" size="340,18" transparent="1" />
+      <widget backgroundColor="#00000000" font="Regular;14" foregroundColor="#00ffffff" halign="center" position="428,18" render="Label" size="90,14" source="Title" text="&#1042;&#1080;&#1076;&#1077;&#1086;&#1090;&#1077;&#1082;&#1072;" transparent="1" />
+      <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/mp_buttons.png" position="117,107" size="164,16" />
+      <widget backgroundColor="#004e5a74" font="Regular;14" halign="left" position="57,43" render="Label" size="48,14" source="session.CurrentService" transparent="1" valign="center">
+        <convert type="ServicePosition">Length</convert>
+      </widget>
+      <widget backgroundColor="#0006224f" font="Regular; 14" halign="right" position="3,43" render="Label" shadowColor="#1d354c" shadowOffset="-1,-1" size="48,14" source="session.CurrentService" transparent="1" valign="center">
+        <convert type="ServicePosition">Position</convert>
+      </widget>
+      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/progress_back.png" position="100,47" size="380,9" zPosition="1" />
+      <widget backgroundColor="#0006224f" font="Regular;14" halign="center" position="480,43" render="Label" shadowColor="#1d354c" shadowOffset="-1,-1" size="48,14" source="session.CurrentService" transparent="1" valign="center">
+        <convert type="ServicePosition">Remaining</convert>
+      </widget>
+      <widget pixmap="KartinaTV_skin/sd/progress_event.png" position="103,47" render="Progress" size="374,9" source="session.CurrentService" transparent="1" zPosition="2">
+        <convert type="ServicePosition">Position</convert>
+      </widget>
+      <widget name="poster" position="530,24" size="64,90" transparent="1" zPosition="3" />
+      <eLabel backgroundColor="#0006224f" font="Regular;14" halign="center" position="50,43" size="8,14" text="/" transparent="1" />
+      <widget font="Regular; 12" foregroundColor="#00bbbbbb" name="description" position="70,62" size="450,39" transparent="1" zPosition="1" />
+      <ePixmap name="new ePixmap" pixmap="KartinaTV_skin/sd/frame2.png" position="527,21" size="71,97" />
+    </screen>
     <screen flags="wfNoBorder" name="KartinaChannelSelection" position="center,center" size="640,480" title="Channel Selection">
-  <ePixmap pixmap="KartinaTV_skin/sd/back.png" position="0,0" size="640,480" zPosition="-10" />
-  <eLabel backgroundColor="#00ffffff" position="405,55" size="220,183" zPosition="2" />
-  <widget backgroundColor="#ff000000" position="405,55" render="Pig" size="220,183" source="session.VideoPicture" zPosition="3" />
-  <widget backgroundColor="#001b2c47" font="Regular;16" halign="right" position="568,30" render="Label" size="56,20" source="global.CurrentTime" transparent="1">
-    <convert type="ClockToText">Default</convert>
-  </widget>
-  <widget backgroundColor="#001b2c47" font="Regular;16" halign="right" position="548,6" render="Label" size="76,20" source="global.CurrentTime" transparent="1">
-    <convert type="ClockToText">Format:%d.%m.%Y</convert>
-  </widget>
-  <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/info.png" position="425,6" size="56,24" zPosition="3" />
-  <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/menu.png" position="485,6" size="56,24" zPosition="3" />
-  <eLabel backgroundColor="#001b2c47" font="Regular;20" halign="center" position="260,6" shadowColor="#000064c7" size="130,20" text="Channel Selection" transparent="1" />
-  <widget backgroundColor="#00343c4f" font="Regular;16" position="6,36" render="Label" shadowColor="#000064c7" size="388,18" source="Title" transparent="1" />
-  <widget backgroundColor="#15000000" backgroundColorSelected="#000a1822" colorEventProgressbar="#005DB5" colorEventProgressbarBorder="#00bbbbbb" colorEventProgressbarBorderSelected="#FFC387" colorServiceDescription="#C1E3FF" colorServiceDescriptionSelected="#FFC387" foregroundColor="#00ffffff" foregroundColorSelected="#00ff880a" name="list" picServiceArchive="KartinaTV_skin/rec.png" position="5,58" scrollbarMode="showOnDemand" serviceInfoFont="Regular;21" serviceItemHeight="28" serviceNameFont="Regular;23" serviceNumberFont="Regular;23" size="388,370" transparent="1" />
-  <widget backgroundColor="#0038435a" font="Regular; 16" foregroundColor="#00e5b243" halign="center" name="epgName" position="405,245" size="220,45" transparent="1" />
-  <widget backgroundColor="#0038435a" font="Regular; 16" name="epgTime" position="405,295" size="81,16" transparent="1" />
-  <widget backgroundColor="#0038435a" borderColor="#00bbbbbb" borderWidth="1" name="epgProgress" position="490,299" size="78,9" transparent="1" />
-  <widget backgroundColor="#0038435a" font="Regular; 18" foregroundColor="#00bbbbbb" name="epgDescription" position="405,318" size="220,115" transparent="1" />
-  <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/red.png" position="10,447" size="21,21" />
-  <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/green.png" position="181,447" size="21,21" />
-  <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/yellow.png" position="center,447" size="21,21" />
-  <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/blue.png" position="507,447" size="21,21" />
-  <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_red" position="36,449" size="100,16" transparent="1" zPosition="1" />
-  <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_green" position="208,449" size="100,16" transparent="1" zPosition="1" />
-  <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_yellow" position="375,449" size="100,16" transparent="1" zPosition="1" />
-  <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_blue" position="533,449" size="100,16" transparent="1" zPosition="1" />
-  <widget backgroundColor="#001b2c47" font="Regular;14" halign="left" name="packetExpire" position="6,6" size="180,16" transparent="1" />
-</screen>
+      <ePixmap pixmap="KartinaTV_skin/sd/back.png" position="0,0" size="640,480" zPosition="-10" />
+      <eLabel backgroundColor="#00ffffff" position="405,55" size="220,183" zPosition="2" />
+      <widget backgroundColor="#ff000000" position="405,55" render="Pig" size="220,183" source="session.VideoPicture" zPosition="3" />
+      <widget backgroundColor="#001b2c47" font="Regular;16" halign="right" position="568,25" render="Label" size="56,16" source="global.CurrentTime" transparent="1">
+        <convert type="ClockToText">Default</convert>
+      </widget>
+      <widget backgroundColor="#001b2c47" font="Regular;16" halign="right" position="539,6" render="Label" size="85,16" source="global.CurrentTime" transparent="1">
+        <convert type="ClockToText">Format:%d.%m.%Y</convert>
+      </widget>
+      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/info.png" position="425,6" size="56,24" zPosition="3" />
+      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/sd/menu.png" position="482,6" size="56,24" zPosition="3" />
+      <eLabel backgroundColor="#001b2c47" font="Regular;20" halign="center" position="250,6" shadowColor="#000064c7" size="165,20" text="&#1042;&#1099;&#1073;&#1086;&#1088; &#1082;&#1072;&#1085;&#1072;&#1083;&#1072;" transparent="1" />
+      <widget backgroundColor="#00343c4f" font="Regular;16" position="6,36" render="Label" shadowColor="#000064c7" size="388,16" source="Title" transparent="1" />
+      <widget backgroundColor="#15000000" backgroundColorSelected="#000a1822" colorEventProgressbar="#005DB5" colorEventProgressbarBorder="#00bbbbbb" colorEventProgressbarBorderSelected="#FFC387" colorServiceDescription="#C1E3FF" colorServiceDescriptionSelected="#FFC387" foregroundColor="#00ffffff" foregroundColorSelected="#00ff880a" itemHeight="20" name="list" picServiceArchive="KartinaTV_skin/rec.png" position="6,55" scrollbarMode="showOnDemand" serviceInfoFont="Regular;21" serviceItemHeight="28" serviceNameFont="Regular;23" serviceNumberFont="Regular;23" size="388,368" transparent="1" />
+      <widget backgroundColor="#0038435a" font="Regular; 16" foregroundColor="#00e5b243" halign="center" name="epgName" position="405,244" size="220,45" transparent="1" />
+      <widget backgroundColor="#0038435a" font="Regular; 16" name="epgTime" position="405,294" size="103,16" transparent="1" />
+      <widget backgroundColor="#0038435a" borderColor="#00bbbbbb" borderWidth="1" name="epgProgress" position="513,297" size="78,10" transparent="1" />
+      <widget backgroundColor="#0038435a" font="Regular; 18" foregroundColor="#00bbbbbb" name="epgDescription" position="405,315" size="220,118" transparent="1" />
+      <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/red.png" position="10,447" size="21,21" />
+      <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/green.png" position="181,447" size="21,21" />
+      <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/yellow.png" position="center,447" size="21,21" />
+      <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/blue.png" position="507,447" size="21,21" />
+      <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_red" position="36,449" size="100,16" transparent="1" zPosition="1" />
+      <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_green" position="208,449" size="100,16" transparent="1" zPosition="1" />
+      <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_yellow" position="375,449" size="100,16" transparent="1" zPosition="1" />
+      <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_blue" position="533,449" size="100,16" transparent="1" zPosition="1" />
+      <widget backgroundColor="#001b2c47" font="Regular;14" halign="left" name="packetExpire" position="6,6" size="180,14" transparent="1" />
+    </screen>
     <screen flags="wfNoBorder" name="KartinaEpgList" position="center,center" size="640,480" title="Channel Selection">
-  <ePixmap pixmap="KartinaTV_skin/sd/back.png" position="0,0" size="640,480" zPosition="-10" />
-  <eLabel backgroundColor="#00ffffff" position="405,55" size="220,183" zPosition="2" />
-  <widget backgroundColor="#ff000000" position="405,55" render="Pig" size="220,183" source="session.VideoPicture" zPosition="3" />
-  <widget backgroundColor="#001b2c47" font="Regular;16" halign="right" position="570,30" render="Label" size="56,20" source="global.CurrentTime" transparent="1">
-    <convert type="ClockToText">Default</convert>
-  </widget>
-  <widget backgroundColor="#001b2c47" font="Regular;16" halign="right" position="550,6" render="Label" size="76,20" source="global.CurrentTime" transparent="1">
-    <convert type="ClockToText">Format:%d.%m.%Y</convert>
-  </widget>
-  <eLabel backgroundColor="#001b2c47" font="Regular;20" halign="center" position="230,6" shadowColor="#000064c7" size="258,28" text="EPG List" transparent="1" />
-  <widget backgroundColor="#00343c4f" font="Regular;16" position="6,36" render="Label" shadowColor="#000064c7" size="388,22" source="Title" transparent="1" />
-  <widget backgroundColor="#15000000" backgroundColorSelected="#000a1822" foregroundColor="#00ffffff" foregroundColorSelected="#00ff880a" name="list" position="6,60" scrollbarMode="showOnDemand" size="388,345" transparent="1" />
-  <widget backgroundColor="#0038435a" font="Regular; 16" foregroundColor="#00e5b243" halign="center" name="epgName" position="405,245" size="220,40" transparent="1" />
-  <widget backgroundColor="#0038435a" font="Regular; 16" name="epgTime" position="405,290" size="81,17" transparent="1" />
-  <widget backgroundColor="#0038435a" font="Regular; 16" name="epgDuration" position="544,290" size="81,17" transparent="1" />
-  <widget backgroundColor="#0038435a" font="Regular; 14" foregroundColor="#00bbbbbb" name="epgDescription" position="406,315" size="220,108" transparent="1" />
-  <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/red.png" position="138,447" size="21,21" />
-  <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/green.png" position="352,447" size="21,21" />
-  <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_red" position="166,449" size="100,18" transparent="1" zPosition="1" />
-  <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_green" position="380,449" size="100,18" transparent="1" zPosition="1" />
-  <widget backgroundColor="#0038435a" font="Regular; 20" halign="center" name="sepgName" position="6,60" size="388,30" transparent="1" />
-  <widget backgroundColor="#00343c4f" font="Regular; 18" foregroundColor="#00e5b243" halign="left" name="sepgDescription" position="6,90" size="388,290" transparent="1" />
-  <widget backgroundColor="#0038435a" font="Regular; 18" foregroundColor="#00e5b243" halign="left" name="sepgTime" position="6,380" size="168,20" transparent="1" />
-  <widget backgroundColor="#0038435a" font="Regular; 18" foregroundColor="#00e5b243" halign="rigth" name="sepgDuration" position="225,380" size="168,20" transparent="1" />
-</screen>
+      <ePixmap pixmap="KartinaTV_skin/sd/back.png" position="0,0" size="640,480" zPosition="-10" />
+      <eLabel backgroundColor="#00ffffff" position="405,55" size="220,183" zPosition="2" />
+      <widget backgroundColor="#ff000000" position="405,55" render="Pig" size="220,183" source="session.VideoPicture" zPosition="3" />
+      <widget backgroundColor="#001b2c47" font="Regular;16" halign="right" position="568,25" render="Label" size="56,16" source="global.CurrentTime" transparent="1">
+        <convert type="ClockToText">Default</convert>
+      </widget>
+      <widget backgroundColor="#001b2c47" font="Regular;16" halign="right" position="539,6" render="Label" size="85,16" source="global.CurrentTime" transparent="1">
+        <convert type="ClockToText">Format:%d.%m.%Y</convert>
+      </widget>
+      <eLabel backgroundColor="#001b2c47" font="Regular;20" halign="center" position="230,6" shadowColor="#000064c7" size="210,20" text="&#1055;&#1088;&#1086;&#1075;&#1088;&#1072;&#1084;&#1084;&#1072; &#1087;&#1077;&#1088;&#1077;&#1076;&#1072;&#1095;" transparent="1" />
+      <widget backgroundColor="#00343c4f" font="Regular;16" position="6,36" render="Label" shadowColor="#000064c7" size="388,16" source="Title" transparent="1" />
+      <widget backgroundColor="#15000000" backgroundColorSelected="#000a1822" foregroundColor="#00ffffff" foregroundColorSelected="#00ff880a" itemHeight="20" name="list" position="6,55" scrollbarMode="showOnDemand" size="388,364" transparent="1" />
+      <widget backgroundColor="#0038435a" font="Regular; 16" foregroundColor="#00e5b243" halign="center" name="epgName" position="405,244" size="220,45" transparent="1" />
+      <widget backgroundColor="#0038435a" font="Regular; 16" name="epgTime" position="405,294" size="103,16" transparent="1" />
+      <widget backgroundColor="#0038435a" font="Regular; 16" name="epgDuration" position="513,294" size="81,16" transparent="1" />
+      <widget backgroundColor="#0038435a" font="Regular; 14" foregroundColor="#00bbbbbb" name="epgDescription" position="406,315" size="220,108" transparent="1" />
+      <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/red.png" position="138,447" size="21,21" />
+      <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/green.png" position="352,447" size="21,21" />
+      <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_red" position="166,449" size="100,16" transparent="1" zPosition="1" />
+      <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_green" position="380,449" size="100,16" transparent="1" zPosition="1" />
+      <widget backgroundColor="#0038435a" font="Regular; 20" halign="center" name="sepgName" position="6,55" size="388,20" transparent="1" />
+      <widget backgroundColor="#00343c4f" font="Regular; 20" foregroundColor="#00e5b243" halign="left" name="sepgDescription" position="6,76" size="388,310" transparent="1" />
+      <widget backgroundColor="#0038435a" font="Regular; 18" foregroundColor="#00e5b243" halign="left" name="sepgTime" position="6,390" size="103,18" transparent="1" valign="center" />
+      <widget backgroundColor="#0038435a" font="Regular; 18" foregroundColor="#00e5b243" halign="rigth" name="sepgDuration" position="304,390" size="90,18" transparent="1" />
+    </screen>
     <screen backgroundColor="#25080808" flags="wfNoBorder" name="KartinaVideoList" position="center,center" size="640,480" title="list">
-  <widget backgroundColor="#001b2c47" font="Regular;16" halign="right" position="568,30" render="Label" size="56,20" source="global.CurrentTime" transparent="1">
-    <convert type="ClockToText">Default</convert>
-  </widget>
-  <widget backgroundColor="#001b2c47" font="Regular;16" halign="right" position="548,6" render="Label" size="76,20" source="global.CurrentTime" transparent="1">
-    <convert type="ClockToText">Format:%d.%m.%Y</convert>
-  </widget>
-  <eLabel backgroundColor="#001b2c47" font="Regular;20" halign="center" position="230,6" shadowColor="#000064c7" size="258,28" text="Video collection" transparent="1" />
-  <widget backgroundColor="#00343c4f" font="Regular;16" position="36,41" render="Label" shadowColor="#000064c7" size="335,22" source="Title" transparent="1" />
-  <widget backgroundColor="#00343c4f" font="Regular; 18" name="pages" position="36,6" shadowColor="#000064c7" size="97,21" transparent="1" />
-  <widget backgroundColor="#15000000" backgroundColorSelected="#000a1822" foregroundColor="#00ffffff" foregroundColorSelected="#00ff880a" name="list" position="10,65" scrollbarMode="showOnDemand" size="360,345" transparent="1" zPosition="0" />
-  <widget backgroundColor="#15000000" backgroundColorSelected="#000a1822" foregroundColor="#00ffffff" foregroundColorSelected="#00ff880a" name="glist" position="377,65" scrollbarMode="showOnDemand" size="250,345" transparent="1" zPosition="-1" />
-  <widget backgroundColor="#0038435a" font="Regular;16" foregroundColor="#00e5b243" halign="center" name="name" position="377,229" size="250,18" transparent="1" zPosition="1" />
-  <widget backgroundColor="#0038435a" font="Regular;16" foregroundColor="#00bbbbbb" name="description" position="377,251" size="250,158" transparent="1" zPosition="1" />
-  <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/red.png" position="10,447" size="21,21" />
-  <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/green.png" position="181,447" size="21,21" />
-  <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/yellow.png" position="349,447" size="21,21" />
-  <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/blue.png" position="507,447" size="21,21" />
-  <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_red" position="36,449" size="100,18" transparent="1" zPosition="1" />
-  <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_green" position="208,449" size="100,18" transparent="1" zPosition="1" />
-  <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_yellow" position="375,449" size="100,18" transparent="1" zPosition="1" />
-  <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_blue" position="533,449" size="100,18" transparent="1" zPosition="1" />
-  <widget backgroundColor="#0038435a" font="Regular;16" foregroundColor="#00e5b243" halign="center" name="year" position="447,69" size="56,20" transparent="1" zPosition="3" />
-  <widget backgroundColor="#001b2c47" font="Regular;16" halign="left" name="genres" position="20,415" size="600,20" transparent="1" />
-  <widget alphatest="blend" name="rate1_back" pixmap="KartinaTV_skin/sd/stars_back.png" position="520,177" size="68,15" />
-  <widget name="rate1" pixmap="KartinaTV_skin/sd/stars.png" position="520,177" size="68,15" transparent="1" zPosition="2" />
-  <widget alphatest="blend" name="rate2_back" pixmap="KartinaTV_skin/sd/stars_back.png" position="520,205" size="68,15" />
-  <widget name="rate2" pixmap="KartinaTV_skin/sd/stars.png" position="520,205" size="68,15" transparent="1" zPosition="2" />
-  <widget backgroundColor="#001b2c47" font="Regular;14" halign="center" name="rate1_text" position="447,177" size="56,17" text="IMDB" transparent="1" />
-  <widget backgroundColor="#001b2c47" font="Regular;14" halign="center" name="rate2_text" position="447,205" size="61,17" text="Kinopoisk" transparent="1" />
-  <widget font="Regular;14" name="moreinfo" position="447,92" size="180,80" transparent="1" valign="top" zPosition="5" />
-  <widget name="poster" position="377,76" size="67,138" transparent="1" zPosition="3" />
-  <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/bouquet.png" position="6,6" size="27,49" zPosition="1" />
-</screen>
+      <widget backgroundColor="#001b2c47" font="Regular;16" halign="right" position="568,25" render="Label" size="56,16" source="global.CurrentTime" transparent="1">
+        <convert type="ClockToText">Default</convert>
+      </widget>
+      <widget backgroundColor="#001b2c47" font="Regular;16" halign="right" position="539,6" render="Label" size="85,16" source="global.CurrentTime" transparent="1">
+        <convert type="ClockToText">Format:%d.%m.%Y</convert>
+      </widget>
+      <eLabel backgroundColor="#001b2c47" font="Regular;20" halign="center" position="260,6" shadowColor="#000064c7" size="120,20" text="&#1042;&#1080;&#1076;&#1077;&#1086;&#1090;&#1077;&#1082;&#1072;" transparent="1" />
+      <widget backgroundColor="#00343c4f" font="Regular;16" position="36,41" render="Label" shadowColor="#000064c7" size="335,16" source="Title" transparent="1" />
+      <widget backgroundColor="#00343c4f" font="Regular; 18" name="pages" position="36,6" shadowColor="#000064c7" size="97,18" transparent="1" />
+      <widget backgroundColor="#15000000" backgroundColorSelected="#000a1822" foregroundColor="#00ffffff" foregroundColorSelected="#00ff880a" name="list" position="10,60" scrollbarMode="showOnDemand" size="360,345" transparent="1" zPosition="0" />
+      <widget backgroundColor="#15000000" backgroundColorSelected="#000a1822" foregroundColor="#00ffffff" foregroundColorSelected="#00ff880a" name="glist" position="377,60" scrollbarMode="showOnDemand" size="250,345" transparent="1" zPosition="-1" />
+      <widget backgroundColor="#0038435a" font="Regular;16" foregroundColor="#00e5b243" halign="center" name="name" position="377,228" size="250,16" transparent="1" zPosition="1" />
+      <widget backgroundColor="#0038435a" font="Regular;16" foregroundColor="#00bbbbbb" name="description" position="377,248" size="250,157" transparent="1" zPosition="1" />
+      <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/red.png" position="10,447" size="21,21" />
+      <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/green.png" position="181,447" size="21,21" />
+      <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/yellow.png" position="349,447" size="21,21" />
+      <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/blue.png" position="507,447" size="21,21" />
+      <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_red" position="36,449" size="100,16" transparent="1" zPosition="1" />
+      <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_green" position="208,449" size="100,16" transparent="1" zPosition="1" />
+      <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_yellow" position="375,449" size="100,16" transparent="1" zPosition="1" />
+      <widget backgroundColor="#00000000" font="Regular;16" halign="left" name="key_blue" position="533,449" size="100,16" transparent="1" zPosition="1" />
+      <widget backgroundColor="#0038435a" font="Regular;16" foregroundColor="#00e5b243" halign="center" name="year" position="377,80" size="56,16" transparent="1" zPosition="3" />
+      <widget backgroundColor="#001b2c47" font="Regular;16" halign="left" name="genres" position="20,415" size="600,16" transparent="1" />
+      <widget alphatest="blend" name="rate1_back" pixmap="KartinaTV_skin/sd/stars_back.png" position="545,177" size="69,15" />
+      <widget name="rate1" pixmap="KartinaTV_skin/sd/stars.png" position="545,177" size="69,15" transparent="1" zPosition="2" />
+      <widget alphatest="blend" name="rate2_back" pixmap="KartinaTV_skin/sd/stars_back.png" position="545,205" size="69,15" />
+      <widget name="rate2" pixmap="KartinaTV_skin/sd/stars.png" position="545,205" size="69,15" transparent="1" zPosition="2" />
+      <widget backgroundColor="#001b2c47" font="Regular;14" halign="center" name="rate1_text" position="480,177" size="56,14" text="IMDB" transparent="1" />
+      <widget backgroundColor="#001b2c47" font="Regular;14" halign="center" name="rate2_text" position="480,205" size="61,14" text="Kinopoisk" transparent="1" />
+      <widget font="Regular; 12" name="moreinfo" position="465,80" size="162,92" transparent="1" valign="top" zPosition="5" />
+      <widget name="poster" position="377,100" size="85,123" transparent="1" zPosition="3" />
+      <ePixmap alphatest="on" pixmap="KartinaTV_skin/sd/bouquet.png" position="6,6" size="27,49" zPosition="1" />
+    </screen>
     <screen flags="wfBorder" name="VirtualKeyBoardRu" position="center,center" size="550,300" title="Virtual KeyBoard RU" zPosition="99">
       <ePixmap alphatest="on" pixmap="skin_default/vkey_text.png" position="6,33" size="540,27" zPosition="-4" />
-      <widget font="Regular; 18" name="header" noWrap="1" position="5,3" size="540,20" transparent="1" />
-      <widget font="Regular; 20" halign="right" name="text" noWrap="1" position="5,33" size="540,27" transparent="1" valign="venter" />
+      <widget font="Regular; 18" name="header" noWrap="1" position="5,6" size="540,18" transparent="1" />
+      <widget font="Regular; 20" halign="right" name="text" noWrap="1" position="5,36" size="540,20" transparent="1" valign="venter" />
       <widget name="list" position="5,65" selectionDisabled="1" size="540,235" transparent="1" />
     </screen>
   </skin>
