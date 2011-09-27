@@ -27,3 +27,16 @@ FILES_${PN}-dbg = " /usr/lib/enigma2/python/Plugins/Extensions/KartinaTV/.debug 
 DEPENDS = "enigma2"
 
 inherit autotools
+
+pkg_postinst() {
+	#!/bin/sh
+	F="/etc/iptvdream/playlist.m3u"
+	if ! test -f $F; then
+		echo """
+		#EXTM3U
+		#EXTINF:0,example stream
+		rtsp://82.177.67.61/axis-media/media.amp
+		""" > $F
+	fi
+}
+
