@@ -311,10 +311,12 @@ UPDATE_ON_TOGGLE = True #In video list, when genre selected
 USE_VIRTUAL_KB = 1 #XXX: not used!
 CLEAN_POSTER_CACHE = 10 #Max posters count to save on hdd. 0 - unlimited 
 POSTER_PATH = '/tmp/iptvdream/'
-#Manual change aspect ratio in stream player.
-#Replace "None" with "0", "1", "2" or else...
+
+#Manual change aspect ratio in player.
+#If videmode system-plugin installed (enigma2 > 20080309)
+#Replace "None" with ('16:9 policy', '4:3 policy')
 #example:
-#MANUAL_ASPECT_RATIO = 2
+#MANUAL_ASPECT_RATIO = ('letterbox', 'pillarbox')
 
 MANUAL_ASPECT_RATIO = None
 
@@ -342,6 +344,13 @@ class MyInfoBarShowHide:
 	
 	def __init__(self):
 		self.__state = self.STATE_SHOWN
+		
+		self["ShowHideActions"] = ActionMap( ["InfobarShowHideActions"] ,
+			{
+				"toggleShow": self.toggleShow,
+				"hide": self.hide,
+			}, 1) # lower prio to make it possible to override ok and cancel..
+
 
 		self.hideTimer = eTimer()
 		self.hideTimer.callback.append(self.doTimerHide)
@@ -433,14 +442,12 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		#disable/enable action map. This method used by e2 developers...
 		self["actions"] = ActionMap(["OkCancelActions", "InfobarActions"], 
 		{
-			"cancel": self.hide, 
-			"ok" : self.toggleShow,
 			"toogleTvRadio" : self.exit,
 			"showMovies" : self.nextAPI
 		}, -1)
 		
 		self.oldService = self.session.nav.getCurrentlyPlayingServiceReference()
-		self.oldAspectRatio = ({"4_3_letterbox": 0, "4_3_panscan": 1, "16_9": 2, "16_9_always": 3, "16_10_letterbox": 4, "16_10_panscan": 5, "16_9_letterbox" : 6}[config.av.aspectratio.value])
+		self.oldAspectRatio = (config.av.policy_169.value, config.av.policy_43.value)
 		
 		#Standby notifier!!
 		config.misc.standbyCounter.addNotifier(self.standbyCountChanged, initial_call = False)
@@ -595,7 +602,8 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		self.start()
 
 	def exit(self):
-		eAVSwitch.getInstance().setAspectRatio(self.oldAspectRatio)
+		if MANUAL_ASPECT_RATIO:
+			(config.av.policy_169.value, config.av.policy_43.value) = self.oldAspectRatio
 		self.session.nav.playService(self.oldService)
 		#XXX:
 		if bouquet:
@@ -813,7 +821,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 			uri = ktv.getStreamUrl(cid)
 		except:
 			print "[KartinaTV] Error: getting stream uri failed!"
-			self.session.open(MessageBox, _("Error while getting stream uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
+			#self.session.open(MessageBox, _("Error while getting stream uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
 			return -1
 		
 		srv = SERVICE_KARTINA
@@ -998,8 +1006,7 @@ class KartinaVideoPlayer(KartinaPlayer):
 		self.session.nav.playService(sref)
 		
 		if MANUAL_ASPECT_RATIO is not None:
-			eAVSwitch.getInstance().setAspectRatio(MANUAL_ASPECT_RATIO)
-		
+			(config.av.policy_169.value, config.av.policy_43.value) = MANUAL_ASPECT_RATIO
 		self["channelName"].setText(ktv.filmFiles[cid]['name']) #FIXME: videos dict could be cleaned empty o_O
 		vid = bouquet.current.parent.name #Video is parent, episode is current
 		self["description"].setText(ktv.videos[vid].descr)
@@ -1957,7 +1964,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.selectionChanged()
 	
 	def nextPage(self):
-		if bouquet.getCurrentSel().type == Bouquet.TYPE_SERVICE: return
+		if not bouquet.getCurrentSel() or bouquet.getCurrentSel().type == Bouquet.TYPE_SERVICE: return
 		bouquet.page += 1
 		if  (bouquet.page-1)*NUMS_ON_PAGE > bouquet.count:
 			bouquet.page = 1
@@ -1965,7 +1972,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.start()
 	
 	def prevPage(self):
-		if bouquet.getCurrentSel().type == Bouquet.TYPE_SERVICE: return
+		if not bouquet.getCurrentSel() or bouquet.getCurrentSel().type == Bouquet.TYPE_SERVICE: return
 		bouquet.page -= 1
 		if bouquet.page == 0:
 			bouquet.page = bouquet.count / NUMS_ON_PAGE
