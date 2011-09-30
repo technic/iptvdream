@@ -142,6 +142,8 @@ for afile in os_listdir(API_PREFIX + API_DIR):
 		_api = getattr(_api, API_NAME)
 		aprov = _api.iProvider
 		aname = _api.iName
+		if _api.iTitle is None:
+			_api.iTitle = _api.iName
 		apis[aname] = (_api, aprov)
 		if not aprov in api_providers:
 			api_providers += [aprov]
@@ -178,7 +180,7 @@ def Plugins(path, **kwargs):
 	res = []
 	for aname in apis.keys():
 		res += [
-		PluginDescriptor(name=aname, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = boundFunction(AOpen, aname) ),
+		PluginDescriptor(name=apis[aname][0].iTitle, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = boundFunction(AOpen, aname) ),
 		PluginDescriptor(name=aname, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_MENU, fnc = boundFunction(menuOpen, aname) ) ]
 	res.append(PluginDescriptor(name="IPtvDream config", description="Configure all IPtvDream services", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = selectConfig ))
 	return res
@@ -1769,7 +1771,7 @@ class DownloadThread(Thread):
 	def run(self):
 		while True:
 			self.cnd.acquire()
-			while not self.__newTask:
+			while not (self.__newTask or self.__cancel):
 				self.cnd.wait()
 			self.__newTask = False
 			tmpurl = self.url

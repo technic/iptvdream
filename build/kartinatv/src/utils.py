@@ -68,7 +68,7 @@ class EpgEntry():
 		now = syncTime()+secTd(delta)
 		return tdSec(self.tend-now)
 	
-	def getTimeLeftmsec(self, delta) #More accurancy, milliseconds
+	def getTimeLeftmsec(self, delta): #More accurancy, milliseconds
 		now = syncTime()+secTd(delta)
 		return tdmSec(self.tend-now)
 
