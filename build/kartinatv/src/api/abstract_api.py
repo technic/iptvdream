@@ -17,6 +17,7 @@ class AbstractAPI:
 	MODE = MODE_STREAM
 	iProvider = "free"
 	iName = "example"
+	iTitle = None
 	NEXT_API = None 
 	NUMBER_PASS = False
 	
