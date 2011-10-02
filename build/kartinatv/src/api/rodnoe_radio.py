@@ -28,36 +28,6 @@ class Ktv(RodnoeAPI):
 		self.channels = {}
 		self.aTime = 0
 	
-	def sortByName(self):
-		x = [(val.name, key) for (key, val) in self.channels.items()]
-		x.sort()
-		services = Bouquet(Bouquet.TYPE_MENU, 'all')
-		for item in x:
-			ch = self.channels[item[1]]
-			services.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num )) #two sort args [channel_name, number]
-		return services
-	
-	def sortByGroup(self):
-		x = [(val.group, key) for (key, val) in self.channels.items()]
-		x.sort()
-		groups = Bouquet(Bouquet.TYPE_MENU, 'By group')
-		if not x: return groups
-		groupname = x[0][0]
-		ch = self.channels[x[0][1]]
-		group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.gid) #two sort args [group_name, number]
-		for item in x:
-			ch = self.channels[item[1]]
-			if item[0] == groupname:
-				group.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num))
-			else:
-				groups.append(group)
-				groupname = item[0]
-				ch = self.channels[item[1]]
-				group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.gid) #two sort args [group_name, number]
-				group.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num))
-		groups.append(group)
-		return groups
-	
 	def setChannelsList(self):
 		root = self.getChannelsList()
 		t = int(root.findtext('servertime'))

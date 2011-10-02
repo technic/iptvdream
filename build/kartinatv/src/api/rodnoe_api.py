@@ -21,7 +21,7 @@ global Timezone
 Timezone = 120 #int(round(tdSec(datetime.datetime.now()-datetime.datetime.utcnow()) / 3600.0)*60)
 print "[KartinaTV] dreambox timezone is", Timezone, "min"
 
-class RodnoeAPI(AbstractAPI):
+class RodnoeAPI(AbstractStream):
 	
 	iProvider = "rodnoe"
 	NUMBER_PASS = False
@@ -129,37 +129,6 @@ class Ktv(RodnoeAPI):
 		RodnoeAPI.__init__(self, username, password)
 		self.channels = {}
 		self.aTime = 0
-
-	
-	def sortByName(self):
-		x = [(val.name, key) for (key, val) in self.channels.items()]
-		x.sort()
-		services = Bouquet(Bouquet.TYPE_MENU, 'all')
-		for item in x:
-			ch = self.channels[item[1]]
-			services.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num )) #two sort args [channel_name, number]
-		return services
-	
-	def sortByGroup(self):
-		x = [(val.group, key) for (key, val) in self.channels.items()]
-		x.sort()
-		if not x: return groups
-		groups = Bouquet(Bouquet.TYPE_MENU, 'By group')
-		groupname = x[0][0]
-		ch = self.channels[x[0][1]]
-		group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.gid) #two sort args [group_name, number]
-		for item in x:
-			ch = self.channels[item[1]]
-			if item[0] == groupname:
-				group.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num))
-			else:
-				groups.append(group)
-				groupname = item[0]
-				ch = self.channels[item[1]]
-				group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.gid) #two sort args [group_name, number]
-				group.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num))
-		groups.append(group)
-		return groups
 	
 	def setChannelsList(self):
 		root = self.getChannelsList()

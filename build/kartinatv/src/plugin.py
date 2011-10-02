@@ -745,8 +745,8 @@ class KartinaStreamPlayer(KartinaPlayer):
 		for x in favouritesList:
 			if x in ktv.channels.keys():
 				fav.append(Bouquet(Bouquet.TYPE_SERVICE, x))
-		bouquet.appendRoot(ktv.sortByName())
-		bouquet.appendRoot(ktv.sortByGroup())
+		bouquet.appendRoot(ktv.selectAll())
+		bouquet.appendRoot(ktv.selectByGroup())
 		bouquet.appendRoot(fav)
 		
 		#sort bouquets #TODO: move sorting to utils
