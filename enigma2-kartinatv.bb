@@ -6,8 +6,8 @@ SECTION = "extra"
 
 PN="enigma2-plugin-extensions-kartinatv"
 
-PV="1.9.4"
-PR = "r0"
+PV="1.9.5"
+PR = "r3"
 
 SRC_URI = "file://${FILE_DIRNAME}/build"
 S = "${WORKDIR}/build"
@@ -30,6 +30,7 @@ inherit autotools
 
 pkg_postinst() {
 	#!/bin/sh
+	mkdir -p /etc/iptvdream/ 
 	F="/etc/iptvdream/playlist.m3u"
 	if ! test -f $F; then
 		echo """

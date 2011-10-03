@@ -22,6 +22,7 @@ from Components.Label import Label
 from Components.Slider import Slider
 from Components.Button import Button
 from Components.Pixmap import Pixmap
+from Components.ScrollLabel import ScrollLabel
 from Components.ServiceEventTracker import ServiceEventTracker, InfoBarBase
 from Screens.InfoBarGenerics import InfoBarMenu, InfoBarPlugins, InfoBarExtensions, InfoBarAudioSelection, NumberZap, InfoBarSubtitleSupport, InfoBarNotifications, InfoBarSeek
 from Components.MenuList import MenuList
@@ -37,7 +38,7 @@ from Components.AVSwitch import AVSwitch
 from urllib import urlretrieve
 from Components.ParentalControl import parentalControl
 from threading import Thread, Lock, Condition
-from enigma import ePythonMessagePump, eBackgroundFileEraser, eAVSwitch
+from enigma import ePythonMessagePump, eBackgroundFileEraser
 from Tools.LoadPixmap import LoadPixmap
 #from Components.Pixmap import Pixmap
 from skin import loadSkin, parseFont, colorNames, SkinError
@@ -1657,6 +1658,12 @@ class WeatherIcon(Pixmap): #Pixmap class by Dr.Best. A bit "long" code IMHO:) Ha
 		else:
 			print "already shown", filename
 
+class KartinaScrollLabel(ScrollLabel):
+	def down(self):
+		self.pageDown
+	def up(self):
+		self.pageUp
+
 class multiListHandler():
 	def __init__(self, menu_lists):
 		self.count = len(menu_lists)
@@ -1689,8 +1696,9 @@ class multiListHandler():
 	def selectList(self, curr):
 		self.curr = curr
 		for i in self.lists:
-			self[i].selectionEnabled(0)
-		self[self.curr].selectionEnabled(1)
+			if not isinstance(self[i], ScrollLabel): self[i].selectionEnabled(0)
+		if not isinstance(self[self.curr], ScrollLabel):
+			self[self.curr].selectionEnabled(1)
 		self.is_selection = isinstance(self[self.curr], SelectionList)
 		self.is_fakepage = hasattr(self[self.curr], 'fake_page')
 		print "[KartinaTV] select list", self.curr, "selection", self.is_selection, self.is_fakepage
@@ -1797,7 +1805,9 @@ class KartinaVideoList(Screen, multiListHandler):
 	
 	MODE_MAIN = 0 
 	MODE_GENRES = 1
-
+	MODE2_LIST = 0
+	MODE2_INFO = 1
+	
 	def __init__(self, session):
 		Screen.__init__(self, session)
 		
@@ -1816,8 +1826,9 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.glist.l.setFont(0, gFont("Regular", 20))
 		self.glist.l.setItemHeight(28)
 		self["glist"] = self.glist
+		self["fullinfo"] = KartinaScrollLabel()
 		
-		multiListHandler.__init__(self, ["list", "glist"])
+		multiListHandler.__init__(self, ["list", "glist", "fullinfo"])
 		
 		self["name"] = Label()
 		self["description"] = Label()
@@ -1836,7 +1847,8 @@ class KartinaVideoList(Screen, multiListHandler):
 		self["genres"] = Label()
 		self["genres"].setText(_("Genres: ")+_("all"))
 				
-		self["actions"] = ActionMap(["OkCancelActions","ColorActions", "EPGSelectActions"], 
+		self["actions"] = ActionMap(["OkCancelActions","ColorActions",
+		                             "EPGSelectActions","ChannelSelectEPGActions"], 
 		{
 			"cancel": self.exit,
 			"ok": self.ok,
@@ -1845,10 +1857,18 @@ class KartinaVideoList(Screen, multiListHandler):
 			"green": self.selectGenres,
 			"yellow": self.search,
 			"nextBouquet" : self.nextPage,
-			"prevBouquet" :self.prevPage
+			"prevBouquet" :self.prevPage,
+			"showEPGList" : self.showVidInfo
+		}, -1)
+		
+		self["actions_info"] = ActionMap(["OkCancelActions"],
+		{
+			"cancel": self.exitInfo,
+			"ok": self.exitInfo
 		}, -1)
 		
 		self.mode = self.MODE_MAIN
+		self.mode2 = self.MODE2_LIST
 		self.fillingList = True
 		
 		self.lastroot = bouquet.current
@@ -1863,8 +1883,8 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.download.messagePump.recv_msg.get().append(self.startPosterDecode)
 		self.download.start()
 		self.onClose.append(self.disconnectPump)
-		self.onClose.append(self.download.stopTasks)		
-	
+		self.onClose.append(self.download.stopTasks)
+
 	def disconnectPump(self):
 		self.download.messagePump.recv_msg.get().remove(self.startPosterDecode)
 		
@@ -1872,6 +1892,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		if self.start in self.onShown:
 			self.onShown.remove(self.start)
 			#On first fill...
+			self.exitInfo()
 			if bouquet.current.type == Bouquet.TYPE_SERVICE:
 				bouquet.goOut()
 				self.fillSingle()
@@ -2091,6 +2112,31 @@ class KartinaVideoList(Screen, multiListHandler):
 		if self["poster"].IconFileName != self.poster_path:
 			self.download.nextTask(ktv.getPosterPath(cid), self.poster_path)
 	
+	def showVidInfo(self):
+		c = bouquet.getCurrentSel()
+		if c:
+			cid = c.name
+			txtmore = ""
+			#some specific here
+			if c.type == Bouquet.TYPE_SERVICE:
+				fid = cid
+				cid = bouquet.current.name
+				txtactors = '%s: %s' % (_("Actors"), ktv.videos[cid].actors)
+				txtmore += '\n'.join([ktv.videos[cid].country, ktv.videos[cid].genre, _("Director"),
+				                ktv.videos[cid].director, txtactors])
+		else:
+			return
+		
+		txt = ktv.videos[cid].descr + '\n' + txtmore
+		self["fullinfo"].setText(txt)
+		self.mode2 = self.MODE2_INFO
+		self.selectList("fullinfo")
+		self["actions"].setEnabled(False)
+		self["actions_info"].setEnabled(True)
+		self["list"].hide()
+		self["fullinfo"].show()
+
+	
 	def startPosterDecode(self, msg):
 		if self.download.lastposter == self.poster_path:
 			self["poster"].updateIcon(self.poster_path)
@@ -2161,6 +2207,14 @@ class KartinaVideoList(Screen, multiListHandler):
 			bouquet.goIn()
 			self.list.onSelectionChanged.pop() #Do it before close, else event happed while close.
 			self.close(True)
+	
+	def exitInfo(self):
+		self["fullinfo"].hide()
+		self["list"].show()
+		self["actions_info"].setEnabled(False)
+		self["actions"].setEnabled(True)
+		self.selectList("list")
+		self.mode2 = self.MODE2_LIST
 	
 	def exit(self):
 		if bouquet.getCurrentSel().type == Bouquet.TYPE_SERVICE:
