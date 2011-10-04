@@ -7,5 +7,4 @@ install_PYTHON = *.py
 install_DATA = \
 	plugin-ktv.png \
 	plugin-rtv.png \
-	playlist.m3u
 	LICENCE

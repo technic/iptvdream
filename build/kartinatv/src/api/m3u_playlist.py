@@ -61,7 +61,7 @@ class Ktv(AbstractAPI):
 		return groups
 	
 	def setChannelsList(self):
-		FILENAME = '/usr/lib/enigma2/python/Plugins/Extensions/KartinaTV/playlist.m3u' 
+		FILENAME = '/etc/iptvdream/playlist.m3u' 
 		fd = open(FILENAME, 'r')
 		if fd.readline().rstrip() != "#EXTM3U":
 			raise Exception("Wrong header. #EXTM3U expected")

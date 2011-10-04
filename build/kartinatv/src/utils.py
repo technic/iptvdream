@@ -13,6 +13,10 @@ from operator import attrgetter
 
 def tdSec(td):
 	return td.days * 86400 + td.seconds
+def tdmSec(td):
+	#Add +1. Timer should wait for next event until event happed exactly.
+	#Otherwise inaccuracy in round may lead to mistake.
+	return td.days * 86400*1000 + td.seconds * 1000 + td.microseconds/1000 +1
 def secTd(sec):
 	return datetime.timedelta(sec / 86400, sec % 86400)
 	
@@ -64,6 +68,10 @@ class EpgEntry():
 		now = syncTime()+secTd(delta)
 		return tdSec(self.tend-now)
 	
+	def getTimeLeftmsec(self, delta): #More accurancy, milliseconds
+		now = syncTime()+secTd(delta)
+		return tdmSec(self.tend-now)
+
 	#programm is now and tstart and tend defined
 	def isNow(self, delta): 
 		if self.isValid():

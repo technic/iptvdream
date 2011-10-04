@@ -131,8 +131,9 @@
       <widget backgroundColor="#00343c4f" font="Regular;22" name="pages" position="69,33" shadowColor="#000064c7" size="170,27" transparent="1" />
       <widget backgroundColor="#15000000" backgroundColorSelected="#000a1822" foregroundColor="#00ffffff" foregroundColorSelected="#00ff880a" name="list" position="56,109" scrollbarMode="showOnDemand" size="714,506" transparent="1" zPosition="0" />
       <widget backgroundColor="#15000000" backgroundColorSelected="#000a1822" foregroundColor="#00ffffff" foregroundColorSelected="#00ff880a" name="glist" position="788,106" scrollbarMode="showOnDemand" size="487,506" transparent="1" zPosition="-1" />
+      <widget backgroundColor="#0038435a" font="Regular;19" foregroundColor="#00bbbbbb" name="fullinfo" position="56,109" size="714,506" transparent="1" zPosition="1" />
       <widget backgroundColor="#0038435a" font="Regular;22" foregroundColor="#00e5b243" halign="center" name="name" position="795,375" size="430,25" transparent="1" zPosition="1" />
-      <widget backgroundColor="#0038435a" font="Regular;18" foregroundColor="#00bbbbbb" name="description" position="794,416" size="435,197" transparent="1" zPosition="1" />
+      <widget backgroundColor="#0038435a" font="Regular;18" foregroundColor="#00bbbbbb" name="description" position="794,416" size="435,194" transparent="1" zPosition="1" />
       <ePixmap alphatest="on" pixmap="KartinaTV_skin/buttons/red.png" position="70,635" size="24,24" />
       <ePixmap alphatest="on" pixmap="KartinaTV_skin/buttons/green.png" position="360,635" size="24,24" />
       <ePixmap alphatest="on" pixmap="KartinaTV_skin/buttons/yellow.png" position="650,635" size="24,24" />
@@ -149,7 +150,7 @@
       <widget name="rate2" pixmap="KartinaTV_skin/stars.png" position="788,289" size="120,24" transparent="1" zPosition="2" />
       <widget backgroundColor="#001b2c47" font="Regular; 22" halign="center" name="rate1_text" position="794,181" size="100,22" text="IMDB" transparent="1" />
       <widget backgroundColor="#001b2c47" font="Regular; 20" halign="center" name="rate2_text" position="794,252" size="110,22" text="Kinopoisk" transparent="1" />
-      <widget font="Regular;18" name="moreinfo" position="1055,130" size="166,219" transparent="1" valign="top" zPosition="5" />
+      <widget font="Regular;18" name="moreinfo" position="1055,130" size="166,214" transparent="1" valign="top" zPosition="5" />
       <widget name="poster" position="917,131" size="120,173" transparent="1" zPosition="3" />
       <ePixmap alphatest="on" pixmap="KartinaTV_skin/buttons/bouquet.png" position="24,35" size="33,61" zPosition="1" />
     </screen>
