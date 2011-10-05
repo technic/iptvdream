@@ -2217,7 +2217,8 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.mode2 = self.MODE2_LIST
 	
 	def exit(self):
-		if bouquet.getCurrentSel().type == Bouquet.TYPE_SERVICE:
+		c = bouquet.getCurrentSel()
+		if c and c.type == Bouquet.TYPE_SERVICE:
 			bouquet.goOut()
 			self.goto_end = False
 			self.fillList()
