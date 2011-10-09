@@ -17,7 +17,7 @@ class AbstractAPI:
 	MODE = MODE_STREAM
 	iProvider = "free"
 	iName = "example"
-	iTitle = None
+	iTitle = None #Defaults to iName
 	NEXT_API = None 
 	NUMBER_PASS = False
 	
@@ -35,6 +35,10 @@ class AbstractAPI:
 		"""Use for API debug"""
 		if DEBUG:
 			print "[KartinaTV] %s: %s" % (self.iName, msg)
+	
+	def get_hashID(self):
+		return hash(self.iName)
+	hashID = property(get_hashID)
 
 class AbstractStream(AbstractAPI):
 	def __init__(self, username, password):
@@ -74,8 +78,14 @@ class AbstractStream(AbstractAPI):
 	def getGmtEpg(self, cid):
 		"""Plugin call this function if it wants to access epg that was self.aTime seconds before now.
 		   If you can download epg next that was self.aTime seconds before also in this request, do it here."""
-		#TODO: getGmtEpgNext() !!!!!! Also utils!
 		pass
+	
+	def getGmtEpgNext(self, cid):
+		pass
+	
+	def getPiconName(self, cid):
+		"""You can return reference to cid or to channel name, anything you want ;)"""
+		return "iptvdream_%s_%s" % (self.iName, cid)
 	
 	def selectAll(self):
 		"""You don't need to override this function"""

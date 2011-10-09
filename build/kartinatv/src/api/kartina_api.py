@@ -12,8 +12,8 @@ from abstract_api import MODE_STREAM, AbstractAPI
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 import datetime
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities
-
+from utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities
+#Plugins.Extensions.KartinaTV.
 #TODO: GLOBAL: add private! Get values by properties.
 
 global Timezone
@@ -187,8 +187,6 @@ class Ktv(KartinaAPI):
 		return root.attrib.get("url").encode("utf-8").split(' ')[0].replace('http/ts://', 'http://')
 	
 	def getChannelsEpg(self, cids):
-		if len(cids) == 1:
-			return self.epgNext(cids[0])
 		params = {"cids" : ",".join(map(str, cids))}
 		root = self.getData("/api/xml/epg_current?"+urllib.urlencode(params), "getting epg of cids = %s" % cids)
 		for channel in root.find('epg'):
@@ -201,17 +199,21 @@ class Ktv(KartinaAPI):
 			prog = e.findtext('epg_progname').encode('utf-8')
 			self.channels[id].epg = EpgEntry(prog, t_start, t_end)
 	
-	def getGmtEpg(self, id):
+	def getGmtEpg(self, cid):
 		params = {"m" : "channels",
 				  "act" : "get_stream_url",
-				  "cid" : id,
+				  "cid" : cid,
 				  "gmt": (syncTime() + secTd(self.aTime)).strftime("%s"),
 				  "just_info" : 1 }
-		root = self.getData("/?"+urllib.urlencode(params), "get GmtEpg of stream %s" % id)
+		root = self.getData("/?"+urllib.urlencode(params), "get GmtEpg of stream %s" % cid)
 		prog = unescapeEntities(root.attrib.get("programm")).encode("utf-8")
 		tstart = datetime.datetime.fromtimestamp( int(root.attrib.get("start").encode("utf-8")) ) #unix
 		tend = datetime.datetime.fromtimestamp( int(root.attrib.get("next").encode("utf-8")) )
-		self.channels[id].aepg = EpgEntry(prog, tstart,  tend)
+		self.channels[cid].aepg = EpgEntry(prog, tstart,  tend)
+	
+	def getGmtEpgNext(self, cid):
+		date = syncTime()+secTd(ktv.aTime)
+		return getDayEpg(self, cid, date)
 		
 	
 	def getDayEpg(self, cid, date = None):
@@ -221,7 +223,7 @@ class Ktv(KartinaAPI):
 				  "act" : "show_day_xml",
 				  "day" : date.strftime("%d%m%y"),
 				  "cid" : cid}
-		root = self.getData("/?"+urllib.urlencode(params), "EPG for channel %s" % cid)
+		root = self.getData("/?"+urllib.urlencode(params), "day EPG for channel %s" % cid)
 		epglist = []
 		archive = int(root.attrib.get("have_archive").encode("utf-8"))
 		self.channels[cid].archive = archive
@@ -230,8 +232,11 @@ class Ktv(KartinaAPI):
 			time = datetime.datetime.fromtimestamp(t)
 			progname = unescapeEntities(program.attrib.get("progname")).encode("utf-8")
 			pdescr =  unescapeEntities(program.attrib.get("pdescr")).encode("utf-8")
-			epglist += [(time, progname, pdescr)]
-		return epglist
+			epglist += [EpgEntry(progname+'\n'+pdescr, time, None)]
+		ktv.channels[cid].pushEpgSorted(epglist)
+	
+	def epgCurrent(self, cid):
+		return self.epgNext(cid)
 	
 	def epgNext(self, cid):
 		params = {"cid": cid}
@@ -244,9 +249,9 @@ class Ktv(KartinaAPI):
 			return (tstart, title)
 		if len(lst)>1:
 			#print parseepg(lst[0])[0]
-			self.channels[cid].epg = EpgEntry(parseepg(lst[0])[1], parseepg(lst[0])[0], parseepg(lst[1])[0])	
+			self.channels[cid].epg = EpgEntry(parseepg(lst[0])[1], parseepg(lst[0])[0], parseepg(lst[1])[0])
 		if len(lst)>2:
-			self.channels[cid].nepg = EpgEntry(parseepg(lst[1])[1], parseepg(lst[1])[0], parseepg(lst[2])[0])	
+			self.channels[cid].epg = EpgEntry(parseepg(lst[1])[1], parseepg(lst[1])[0], parseepg(lst[2])[0])	
 
 	
 
@@ -254,8 +259,21 @@ if __name__ == "__main__":
 	import sys
 	ktv = Ktv(sys.argv[1], sys.argv[2])
 	ktv.start()
+	cid = 39
+	def printe():
+		print "-----------------------------"
+		for x in ktv.channels[cid].q:
+			print x
+		print "-----------------------------"
 	#ktv.setTimeShift(0)
 	#ktv.setChannelsList()
-	print ktv.getStreamUrl(39)
 	ktv.setChannelsList()
-	ktv.getChannelsEpg(ktv.channels.keys())
+#	ktv.getChannelsEpg(ktv.channels.keys())
+	ktv.epgCurrent(cid)
+	print ktv.channels[cid].hasEpgNext()
+	ktv.getDayEpg(cid)
+	printe()
+	ktv.epgNext(cid)
+	print ktv.channels[cid].hasEpg(-10000)
+	print ktv.channels[cid].hasEpgNext(-10000)
+	printe()

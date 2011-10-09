@@ -28,6 +28,13 @@ def setSyncTime(time):
 	time_delta = time-datetime.datetime.now()
 	print "[KartinaTV] set time delta to", tdSec(time_delta)
 
+		x = 0
+		for x in xrange(len(epglist)):
+			if epglist[x][0] and (epglist[x][0] > syncTime()):
+				break
+		if x > 0: x-=1
+
+
 def syncTime():
 	#print "[KartinaTV] time delta = ", tdSec(time_delta)
 	return datetime.datetime.now() + time_delta
@@ -85,26 +92,70 @@ class Channel():
 		self.num = num
 		self.group = group
 		self.archive = archive
+		
+		self.delta = 0
+		self.q = []
 		self.epg = None #epg for current program
 		self.aepg = None #epg of archive
 		self.nepg = None #epg for next program
+		self.anepg = None #epg for next program in archive
 		self.lepg = {}
 		self.lastUpdateFailed = False
 	
 	#EPG is valid only if bouth tstart and tend specified!!!
 	#in this case hasSmth returns True
 	
-	def hasEpg(self):
-		return self.epg and self.epg.isNow(0)
+	def pushEpg(self, epg):
+		self.pushEpgSorted[epg]
 	
-	def hasAEpg(self, delta):
-		return self.aepg and self.aepg.isNow(delta)
+	def pushEpgSorted(self, epglist):
+		#prepare list
+		i = 0
+		while i < len(epglist)-1:
+			if not epglist[i+1]:
+				epglist[i+1].tend = epglist[i].tstart
+			i += 1
+		#push
+		i = 0
+		l_start = epglist[0].tstart
+		l_end = epglist[-1].tend or epglist[-1].tstart
+		while (i < len(self.q)) and (self.q[i].tstart >= l_start):
+			i += 1
+		ins_start = i
+		while (i < len(self.q)) and (self.q[i].tstart <= l_end):
+			i += 1
+		ins_end = i
+		if ins_start == ins_end:
+			ins_end += 1
+		self.q = l[:ins_start] + epglist + l[ins_end:]
 	
-	def hasEpgNext(self):
-		if self.epg and self.epg.isValid() and self.nepg and self.nepg.isValid():
-			return self.epg.tend <= self.nepg.tstart and self.nepg.tstart > syncTime()
+	def findEpg(self, delta=0)
+		i = 0
+		while (i < len(self.q)) and not self.q[i].isNow(delta):
+			i += 1
+		if i == len(self.q):
+			return None
+		else:
+			return i
+	
+	def hasEpg(self, delta=0)
+		res = self.findEpg(delta)
+		if res is None:
+			return None
+		else:
+			return self.q[res]
+	
+	def hasEpgNext(self, delta):
+		i = self.findEpg(delta)
+		if i is None:
+			return None
+		now = syncTime()+secTd(delta)
+		curr = self.q[i]
+		i += 1
+		if (i < len(self.q)) and self.q[i].isValid():
+			return self.q[i]
 		return False
-	
+
 class Bouquet():
 	TYPE_SERVICE = 0
 	TYPE_MENU = 1

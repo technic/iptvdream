@@ -53,17 +53,3 @@ class Ktv(RodnoeAPI):
 		params = {"cid": id}
 		root = self.getData(self.site+"/get_url_radio?"+urllib.urlencode(params), "stream url")
 		return root.findtext("url").encode("utf-8")
-	
-	def getChannelsEpg(self, cids):
-		pass		
-			
-	def epgNext(self, cid): #do Nothing
-		self.trace("NO epgNext in API!")
-		pass 
-	
-	def getDayEpg(self, id, date = None):
-		epglist = []
-		return epglist
-	
-	def getGmtEpg(self, cid):
-		pass

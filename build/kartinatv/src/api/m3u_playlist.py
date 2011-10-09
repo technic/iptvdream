@@ -20,8 +20,7 @@ class Ktv(AbstractStream):
 	locked_cids = []
 	
 	def __init__(self, username, password):
-		AbstractAPI.__init__(self, username, password)
-		self.channels = {}
+		AbstractStream.__init__(self, username, password)
 		self.aTime = 0
 
 	def start(self):
@@ -84,7 +83,10 @@ class Ktv(AbstractStream):
 	
 	def getDayEpg(self, cid, date = None):
 		return []
-		
+	
+	def epgCurrent(self, cid):
+		pass
+	
 	def epgNext(self, cid):
 		pass
 

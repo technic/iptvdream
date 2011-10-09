@@ -177,6 +177,9 @@ class Ktv(RodnoeAPI):
 		root = self.getData(self.site+"/get_url_tv?"+urllib.urlencode(params), "stream url")
 		return root.findtext("url").encode("utf-8")
 	
+	def epgCurrent(self, cid):
+		return getChannelsEpg(self, [cid])
+	
 	def getChannelsEpg(self, cids): #RodnoeTV hasn't got this function in API. Got epg for all instead.
 		params = {}
 		if len(cids) == 1:
@@ -203,8 +206,9 @@ class Ktv(RodnoeAPI):
 			#	print "[KartinaTV] INFO there is no epg for id=%d on ktv-server" % id
 				pass
 	
-	def epgNext(self, cid): #do Nothing
+	def epgNext(self, cid):
 		self.trace("NO epgNext in API!")
+		epgCurrent(self, cid)
 		pass 
 	
 	def getDayEpg(self, id, date = None):
