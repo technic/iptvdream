@@ -168,8 +168,6 @@ for afile in os_listdir(API_PREFIX + API_DIR):
 			config.iptvdream[aname].sortkey["all"] = ConfigInteger(1, (1,2))
 			config.iptvdream[aname].sortkey["By group"] = ConfigInteger(1, (1,2))
 			config.iptvdream[aname].sortkey["in group"] = ConfigInteger(1,(1,2))
-		elif _api.MODE == MODE_VIDEOS:
-			config.iptvdream[aname].lastpos = ConfigInteger(0, (0,30000))
 		print "[KartinaTV] import api %s:%s" % (aprov, aname)
 
 #buftime is general
@@ -607,21 +605,10 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 	def exit(self):
 		if MANUAL_ASPECT_RATIO:
 			(config.av.policy_169.value, config.av.policy_43.value) = self.oldAspectRatio
-		self.session.nav.playService(self.oldService)
 		#XXX:
 		if bouquet:
-			cfg.lastroot.value = str(bouquet.getPath())
-			cfg.lastcid.value = self.current
-			print "[KartinaTV] save path", cfg.lastroot.value, cfg.lastcid.value
-			cfg.lastroot.save()
-			cfg.lastcid.save()
-			cfg.favourites.value = str(favouritesList)
-			cfg.favourites.save()
-			if Ktv.MODE == MODE_VIDEOS: #FIXME: this is hack.
-				pass
-			else:
-				cfg.sortkey.save()
 			self.doExit()
+		self.session.nav.playService(self.oldService)
 		print "[KartinaTV] exiting"
 		self.close()
 	
@@ -787,6 +774,16 @@ class KartinaStreamPlayer(KartinaPlayer):
 			bouquet.historyAppend()
 			self.play()
 	
+	def doExit(self):
+		cfg.lastroot.value = str(bouquet.getPath())
+		cfg.lastcid.value = self.current
+		print "[KartinaTV] save path", cfg.lastroot.value, cfg.lastcid.value
+		cfg.lastroot.save()
+		cfg.lastcid.save()
+		cfg.favourites.value = str(favouritesList)
+		cfg.favourites.save()
+		cfg.sortkey.save()
+		
 	def archiveSeekFwd(self):
 		self.session.openWithCallback(self.fwdJumpTo, MinuteInput)
 			
@@ -993,6 +990,8 @@ class KartinaVideoPlayer(KartinaPlayer):
 		self["description"] = Label()
 		
 		InfoBarSeek.__init__(self)
+		
+		self.is_playing = False
 	
 	def startPlay(self, **kwargs):
 		KartinaPlayer.startPlay(self)
@@ -1007,6 +1006,8 @@ class KartinaVideoPlayer(KartinaPlayer):
 		
 		sref = eServiceReference(4097, 0, uri) #TODO: think about serviceID
 		self.session.nav.playService(sref)
+		
+		self.is_playing = True
 		
 		if MANUAL_ASPECT_RATIO is not None:
 			(config.av.policy_169.value, config.av.policy_43.value) = MANUAL_ASPECT_RATIO
@@ -1023,14 +1024,51 @@ class KartinaVideoPlayer(KartinaPlayer):
 		self.play()
 		
 	def doGo(self):
-		if cfg.lastpos.value:
-			pass
-		else:
+		(vid, fid, play_pos) = eval(cfg.lastroot.value) or (0, 0, 0)
+		if play_pos == 0:	
 			self.showList()
+		else:
+			ktv.getVideoInfo(vid)
+			bouquet.appendRoot(ktv.buildEpisodesBouquet(vid))
+			bouquet.goIn()
+			bouquet.goIn()
+			self.current = bouquet.getCurrent()
+			bouquet.historyAppend()
+			self.switchChannel()
+
+	
+	def doExit(self):
+		if bouquet.current.type == Bouquet.TYPE_MENU:
+			return
+		fid = self.current
+		vid = bouquet.current.parent.name #Video is parent, episode is current		
+		play_pos = 0
+		seek = self.getSeek()
+		if self.is_playing and seek:
+			p = seek.getPlayPosition()
+			if not p[0]:
+				play_pos = p[1]			
+		cfg.lastroot.value = str((vid, fid, play_pos))
 	
 	def doEofInternal(self, playing):
 		#TODO: we can't figure out is it serial.
 		print "[KartinaTV] EOF. playing", playing
+		#self.session.nav.playService(self.oldService)
+		#self.showList()
+		seek = self.getSeek()
+		if seek is None:
+			return
+		l = seek.getLength()
+		p = seek.getPlayPosition()
+		if not l[0] and not p[0]:
+			l = l[1]
+			p = p[1]
+			if p*100.0/l > 90: #Hack to filter only eofs at end.
+				self.is_playing = False
+				print "[KartinaTV] movie ended."
+				if self.execing: self.showList()
+				
+		print "[KartinaTV] l=", seek.getLength(), ' p=', seek.getPlayPosition()
 		#self.session.nav.playService(self.oldService)
 		#self.showList()
 

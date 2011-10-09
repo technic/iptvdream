@@ -123,6 +123,10 @@ class Bouquet():
 		entry.parent = self
 		self.__content += [entry]
 	
+	def extend(self, boquet):
+		for entry in bouquet.content:
+			self.append(entry)
+	
 	def remove(self, id=None):
 		if not id:
 			id = self.index
