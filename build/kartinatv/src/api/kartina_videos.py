@@ -135,7 +135,7 @@ class Ktv(KartinaAPI):
 		return movs
 	
 	def buildEpisodesBouquet(self, vid):
-		files = Bouquet(Bouquet.TYPE_MENU, 'episodes') 
+		files = Bouquet(Bouquet.TYPE_MENU, vid) 
 		for x in self.videos[vid].files:
 			print 'add fid', x, 'to bouquet'
 			file = Bouquet(Bouquet.TYPE_SERVICE, x)
