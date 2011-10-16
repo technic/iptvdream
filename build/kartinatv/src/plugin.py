@@ -289,7 +289,7 @@ class RunManager():
 				return
 			self.timer.start(1,1)		
 		else:
-			KartinaPlayer.instance.exit()
+			KartinaPlayer.instance.close()
 			self.__run_open = True
 			self.timer.start(1,1)
 
@@ -443,7 +443,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		#disable/enable action map. This method used by e2 developers...
 		self["actions"] = ActionMap(["OkCancelActions", "InfobarActions"], 
 		{
-			"toogleTvRadio" : self.exit,
+			"toogleTvRadio" : self.close,
 			"showMovies" : self.nextAPI
 		}, -1)
 		
@@ -473,9 +473,17 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		
 	
 	def __onClose(self):
+		print "[KartinaTV] closing"
 		config.misc.standbyCounter.notifiers.remove(self.standbyCountChanged)
 		KartinaPlayer.instance = None
 		print "[KartinaTV] set instance to None"
+		if MANUAL_ASPECT_RATIO:
+			(config.av.policy_169.value, config.av.policy_43.value) = self.oldAspectRatio
+		#XXX:
+		if bouquet:
+			self.doExit()
+		self.session.nav.playService(self.oldService)
+		print "[KartinaTV] exiting"
 	
 	def start(self):		
 		if self.start in self.onShown:
@@ -590,27 +598,17 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			bouquet.historyAppend()
 			self.switchChannel()
 		elif bouquet.current.type == Bouquet.TYPE_MENU:
-			self.exit()
+			self.close()
 			
 	def errorCB(self, edit = False):
 		if edit:
 			self.kartinaConfig()
 		else:
-			self.exit()
+			self.close()
 
 	def restart(self):
 		self.session.nav.stopService()
 		self.start()
-
-	def exit(self):
-		if MANUAL_ASPECT_RATIO:
-			(config.av.policy_169.value, config.av.policy_43.value) = self.oldAspectRatio
-		#XXX:
-		if bouquet:
-			self.doExit()
-		self.session.nav.playService(self.oldService)
-		print "[KartinaTV] exiting"
-		self.close()
 	
 	def doExit(self):
 		pass
@@ -862,7 +860,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 			self["currentName"].setText(curr.name)
 			self["currentTime"].setText(curr.tstart.strftime("%H:%M"))
 			self["nextTime"].setText(curr.tend.strftime("%H:%M"))
-			self.epgTimer.start(curr.getTimeLeftmsec(ktv.aTime) ) #milliseconds
+			self.epgTimer.start(curr.getTimeLeftmsec(ktv.aTime) +1000) #milliseconds
 			self["currentDuration"].setText("+%d min" % (curr.getTimeLeft(ktv.aTime) / 60) )
 			self["progressBar"].setValue(PROGRESS_SIZE * curr.getTimePass(ktv.aTime) / curr.duration)
 			self.epgProgressTimer.start(PROGRESS_TIMER)
