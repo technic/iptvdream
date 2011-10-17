@@ -356,7 +356,6 @@ void eServiceTS::recv_event(int evt)
 		}
 		if (PID_SET == 0)
 		{
-			PID_SET = 1;
 			m_decodedemux->flush();
 			if (VPID != 0){
 				if (H264)
@@ -376,7 +375,8 @@ void eServiceTS::recv_event(int evt)
 			}
 			m_event(this, evStart);
 			m_decoder->play();
-			
+			PID_SET = 1;
+			m_streamthread->startdvr();
 		}
 		break;
 	}
@@ -622,9 +622,17 @@ void eStreamThread::start(int srcfd, int destfd, int buftime) {
 	m_buffer_time = buftime;
 	pthread_mutex_init(&m_mutex, NULL);
 	pthread_cond_init(&m_full, NULL);
+	pthread_mutex_init(&m_startmut, NULL);
+	pthread_cond_init(&m_startsig, NULL);
 	m_stop = false;
 	m_audioInfo = 0;
 	run(IOPRIO_CLASS_RT);
+}
+
+void eStreamThread::startdvr() {
+	pthread_mutex_lock(&m_startmut);
+	pthread_cond_signal(&m_startsig);
+	pthread_mutex_unlock(&m_startmut);
 }
 
 void eStreamThread::stop() {
@@ -640,6 +648,8 @@ void eStreamThread::stop() {
 		pthread_cond_signal(&m_full);
 		pthread_mutex_unlock(&m_mutex);
 		//mutex unlock
+		PID_SET = 1;
+		this->startdvr();
 	}
 	kill();
 }
@@ -798,7 +808,7 @@ void eStreamThread::thread() {
 	const int bufsize = 188*22310+1; //aligned to 188. approximately 4MB. 
 	//const int bufmask = bufsize -1;
 	const int blocksize = 188*348;
-	int rc, avail, put, get, size, x;
+	int rc, avail, put, get, size, x, scan_pos=0;
 	int predone = blocksize;
 	time_t next_scantime = 0;
 	fd_set wset;
@@ -899,7 +909,7 @@ void eStreamThread::thread() {
 		int towrite;
 		//buffer contains:
 		//"(get+1 pointer) (x-1 drop bytes) (0x47 start byte) (188 tspacket bytes)*packet_count + (tail that not aligned to 188)"
-		//if (PID_SET == 1) {	
+		if (PID_SET == 1) {	
 			x = 0;
 			while ((buf[wstart+x] != 0x47) && (avail > x)){
 				x++;
@@ -920,11 +930,11 @@ void eStreamThread::thread() {
 				rc = x + avail;
 				eDebug("WARNING! ignore %d", avail);
 			}
-		
-		//} else {
-		//	rc = avail - avail % 188; //align all to 188!
-		//	eDebug("ignore %d", avail);
-		//}
+			scan_pos = get;
+		} else {
+			rc = 0;
+			eDebug("Wateing for pids");
+		}
 
 		if (rc < 0) {
 			eDebug("eStreamThreadGet error in write (%d)", errno);
@@ -936,11 +946,17 @@ void eStreamThread::thread() {
 			m_messagepump.send(evtSOS);
 			sosSend = true;
 		}
-		if (time(0) >= next_scantime && (get+rc) >= blocksize) {
-			if (scanAudioInfo(buf+get+rc-blocksize, blocksize)) {
+		bool need_scan = time(0) >= next_scantime || PID_SET == 0;
+		if (need_scan && scan_pos+blocksize < bufsize) {
+			if (scanAudioInfo(buf+scan_pos, blocksize)) {
 				m_messagepump.send(evtStreamInfo);
-				eDebug("found after get=%d", get);
 				next_scantime = time(0) + 1;
+				scan_pos += avail;
+				pthread_mutex_lock(&m_startmut);
+				while (PID_SET == 0) {
+					pthread_cond_wait(&m_startsig, &m_startmut);
+				}
+				pthread_mutex_unlock(&m_startmut);
 			}
 		}
 		get += rc;
@@ -1026,6 +1042,7 @@ void eStreamThreadPut::thread()
 		pthread_testcancel();
 		
 		//wait for event
+		pthread_mutex_lock(m_mutex);
 		do{
 			put = m_ring->put;
 			get = m_ring->get;

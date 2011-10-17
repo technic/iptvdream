@@ -169,6 +169,7 @@ public:
 	void start(int srcfd, int destfd, int buftime);
 	void stop();
 	bool running() { return m_running; }
+	void startdvr();
 
 	virtual void thread();
 	virtual void thread_finished();
@@ -181,8 +182,8 @@ private:
 	bool m_stop;
 	bool m_running;
 	int m_srcfd, m_destfd, m_buffer_time;
-	pthread_cond_t m_full;
-	pthread_mutex_t m_mutex;
+	pthread_cond_t m_full, m_startsig;
+	pthread_mutex_t m_mutex, m_startmut;
 	ePtr<TSAudioInfoWeb> m_audioInfo;
 	eFixedMessagePump<int> m_messagepump;
 	void recvEvent(const int &evt);
