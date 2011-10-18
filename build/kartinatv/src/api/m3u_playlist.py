@@ -8,24 +8,58 @@
 # Software Foundation; either version 2, or (at your option) any later
 # version.
 
-from abstract_api import MODE_STREAM, AbstractStream
+from abstract_api import MODE_STREAM, AbstractAPI
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring, ElementTree
 import datetime
 from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel
 
-class Ktv(AbstractStream):
+class Ktv(AbstractAPI):
 	
-	iName = "m3uPlaylist"
+	iName = "m3uPlaylist"		
 	locked_cids = []
 	
 	def __init__(self, username, password):
-		AbstractStream.__init__(self, username, password)
+		AbstractAPI.__init__(self, username, password)
+		self.channels = {}
 		self.aTime = 0
 
 	def start(self):
+		pass		
+					
+	def setTimezone(self):
 		pass
 
+	
+	def sortByName(self):
+		x = [(val.name, key) for (key, val) in self.channels.items()]
+		x.sort()
+		services = Bouquet(Bouquet.TYPE_MENU, 'all')
+		for item in x:
+			ch = self.channels[item[1]]
+			services.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num )) #two sort args [channel_name, number]
+		return services
+	
+	def sortByGroup(self):
+		x = [(val.group, key) for (key, val) in self.channels.items()]
+		x.sort()
+		groups = Bouquet(Bouquet.TYPE_MENU, 'By group')
+		groupname = x[0][0]
+		ch = self.channels[x[0][1]]
+		group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.gid) #two sort args [group_name, number]
+		for item in x:
+			ch = self.channels[item[1]]
+			if item[0] == groupname:
+				group.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num))
+			else:
+				groups.append(group)
+				groupname = item[0]
+				ch = self.channels[item[1]]
+				group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.gid) #two sort args [group_name, number]
+				group.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num))
+		groups.append(group)
+		return groups
+	
 	def setChannelsList(self):
 		FILENAME = '/etc/iptvdream/playlist.m3u' 
 		fd = open(FILENAME, 'r')
@@ -83,10 +117,7 @@ class Ktv(AbstractStream):
 	
 	def getDayEpg(self, cid, date = None):
 		return []
-	
-	def epgCurrent(self, cid):
-		pass
-	
+		
 	def epgNext(self, cid):
 		pass
 
