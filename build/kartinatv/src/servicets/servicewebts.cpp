@@ -375,7 +375,6 @@ void eServiceTS::recv_event(int evt)
 			}
 			m_event(this, evStart);
 			m_decoder->play();
-			PID_SET = 1;
 			m_streamthread->startdvr();
 		}
 		break;
@@ -631,6 +630,7 @@ void eStreamThread::start(int srcfd, int destfd, int buftime) {
 
 void eStreamThread::startdvr() {
 	pthread_mutex_lock(&m_startmut);
+	PID_SET = 1;
 	pthread_cond_signal(&m_startsig);
 	pthread_mutex_unlock(&m_startmut);
 }
@@ -951,13 +951,13 @@ void eStreamThread::thread() {
 			if (scanAudioInfo(buf+scan_pos, blocksize)) {
 				m_messagepump.send(evtStreamInfo);
 				next_scantime = time(0) + 1;
-				scan_pos += avail;
 				pthread_mutex_lock(&m_startmut);
 				while (PID_SET == 0) {
 					pthread_cond_wait(&m_startsig, &m_startmut);
 				}
 				pthread_mutex_unlock(&m_startmut);
 			}
+			scan_pos += avail;
 		}
 		get += rc;
 		if (get == bufsize -1) {
