@@ -54,6 +54,7 @@ def parseColor(str): #FIXME: copy-paste form skin source
 from Tools.Directories import resolveFilename, SCOPE_CURRENT_SKIN
 from Components.GUIComponent import GUIComponent
 from Components.Sources.Boolean import Boolean
+from Components.Sources.StaticText import StaticText
 import datetime
 from utils import Bouquet, BouquetManager, tdSec, secTd, syncTime
 
@@ -333,9 +334,9 @@ def setServ():
 
 def fakeReference(cid):
 	sref = eServiceReference(4112, 0, '') #these are fake references;) #always 4112 because of parental control
-	if Ktv.iName == "RodnoeTV":
-		sref.setData(6, 1)
+	#This big hash is for parentalControl only.
 	sref.setData(7, int(str(cid), 16) )
+	sref.setData(6, ktv.hashID)
 	return sref
 
 #  Reimplementation of InfoBarShowHide
@@ -664,6 +665,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 		self["archiveDate"] = Label("")
 		self["state"] = Label("")
 		self["KartinaInArchive"] = Boolean(False)
+		self["KartinaPiconRef"] = StaticText()
 		
 		self["live_actions"] = ActionMap(["OkCancelActions", "ColorActions", "ChannelSelectEPGActions", "InfobarChannelSelection", "InfobarActions"], 
 		{
@@ -830,15 +832,12 @@ class KartinaStreamPlayer(KartinaPlayer):
 			self.session.open(MessageBox, _("mms:// protocol turned off"), type = MessageBox.TYPE_ERROR, timeout = 5)
 			return -1
 			
-		sref = eServiceReference(srv, 0, uri) 
-		sref.setData(7, int(str(cid), 16) ) #picon hack.
-		if Ktv.iName == "RodnoeTV":
-			sref.setData(6,1) #again hack;)	
+		sref = eServiceReference(srv, 0, uri)
+		self.session.nav.playService(sref)
 		
-		self.session.nav.playService(sref) 
-		
+		self["KartinaPiconRef"].text = ktv.getPiconName(cid)
 		self["channelName"].setText(ktv.channels[cid].name)
-		self.epgEvent()	
+		self.epgEvent()
 
 	
 	def epgEvent(self):
