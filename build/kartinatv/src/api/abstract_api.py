@@ -27,6 +27,9 @@ class AbstractAPI:
 		self.SID = False
 		self.packet_expire = None
 	
+	def getPiconName(self, cid):
+		return "%s_%s" % (self.iName, cid)
+	
 	def start(self):
 		pass
 	
