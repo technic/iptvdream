@@ -17,7 +17,7 @@ class AbstractAPI:
 	MODE = MODE_STREAM
 	iProvider = "free"
 	iName = "example"
-	iTitle = None
+	iTitle = None #Defaults to iName
 	NEXT_API = None 
 	NUMBER_PASS = False
 	
@@ -26,6 +26,9 @@ class AbstractAPI:
 		self.password = password
 		self.SID = False
 		self.packet_expire = None
+	
+	def getPiconName(self, cid):
+		return "%s_%s" % (self.iName, cid)
 	
 	def start(self):
 		pass
