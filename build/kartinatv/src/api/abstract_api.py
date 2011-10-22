@@ -30,6 +30,10 @@ class AbstractAPI:
 	def getPiconName(self, cid):
 		return "%s_%s" % (self.iName, cid)
 	
+	def get_hashID(self):
+		return hash(self.iName)
+	hashID = property(get_hashID)
+	
 	def start(self):
 		pass
 	
