@@ -16,7 +16,7 @@ import servicewebts
 from Plugins.Plugin import PluginDescriptor
 from Screens.Screen import Screen
 from Components.ActionMap import ActionMap, NumberActionMap, HelpableActionMap
-from Components.config import config, ConfigSubsection, ConfigText, ConfigInteger, getConfigListEntry, ConfigYesNo, ConfigSubDict, getKeyNumber, KEY_ASCII, KEY_NUMBERS
+from Components.config import config, ConfigSubsection, ConfigText, ConfigInteger, getConfigListEntry, ConfigYesNo, ConfigSubDict, ConfigElement, getKeyNumber, KEY_ASCII, KEY_NUMBERS
 from Components.ConfigList import ConfigListScreen
 from Components.Label import Label
 from Components.Slider import Slider
@@ -1023,7 +1023,7 @@ class KartinaVideoPlayer(KartinaPlayer):
 		(vid, fid, play_pos) = eval(cfg.lastroot.value) or (0, 0, 0)
 		if play_pos == 0:	
 			self.showList()
-		else:
+		elif fid != self.NOCURR:
 			ktv.getVideoInfo(vid)
 			bouquet.appendRoot(ktv.buildEpisodesBouquet(vid))
 			bouquet.goIn()
@@ -2294,7 +2294,7 @@ def configEnded(session, aname, changed = False):
 		#If kartinatv not running (failed last start)
 		#then we exit it. If it is allready running do nothing
 		elif not KartinaPlayer.instance.is_runnig():
-			KartinaPlayer.instance.exit()
+			KartinaPlayer.instance.close()
 	else:
 		print "[KartinaTV] player not running do nothing"
 
