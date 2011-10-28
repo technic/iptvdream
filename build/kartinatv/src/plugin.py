@@ -2296,7 +2296,7 @@ def configEnded(session, aname, changed = False):
 		#If kartinatv not running (failed last start)
 		#then we exit it. If it is allready running do nothing
 		elif not KartinaPlayer.instance.is_runnig():
-			KartinaPlayer.instance.exit()
+			KartinaPlayer.instance.close()
 	else:
 		print "[KartinaTV] player not running do nothing"
 
