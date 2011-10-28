@@ -1003,7 +1003,6 @@ class KartinaVideoPlayer(KartinaPlayer):
 		
 		sref = eServiceReference(4097, 0, uri) #TODO: think about serviceID
 		self.session.nav.playService(sref)
-		
 		self.is_playing = True
 		
 		if MANUAL_ASPECT_RATIO is not None:
@@ -1022,7 +1021,7 @@ class KartinaVideoPlayer(KartinaPlayer):
 		
 	def doGo(self):
 		(vid, fid, play_pos) = eval(cfg.lastroot.value) or (0, 0, 0)
-		if play_pos == 0:	
+		if play_pos == 0:
 			self.showList()
 		else:
 			ktv.getVideoInfo(vid)
@@ -1032,6 +1031,8 @@ class KartinaVideoPlayer(KartinaPlayer):
 			self.current = bouquet.getCurrent()
 			bouquet.historyAppend()
 			self.switchChannel()
+			print "[KartinaTV] seek to saved", play_pos
+			self.doSeekRelative(play_pos)
 
 	
 	def doExit(self):
@@ -1044,8 +1045,10 @@ class KartinaVideoPlayer(KartinaPlayer):
 		if self.is_playing and seek:
 			p = seek.getPlayPosition()
 			if not p[0]:
-				play_pos = p[1]			
+				play_pos = p[1]
+		print "[KartinaTV] save play position", play_pos
 		cfg.lastroot.value = str((vid, fid, play_pos))
+		cfg.lastroot.save()
 	
 	def doEofInternal(self, playing):
 		#TODO: we can't figure out is it serial.
@@ -2295,7 +2298,7 @@ def configEnded(session, aname, changed = False):
 		#If kartinatv not running (failed last start)
 		#then we exit it. If it is allready running do nothing
 		elif not KartinaPlayer.instance.is_runnig():
-			KartinaPlayer.instance.exit()
+			KartinaPlayer.instance.close()
 	else:
 		print "[KartinaTV] player not running do nothing"
 
