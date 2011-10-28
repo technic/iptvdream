@@ -110,9 +110,7 @@ class ConfigNumberText(ConfigText):
 	def onDeselect(self, session):
 		self.marked_pos = 0
 		self.offset = 0
-		if not self.last_value == self.value:
-			self.changedFinal()
-			self.last_value = self.value
+		ConfigElement.onDeselect(self, session)
 			
 config.iptvdream = ConfigSubDict()
 #Import apis
