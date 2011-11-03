@@ -16,7 +16,7 @@ import servicewebts
 from Plugins.Plugin import PluginDescriptor
 from Screens.Screen import Screen
 from Components.ActionMap import ActionMap, NumberActionMap, HelpableActionMap
-from Components.config import config, ConfigSubsection, ConfigText, ConfigInteger, getConfigListEntry, ConfigYesNo, ConfigSubDict, getKeyNumber, KEY_ASCII, KEY_NUMBERS
+from Components.config import config, ConfigSubsection, ConfigText, ConfigInteger, getConfigListEntry, ConfigYesNo, ConfigSubDict, ConfigElement, getKeyNumber, KEY_ASCII, KEY_NUMBERS
 from Components.ConfigList import ConfigListScreen
 from Components.Label import Label
 from Components.Slider import Slider
@@ -1001,7 +1001,6 @@ class KartinaVideoPlayer(KartinaPlayer):
 		
 		sref = eServiceReference(4097, 0, uri) #TODO: think about serviceID
 		self.session.nav.playService(sref)
-		
 		self.is_playing = True
 		
 		if MANUAL_ASPECT_RATIO is not None:
@@ -1020,9 +1019,9 @@ class KartinaVideoPlayer(KartinaPlayer):
 		
 	def doGo(self):
 		(vid, fid, play_pos) = eval(cfg.lastroot.value) or (0, 0, 0)
-		if play_pos == 0:	
+		if play_pos == 0:
 			self.showList()
-		else:
+		elif fid != self.NOCURR:
 			ktv.getVideoInfo(vid)
 			bouquet.appendRoot(ktv.buildEpisodesBouquet(vid))
 			bouquet.goIn()
@@ -1030,7 +1029,24 @@ class KartinaVideoPlayer(KartinaPlayer):
 			self.current = bouquet.getCurrent()
 			bouquet.historyAppend()
 			self.switchChannel()
-
+			#print "[KartinaTV] seek to saved", play_pos
+			#self.doSeekRelative(play_pos)
+	
+	def event_seek(self):
+		if self.play_pos == 0: return
+		x = self.ptsGetPosition()
+		print "[KartinaTV] at", x
+		print "[KartinaTV] seek to saved", self.play_pos
+		self.doSeekRelative(self.play_pos-x-10000)
+		self.play_pos = 0
+	
+	def ptsGetPosition(self):
+		seek = self.getSeek()
+		if seek:
+			p = seek.getPlayPosition()
+			if not p[0]:
+				return p[1]
+		return 0
 	
 	def doExit(self):
 		if bouquet.current.type == Bouquet.TYPE_MENU:
@@ -1038,12 +1054,11 @@ class KartinaVideoPlayer(KartinaPlayer):
 		fid = self.current
 		vid = bouquet.current.parent.name #Video is parent, episode is current		
 		play_pos = 0
-		seek = self.getSeek()
-		if self.is_playing and seek:
-			p = seek.getPlayPosition()
-			if not p[0]:
-				play_pos = p[1]			
+		if self.is_playing:
+			play_pos = self.ptsGetPosition()
+		print "[KartinaTV] save play position", play_pos
 		cfg.lastroot.value = str((vid, fid, play_pos))
+		cfg.lastroot.save()
 	
 	def doEofInternal(self, playing):
 		#TODO: we can't figure out is it serial.
