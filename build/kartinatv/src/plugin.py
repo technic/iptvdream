@@ -178,9 +178,9 @@ def Plugins(path, **kwargs):
 	res = []
 	for aname in apis.keys():
 		res += [
-		PluginDescriptor(name=apis[aname][0].iTitle, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = boundFunction(AOpen, aname) ),
-		PluginDescriptor(name=aname, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_MENU, fnc = boundFunction(menuOpen, aname) ) ]
-	res.append(PluginDescriptor(name="IPtvDream config", description="Configure all IPtvDream services", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = selectConfig ))
+		PluginDescriptor(name=apis[aname][0].iTitle, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = boundFunction(AOpen, aname), icon=aname+".png" ),
+		PluginDescriptor(name=aname, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_MENU, fnc = boundFunction(menuOpen, aname) )]
+	res.append(PluginDescriptor(name="IPtvDream config", description="Configure all IPtvDream services", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = selectConfig, icon="iptvdream.png" ))
 	return res
 
 class VirtualKeyBoardRu(VirtualKeyBoard):
