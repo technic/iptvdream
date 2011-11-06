@@ -13,20 +13,14 @@ import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 import datetime
 from md5 import md5
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager, EpgEntry, Channel
-
-
-global Timezone
-#XXX: API BUG with Timezone!!! This trick works:
-Timezone = 120 #int(round(tdSec(datetime.datetime.now()-datetime.datetime.utcnow()) / 3600.0)*60)
-print "[KartinaTV] dreambox timezone is", Timezone, "min"
+from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager, EpgEntry, Channel, Timezone
 
 class RodnoeAPI(AbstractAPI):
 	
 	iProvider = "rodnoe"
 	NUMBER_PASS = False
 	
-	site = "http://file-teleport.com/iptv/api/xml"
+	site = "http://file-teleport.com/iptv/api/v1/xml"
 	
 	def __init__(self, username, password):
 		AbstractAPI.__init__(self, username, password)
@@ -40,8 +34,8 @@ class RodnoeAPI(AbstractAPI):
 		
 	def start(self):
 		if self.authorize():
-			params = {'var': 'time_zone time_shift',
-					  'val':  '%s %s' % (Timezone, 0) }
+			params = {'var': 'time_zone,time_shift',
+					  'val':  '%s,%s' % (Timezone, 0) }
 			root = self.getData(self.site+"/set?"+urllib.urlencode(params), "setting time zone %s and time shift %s" % (Timezone, self.time_shift) )	
 	
 	def setTimeShift(self, timeShift): #in hours #sets timezone also
@@ -54,38 +48,33 @@ class RodnoeAPI(AbstractAPI):
 	
 	def authorize(self):
 		self.trace("Username is "+self.username)
-		self.cookiejar.clear()	
-		#self.opener.addheaders += [("X-Requested-With", "XMLHttpRequest")] 		
+		self.cookiejar.clear()
+		#self.opener.addheaders += [("X-Requested-With", "XMLHttpRequest")]
 		params = urllib.urlencode({"login" : self.username,
-								   "pass" : md5(md5(self.username).hexdigest()+md5(self.password).hexdigest()).hexdigest(),
-								   "ext" : '' })
+		                           "pass" : md5(md5(self.username).hexdigest()+md5(self.password).hexdigest()).hexdigest(),
+		                           "with_cfg" : ''})
 		self.trace("Authorization started (%s)" % (self.site+"/login?"+ params))
 		httpstr = self.opener.open(self.site+"/login?"+ params).read()
-		#print httpstr
+		print httpstr
 		#handleError() #TODO!
 		root = fromstring(httpstr)
 		if root.find('error'):
 			err = root.find('error')
 			raise Exception(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8')) 
 		self.sid = root.find('sid').text.encode('utf-8')
-		self.sid_name = root.find('sid_name').text.encode('utf-8') 				  
 		#checking cookies
 		cookies = list(self.cookiejar)
 		cookiesdict = {}
+		print cookies
 		hasSSID = False
 		deleted = False
 		for cookie in cookies:
 			cookiesdict[cookie.name] = cookie.value
-			if (cookie.name.find('SSID') != -1):
+			if (cookie.name.find('sid') != -1):
 				hasSSID = True
-			if (cookie.value.find('deleted') != -1):
-				deleted = True
 		#if (not hasSSID):
 		#	raise Exception(self.username+": Authorization of user failed!")
-		#if (deleted):
-		#	raise Exception(self.username+": Wrong authorization request")
 		self.packet_expire = None #XXX: no info in api..
-		self.opener.addheaders += [("Cookie", "%s=%s" % (self.sid_name, self.sid) )]
 		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 		self.SID = True
 		
@@ -278,6 +267,6 @@ if __name__ == "__main__":
 #	ktv.sortByGroup()
 #	ktv.getChannelsEpg([1,2,3,4])
 	for x in ktv.channels.keys():
-		print x, ktv.channels[x].name, ktv.channels[x].archive#, ktv.channels[x].epg.tstart, ktv.channels[x].epg.tend,  ktv.channels[x].epg.name
+		print "||%s||%s||" % (x, ktv.channels[x].name)#, ktv.channels[x].archive#, ktv.channels[x].epg.tstart, ktv.channels[x].epg.tend,  ktv.channels[x].epg.name
 	#print ktv.getDayEpg(x)[2][3]
-	print ktv.getStreamUrl(66)
+	print ktv.getStreamUrl(17)
