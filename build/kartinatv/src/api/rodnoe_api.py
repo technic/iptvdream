@@ -230,8 +230,10 @@ class Ktv(RodnoeAPI):
 	def getDayEpg(self, id, date = None):
 		if not date:
 			date = syncTime()
+		print date
 		params = {"cid": id,
-				  "day": date.strftime("%y%m%d")}
+				  "from_uts": datetime.datetime(date.year, date.month, date.day).strftime('%s'),
+				  "hours" : 24 }
 		root = self.getData(self.site+"/get_epg?"+urllib.urlencode(params), "EPG for channel %s" % id)
 		epglist = []
 		self.channels[id].lepg[date.strftime("%y%m%d")] = []
