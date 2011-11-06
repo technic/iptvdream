@@ -11,6 +11,11 @@
 import datetime
 from operator import attrgetter
 
+global Timezone
+import time
+Timezone = -time.timezone / 3600
+print "[KartinaTV] dreambox timezone is GMT", Timezone
+
 def tdSec(td):
 	return td.days * 86400 + td.seconds
 def tdmSec(td):
