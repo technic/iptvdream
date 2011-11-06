@@ -430,9 +430,10 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		self.setTitle(Ktv.iName)
 		self["channelName"] = Label("") #Main label on infobar for all cases.
 		
-		self.__event_tracker = ServiceEventTracker(screen=self, eventmap=
+		self.__evtracker = ServiceEventTracker(screen=self, eventmap=
 			{
-				iPlayableService.evUpdatedInfo: self.audioSelect
+				iPlayableService.evUpdatedInfo: self.audioSelect,
+				iPlayableService.evUpdatedEventInfo: self.__event_play
 			})
 		self.__audioSelected = False
 		
@@ -454,6 +455,13 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		
 		self.onClose.append(self.__onClose)
 		self.onShown.append(self.start)
+	
+	def __event_play(self):
+		print "[KartinaTV] event can seek"
+		self.event_seek()
+	
+	def event_seek(self):
+		pass
 
 	#TODO: Standby should be out of Player class
 	def standbyCountChanged(self, configElement):
@@ -1019,13 +1027,17 @@ class KartinaVideoPlayer(KartinaPlayer):
 		
 	def doGo(self):
 		(vid, fid, play_pos) = eval(cfg.lastroot.value) or (0, 0, 0)
-		if play_pos == 0:
+		self.play_pos = play_pos
+		if play_pos == 0 or vid == self.NOCURR or fid == self.NOCURR:
 			self.showList()
-		elif fid != self.NOCURR:
+		else:
 			ktv.getVideoInfo(vid)
 			bouquet.appendRoot(ktv.buildEpisodesBouquet(vid))
 			bouquet.goIn()
-			bouquet.goIn()
+			for idx in range(len(bouquet.current.content)):
+				if bouquet.current.content[idx].name == fid:
+					break
+			bouquet.goIn(idx)
 			self.current = bouquet.getCurrent()
 			bouquet.historyAppend()
 			self.switchChannel()
@@ -1081,7 +1093,11 @@ class KartinaVideoPlayer(KartinaPlayer):
 		print "[KartinaTV] l=", seek.getLength(), ' p=', seek.getPlayPosition()
 		#self.session.nav.playService(self.oldService)
 		#self.showList()
-
+	
+	def seekFwd(self):
+		self.seekFwdManual()
+	def seekBack(self):
+		self.seekBackManual()
 				
 #TODO: BouquetManager guiContent. Don't recreate and refill ChannelSelection if possible
 class ChannelList(MenuList):
