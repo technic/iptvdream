@@ -1030,7 +1030,7 @@ class KartinaVideoPlayer(KartinaPlayer):
 		self.play_pos = play_pos
 		if play_pos == 0 or vid == self.NOCURR or fid == self.NOCURR:
 			self.showList()
-		elif fid != self.NOCURR:
+		else:
 			ktv.getVideoInfo(vid)
 			bouquet.appendRoot(ktv.buildEpisodesBouquet(vid))
 			bouquet.goIn()
