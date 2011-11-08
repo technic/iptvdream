@@ -18,8 +18,7 @@
       <widget backgroundColor="#0038435a" font="Regular;25" foregroundColor="#00e5b243" halign="center" name="channelName" position="319,12" size="574,28" transparent="1" />
       <widget backgroundColor="#00000000" font="Regular;22" foregroundColor="#00ffffff" halign="right" position="852,134" render="Label" size="196,22" source="Title" transparent="1" />
       <ePixmap alphatest="blend" pixmap="KartinaTV_skin/frame.png" position="32,47" size="120,76" zPosition="1" />
-      <widget alphatest="blend" position="42,55" render="Picon" size="100,60" source="session.CurrentService" transparent="1" zPosition="3">
-        <convert type="ServiceName">Reference</convert>
+      <widget alphatest="blend" position="42,55" render="Picon" size="100,60" source="KartinaPiconRef" transparent="1" zPosition="3">
       </widget>
       <widget backgroundColor="#00343c4f" font="Regular;22" foregroundColor="#45ffffff" halign="left" name="currentTime" position="165,49" size="66,26" transparent="1" />
       <widget backgroundColor="#00343c4f" font="Regular;25" foregroundColor="#45ffffff" halign="left" name="currentName" noWrap="1" position="243,47" size="665,30" transparent="1" zPosition="21" />
