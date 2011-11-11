@@ -180,9 +180,9 @@ def Plugins(path, **kwargs):
 	res = []
 	for aname in apis.keys():
 		res += [
-		PluginDescriptor(name=apis[aname][0].iTitle, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = boundFunction(AOpen, aname) ),
-		PluginDescriptor(name=aname, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_MENU, fnc = boundFunction(menuOpen, aname) ) ]
-	res.append(PluginDescriptor(name="IPtvDream config", description="Configure all IPtvDream services", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = selectConfig ))
+		PluginDescriptor(name=apis[aname][0].iTitle, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = boundFunction(AOpen, aname), icon=aname+".png" ),
+		PluginDescriptor(name=aname, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_MENU, fnc = boundFunction(menuOpen, aname) )]
+	res.append(PluginDescriptor(name="IPtvDream config", description="Configure all IPtvDream services", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = selectConfig, icon="iptvdream.png" ))
 	return res
 
 class VirtualKeyBoardRu(VirtualKeyBoard):
@@ -432,9 +432,10 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		self.setTitle(Ktv.iName)
 		self["channelName"] = Label("") #Main label on infobar for all cases.
 		
-		self.__event_tracker = ServiceEventTracker(screen=self, eventmap=
+		self.__evtracker = ServiceEventTracker(screen=self, eventmap=
 			{
-				iPlayableService.evUpdatedInfo: self.audioSelect
+				iPlayableService.evUpdatedInfo: self.audioSelect,
+				iPlayableService.evUpdatedEventInfo: self.__event_play
 			})
 		self.__audioSelected = False
 		
@@ -456,6 +457,13 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		
 		self.onClose.append(self.__onClose)
 		self.onShown.append(self.start)
+	
+	def __event_play(self):
+		print "[KartinaTV] event can seek"
+		self.event_seek()
+	
+	def event_seek(self):
+		pass
 
 	#TODO: Standby should be out of Player class
 	def standbyCountChanged(self, configElement):
@@ -1021,19 +1029,38 @@ class KartinaVideoPlayer(KartinaPlayer):
 		
 	def doGo(self):
 		(vid, fid, play_pos) = eval(cfg.lastroot.value) or (0, 0, 0)
-		if play_pos == 0:
+		self.play_pos = play_pos
+		if play_pos == 0 or vid == self.NOCURR or fid == self.NOCURR:
 			self.showList()
 		else:
 			ktv.getVideoInfo(vid)
 			bouquet.appendRoot(ktv.buildEpisodesBouquet(vid))
 			bouquet.goIn()
-			bouquet.goIn()
+			for idx in range(len(bouquet.current.content)):
+				if bouquet.current.content[idx].name == fid:
+					break
+			bouquet.goIn(idx)
 			self.current = bouquet.getCurrent()
 			bouquet.historyAppend()
 			self.switchChannel()
-			print "[KartinaTV] seek to saved", play_pos
-			self.doSeekRelative(play_pos)
+			#print "[KartinaTV] seek to saved", play_pos
+			#self.doSeekRelative(play_pos)
 
+	def event_seek(self):
+		if self.play_pos == 0: return
+		x = self.ptsGetPosition()
+		print "[KartinaTV] at", x
+		print "[KartinaTV] seek to saved", self.play_pos
+		self.doSeekRelative(self.play_pos-x-10000)
+		self.play_pos = 0
+	
+	def ptsGetPosition(self):
+		seek = self.getSeek()
+		if seek:
+			p = seek.getPlayPosition()
+			if not p[0]:
+				return p[1]
+		return 0
 	
 	def doExit(self):
 		if bouquet.current.type == Bouquet.TYPE_MENU:
@@ -1041,11 +1068,8 @@ class KartinaVideoPlayer(KartinaPlayer):
 		fid = self.current
 		vid = bouquet.current.parent.name #Video is parent, episode is current		
 		play_pos = 0
-		seek = self.getSeek()
-		if self.is_playing and seek:
-			p = seek.getPlayPosition()
-			if not p[0]:
-				play_pos = p[1]
+		if self.is_playing:
+			play_pos = self.ptsGetPosition()
 		print "[KartinaTV] save play position", play_pos
 		cfg.lastroot.value = str((vid, fid, play_pos))
 		cfg.lastroot.save()
@@ -1071,7 +1095,11 @@ class KartinaVideoPlayer(KartinaPlayer):
 		print "[KartinaTV] l=", seek.getLength(), ' p=', seek.getPlayPosition()
 		#self.session.nav.playService(self.oldService)
 		#self.showList()
-
+	
+	def seekFwd(self):
+		self.seekFwdManual()
+	def seekBack(self):
+		self.seekBackManual()
 				
 #TODO: BouquetManager guiContent. Don't recreate and refill ChannelSelection if possible
 class ChannelList(MenuList):
