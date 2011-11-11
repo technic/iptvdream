@@ -16,7 +16,7 @@ import servicewebts
 from Plugins.Plugin import PluginDescriptor
 from Screens.Screen import Screen
 from Components.ActionMap import ActionMap, NumberActionMap, HelpableActionMap
-from Components.config import config, ConfigSubsection, ConfigText, ConfigInteger, getConfigListEntry, ConfigYesNo, ConfigSubDict, ConfigElement, getKeyNumber, KEY_ASCII, KEY_NUMBERS
+from Components.config import config, ConfigSubsection, ConfigText, ConfigInteger, getConfigListEntry, ConfigYesNo, ConfigSubDict, getKeyNumber, KEY_ASCII, KEY_NUMBERS
 from Components.ConfigList import ConfigListScreen
 from Components.Label import Label
 from Components.Slider import Slider
@@ -110,7 +110,9 @@ class ConfigNumberText(ConfigText):
 	def onDeselect(self, session):
 		self.marked_pos = 0
 		self.offset = 0
-		ConfigElement.onDeselect(self, session)
+		if not self.last_value == self.value:
+			self.changedFinal()
+			self.last_value = self.value
 			
 config.iptvdream = ConfigSubDict()
 #Import apis
