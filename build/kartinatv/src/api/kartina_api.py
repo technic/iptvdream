@@ -8,11 +8,11 @@
 # Software Foundation; either version 2, or (at your option) any later
 # version.
 
-from abstract_api import MODE_STREAM, AbstractAPI
+from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 import datetime
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities, Timezone
+from __init__ import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities, Timezone, APIException
 
 #TODO: GLOBAL: add private! Get values by properties.
 
@@ -183,8 +183,6 @@ class Ktv(KartinaAPI, AbstractStream):
 		return root.attrib.get("url").encode("utf-8").split(' ')[0].replace('http/ts://', 'http://')
 	
 	def getChannelsEpg(self, cids):
-		if len(cids) == 1:
-			return self.epgNext(cids[0])
 		params = {"cids" : ",".join(map(str, cids))}
 		root = self.getData("/api/xml/epg_current?"+urllib.urlencode(params), "getting epg of cids = %s" % cids)
 		for channel in root.find('epg'):
@@ -209,7 +207,7 @@ class Ktv(KartinaAPI, AbstractStream):
 		tend = datetime.datetime.fromtimestamp( int(root.attrib.get("next").encode("utf-8")) )
 		self.channels[cid].aepg = EpgEntry(prog, tstart,  tend)
 
-	def getGmtEpgNext(self, cid):
+	def getNextGmtEpg(self, cid):
 		date = syncTime()+secTd(ktv.aTime)
 		return getDayEpg(self, cid, date)
 		
@@ -230,13 +228,13 @@ class Ktv(KartinaAPI, AbstractStream):
 			time = datetime.datetime.fromtimestamp(t)
 			progname = unescapeEntities(program.attrib.get("progname")).encode("utf-8")
 			pdescr =  unescapeEntities(program.attrib.get("pdescr")).encode("utf-8")
-			epglist += [(time, progname, pdescr)]
-		return epglist
+			epglist += [EpgEntry(progname+'\n'+pdescr, time, None)]
+		ktv.channels[cid].pushEpgSorted(epglist)
 	
-	def epgCurrent(self, cid):
+	def getCurrentEpg(self, cid):
 		return self.epgNext(cid)
 	
-	def epgNext(self, cid):
+	def getNextEpg(self, cid):
 		params = {"cid": cid}
 		root = self.getData("/api/xml/epg_next?"+urllib.urlencode(params), "EPG next for channel %s" % cid)
 		lst = root.find('epg')
@@ -247,9 +245,9 @@ class Ktv(KartinaAPI, AbstractStream):
 			return (tstart, title)
 		if len(lst)>1:
 			#print parseepg(lst[0])[0]
-			self.channels[cid].epg = EpgEntry(parseepg(lst[0])[1], parseepg(lst[0])[0], parseepg(lst[1])[0])	
+			self.channels[cid].epg = EpgEntry(parseepg(lst[0])[1], parseepg(lst[0])[0], parseepg(lst[1])[0])
 		if len(lst)>2:
-			self.channels[cid].nepg = EpgEntry(parseepg(lst[1])[1], parseepg(lst[1])[0], parseepg(lst[2])[0])	
+			self.channels[cid].epg = EpgEntry(parseepg(lst[1])[1], parseepg(lst[1])[0], parseepg(lst[2])[0])	
 
 	
 
@@ -257,8 +255,22 @@ if __name__ == "__main__":
 	import sys
 	ktv = Ktv(sys.argv[1], sys.argv[2])
 	ktv.start()
+	cid = 8
+	def printe():
+		print "-----------------------------"
+		for x in ktv.channels[cid].q:
+			print x
+		print "-----------------------------"
 	#ktv.setTimeShift(0)
 	#ktv.setChannelsList()
-	print ktv.getStreamUrl(39)
 	ktv.setChannelsList()
+	print ktv.channels.keys()
 	ktv.getChannelsEpg(ktv.channels.keys())
+	ktv.getCurrentEpg(cid)
+#	print ktv.channels[cid].hasEpgNext()
+#	ktv.getDayEpg(cid)
+#	printe()
+#	ktv.epgNext(cid)
+#	print ktv.channels[cid].hasEpg(-10000)
+#	print ktv.channels[cid].hasEpgNext(-10000)
+#	printe()

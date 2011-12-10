@@ -56,7 +56,7 @@ from Components.GUIComponent import GUIComponent
 from Components.Sources.Boolean import Boolean
 from Components.Sources.StaticText import StaticText
 import datetime
-from utils import Bouquet, BouquetManager, tdSec, secTd, syncTime
+from utils import Bouquet, BouquetManager, tdSec, secTd, syncTime, APIException
 
 #for localized messages
 from . import _
@@ -523,7 +523,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			#XXX: This is critical for api developers!!!
 			ktv.start()
 			self.safeGo()
-		except Exception as e:
+		except APIException as e:
 			print "[KartinaTV] ERROR login/init failed!"
 			print e
 			return False	
@@ -827,7 +827,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 		cid = self.current
 		try:
 			uri = ktv.getStreamUrl(cid)
-		except:
+		except APIException:
 			print "[KartinaTV] Error: getting stream uri failed!"
 			#self.session.open(MessageBox, _("Error while getting stream uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
 			return -1
@@ -856,7 +856,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 		
 		#EPG is valid only if bouth tstart and tend specified!!! Check API.		
 		def setEpgCurrent():
-			curr = ktv.channels[cid].hasEpg(ktv.aTime)
+			curr = ktv.channels[cid].epgCurrent(ktv.aTime)
 			if not curr:
 				return False
 
@@ -880,10 +880,10 @@ class KartinaStreamPlayer(KartinaPlayer):
 				if ktv.aTime:
 					ktv.getGmtEpg(cid)
 				else:
-					ktv.epgCurrent(cid)
-			except:
+					ktv.getCurrentEpg(cid)
+			except APIException:
 				print "[KartinaTV] ERROR load epg failed! cid =", cid, bool(ktv.aTime)		
-			if not setEpgCurrent():	
+			if not setEpgCurrent():
 				self["currentName"].setText('')
 				self["currentTime"].setText('')
 				self["nextTime"].setText('')
@@ -891,7 +891,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 				self["progressBar"].setValue(0)	
 				
 		def setEpgNext():
-			next = ktv.channels[cid].hasEpgNext(ktv.aTime)
+			next = ktv.channels[cid].epgNext(ktv.aTime)
 			if not next:
 				return False
 			self['nextName'].setText(next.name)
@@ -901,10 +901,10 @@ class KartinaStreamPlayer(KartinaPlayer):
 		if not setEpgNext():
 			try:
 				if ktv.aTime:
-					ktv.getGmtEpgNext(cid)
+					ktv.getNextGmtEpg(cid)
 				else:
-					ktv.epgNext(cid)
-			except:
+					ktv.getNextEpg(cid)
+			except APIException:
 				print "[KartinaTV] load epg next failed!"
 			if not setEpgNext():
 				self["nextName"].setText('')
@@ -1000,7 +1000,7 @@ class KartinaVideoPlayer(KartinaPlayer):
 		cid = self.current
 		try:
 			uri = ktv.getVideoUrl(cid)
-		except:
+		except APIException:
 			print "[KartinaTV] Error: getting video uri failed!"
 			self.session.open(MessageBox, _("Error while getting video uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
 			return -1
@@ -1343,7 +1343,7 @@ class KartinaChannelSelection(Screen):
 			try:
 				ktv.getChannelsEpg(uplist)
 				self.lastEpgUpdate = syncTime()
-			except:
+			except APIException:
 				print "[KartinaTV] failed to get epg for uplist"
 		
 		self.setTitle(Ktv.iName+" / "+" / ".join(map(_, bouquet.getPathName())) )
@@ -1594,10 +1594,10 @@ class KartinaEpgList(Screen):
 	def kartinaEpgEntry(self, entry):
 		res = [
 			(entry),
-			(eListboxPythonMultiContent.TYPE_TEXT, 18, 2, 30, 22, 0, RT_HALIGN_LEFT, _(entry[0].strftime('%a')) ), 
-			(eListboxPythonMultiContent.TYPE_TEXT, 50, 2, 90, 22, 0, RT_HALIGN_LEFT, entry[0].strftime('%H:%M')),
-			(eListboxPythonMultiContent.TYPE_TEXT, 130, 2, 595, 24, 1, RT_HALIGN_LEFT, entry[1])]
-		if ktv.channels[self.current].archive and entry[0] < syncTime():
+			(eListboxPythonMultiContent.TYPE_TEXT, 18, 2, 30, 22, 0, RT_HALIGN_LEFT, _(entry.tstart.strftime('%a')) ), 
+			(eListboxPythonMultiContent.TYPE_TEXT, 50, 2, 90, 22, 0, RT_HALIGN_LEFT, entry.tstart.strftime('%H:%M')),
+			(eListboxPythonMultiContent.TYPE_TEXT, 130, 2, 595, 24, 1, RT_HALIGN_LEFT, entry.name)]
+		if ktv.channels[self.current].archive and entry.tstart < syncTime():
 			res += [(eListboxPythonMultiContent.TYPE_PIXMAP_ALPHATEST, 0, 5, 16, 16, rec_png)]
 		return res
 		
@@ -1607,11 +1607,11 @@ class KartinaEpgList(Screen):
 		if self.epgDownloaded: return
 		d = syncTime()+datetime.timedelta(self.day)
 		try:
-			epglist = ktv.getDayEpg(self.current, d)
-		except:
+			ktv.getDayEpg(self.current, d)
+		except APIException:
 			print "[KartinaTV] load day epg failed cid = ", self.current
 			return
-		self.list.setList(map(self.kartinaEpgEntry, epglist))
+		self.list.setList(map(self.kartinaEpgEntry, ktv.channels[self.current].epgDay))
 		self.setTitle("EPG / %s / %s %s" % (ktv.channels[self.current].name, d.strftime("%d"), _(d.strftime("%b")) ))
 		x = 0
 		for x in xrange(len(epglist)):
@@ -1638,17 +1638,17 @@ class KartinaEpgList(Screen):
 	
 	def fillEpgLabels(self, s = "%s"):
 		idx = self.list.getSelectionIndex()
-		if len(self.list.list):
+		cid = self.current
+		if ktv.channels[cid].hasDayEpg(date, idx):
 			entry = self.list.list[idx][0]
-			self[s % "epgName"].setText(entry[1])
-			self[s % "epgTime"].setText(entry[0].strftime("%d.%m %H:%M"))
-			self[s % "epgDescription"].setText(entry[2])
+			self[s % "epgName"].setText(entry.name)
+			self[s % "epgTime"].setText(entry.tstart.strftime("%d.%m %H:%M"))
+			self[s % "epgDescription"].setText(entry.progDescr)
 			self[s % "epgDescription"].show()
 			self[s % "epgName"].show()
 			self[s % "epgTime"].show()
-			if len(self.list.list) > idx+1:
-				next = self.list.list[idx+1][0]
-				self[s % "epgDuration"].setText("%s min" % (tdSec(next[0]-entry[0])/60))
+			if entry.isValid():
+				self[s % "epgDuration"].setText("%s min" % (entry.duration/ 60))
 				self[s % "epgDuration"].show()
 			else:
 				self[s % "epgDuration"].hide()
@@ -1963,7 +1963,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		
 		try:
 			bouquet.count = ktv.getVideos(bouquet.stype, bouquet.page, bouquet.genres, NUMS_ON_PAGE, bouquet.query)
-		except Exception as e:
+		except APIException as e:
 			print "[KartinaTV] load videos failed!!!"
 			print e
 			self.session.open(MessageBox, _("Get videos failed!"), MessageBox.TYPE_ERROR)
@@ -2029,7 +2029,7 @@ class KartinaVideoList(Screen, multiListHandler):
 	
 		try: #TODO: do it safe
 			ktv.getVideoInfo(cid)
-		except:
+		except APIException:
 			print "[KartinaTV] load videos failed!!!"
 			self.session.open(MessageBox, _("Get videos failed!"), MessageBox.TYPE_ERROR)
 			return

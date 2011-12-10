@@ -82,34 +82,94 @@ class EpgEntry():
 		if self.isValid():
 			return self.tstart <= syncTime()+secTd(delta) and syncTime()+secTd(delta) < self.tend  
 		return None
+	
+	def __str__(self):
+		return ("%s -- %s %s") % (self.tstart.__str__(), self.tend.__str__(), self.progName)
+	
+	def __repr__(self):
+		return self.__str__()
 
-class Channel():
+#TODO: thread safe @decorator for future backgroud epg loader ;)
+class Channel(object):
 	def __init__(self, name, group, num, gid, archive=0):
 		self.name = name
 		self.gid = gid
 		self.num = num
 		self.group = group
 		self.archive = archive
-		self.epg = None #epg for current program
-		self.aepg = None #epg of archive
-		self.nepg = None #epg for next program
-		self.lepg = {}
+		self.q = []
 		self.lastUpdateFailed = False
 	
 	#EPG is valid only if bouth tstart and tend specified!!!
 	#in this case hasSmth returns True
 	
-	def hasEpg(self):
-		return self.epg and self.epg.isNow(0)
+	def pushEpg(self, epg):
+		self.pushEpgSorted([epg])
 	
-	def hasAEpg(self, delta):
-		return self.aepg and self.aepg.isNow(delta)
+	def pushEpgSorted(self, epglist):
+		#prepare list
+		i = 0
+		while i < len(epglist)-1:
+			if epglist[i].tend is None:
+				epglist[i].tend = epglist[i+1].tstart
+			i += 1
+		#push
+		print "--------------------------------------------------"
+		i = 0
+		l_start = epglist[0].tstart
+		l_end = epglist[-1].tstart
+		print "+++", epglist, l_end
+		
+		while (i < len(self.q)) and (self.q[i].tstart < l_start):
+			i += 1
+#		if self.q[i].tend > l_start
+#			self.q[i].tend = l_start
+		ins_start = i
+		
+		while (i < len(self.q)) and (self.q[i].tstart <= l_end):
+			i += 1
+		ins_end = i
+		
+		if ins_start == ins_end:
+			ins_end += 1
+		print self.q
+		self.q = self.q[:ins_start] + epglist + self.q[ins_end:]
+		print "==>", ins_start, ins_end
+		print self.q
 	
-	def hasEpgNext(self):
-		if self.epg and self.epg.isValid() and self.nepg and self.nepg.isValid():
-			return self.epg.tend <= self.nepg.tstart and self.nepg.tstart > syncTime()
+	def findEpg(self, delta=0):
+		i = 0
+		while (i < len(self.q)) and not self.q[i].isNow(delta):
+			i += 1
+		if i == len(self.q):
+			return None
+		else:
+			return i
+	
+	def epgCurrent(self, delta=0):
+		res = self.findEpg(delta)
+		if res is None:
+			return None
+		else:
+			return self.q[res]
+	
+	def epgNext(self, delta=0):
+		i = self.findEpg(delta)
+		if i is None:
+			return None
+		now = syncTime()+secTd(delta)
+		curr = self.q[i]
+		i += 1
+		if (i < len(self.q)) and self.q[i].isValid():
+			return self.q[i]
 		return False
 	
+	def epgPeriod(self, date):
+		#d_start =
+		pass
+	
+	epg = property(fset = pushEpg)
+
 class Bouquet():
 	TYPE_SERVICE = 0
 	TYPE_MENU = 1
@@ -353,3 +413,9 @@ def unescapeEntities(text):
                 pass
         return text # leave as is
     return re.sub("&#?\w+;", fixup, text)
+
+class APIException(Exception):
+	def __init__(self, msg):
+	  self.msg = msg
+	def __str__(self):
+	  return repr(self.msg)
