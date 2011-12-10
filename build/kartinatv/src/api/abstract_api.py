@@ -8,6 +8,8 @@
 # Software Foundation; either version 2, or (at your option) any later
 # version.
 
+from . import Bouquet
+
 DEBUG = True
 MODE_STREAM = 0
 MODE_VIDEOS = 1

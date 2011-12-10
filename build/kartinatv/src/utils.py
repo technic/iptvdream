@@ -102,6 +102,7 @@ class Channel(object):
 	
 	#EPG is valid only if bouth tstart and tend specified!!!
 	#in this case hasSmth returns True
+	#TODO: add Heuristik
 	
 	def pushEpg(self, epg):
 		self.pushEpgSorted([epg])
@@ -164,9 +165,13 @@ class Channel(object):
 			return self.q[i]
 		return False
 	
-	def epgPeriod(self, date):
-		#d_start =
-		pass
+	def epgPeriod(self, tstart, tend):
+		i = self.findEpg(tstart)
+		j = self.findEpg(tend)
+		if i and j:
+			return self.q[i:j]
+		else:
+			return False
 	
 	epg = property(fset = pushEpg)
 

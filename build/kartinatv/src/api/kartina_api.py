@@ -12,7 +12,7 @@ from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 import datetime
-from __init__ import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities, Timezone, APIException
+from . import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities, Timezone, APIException
 
 #TODO: GLOBAL: add private! Get values by properties.
 
@@ -37,7 +37,7 @@ class KartinaAPI(AbstractAPI):
 		
 	def authorize(self):
 		self.trace("Authorization started")
-		#self.trace("username = %s" % self.username)
+		self.trace("username = %s" % self.username)
 		self.cookiejar.clear()
 		params = urllib.urlencode({"login" : self.username,
 								  "pass" : self.password})
@@ -51,7 +51,7 @@ class KartinaAPI(AbstractAPI):
 		
 		reply = fromstring(reply)
 		if reply.find("error"):
-			raise Exception(reply.find('error').findtext('message'))
+			raise APIException(reply.find('error').findtext('message'))
 		
 		for cookie in cookies:
 			cookiesdict[cookie.name] = cookie.value
@@ -60,9 +60,9 @@ class KartinaAPI(AbstractAPI):
 			if (cookie.value.find('deleted') != -1):
 				deleted = True
 		if (not hasSSID):
-			raise Exception(self.username+": Authorization of user failed!")
+			raise APIException(self.username+": Authorization of user failed!")
 		if (deleted):
-			raise Exception(self.username+": Wrong authorization request")
+			raise APIException(self.username+": Wrong authorization request")
 		self.packet_expire = datetime.datetime.fromtimestamp(int(reply.find('account').findtext('packet_expire')))
 		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 		self.trace("Packet expire: %s" % self.packet_expire)
@@ -97,15 +97,15 @@ class KartinaAPI(AbstractAPI):
 			self.trace("Second try to get %s (%s)" % (name, url))
 			reply = self.opener.open(url).read()
 			if ((reply.find("code_login") != -1)and(reply.find("code_pass") != -1)):
-				raise Exception("Failed to get %s:\n%s" % (name, reply))
+				raise APIException("Failed to get %s:\n%s" % (name, reply))
 		
 		try:
 			root = fromstring(reply)
 		except:
-			raise Exception("Failed to parse xml response")
+			raise APIException("Failed to parse xml response")
 		if root.find('error'):
 			err = root.find('error')
-			raise Exception(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8'))
+			raise APIException(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8'))
 		
 		self.SID = True
 		return root

@@ -8,7 +8,7 @@
 # Software Foundation; either version 2, or (at your option) any later
 # version.
 
-from abstract_api import MODE_STREAM, AbstractAPI
+from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 import datetime

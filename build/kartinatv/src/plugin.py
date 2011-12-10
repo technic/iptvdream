@@ -525,6 +525,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			self.safeGo()
 		except APIException as e:
 			print "[KartinaTV] ERROR login/init failed!"
+			self.last_error = repr(e)
 			print e
 			return False	
 		self.doGo()
@@ -1232,8 +1233,9 @@ class ChannelList(MenuList):
 			if self.showEpgProgress: 
 				width = 52
 				height = 6
-				if ktv.channels[cid].hasEpg():
-					percent = 100*ktv.channels[cid].epg.getTimePass(0) / ktv.channels[cid].epg.duration
+				epg = ktv.channels[cid].epgCurrent()
+				if epg:
+					percent = 100*epg.getTimePass(0) / epg.duration
 					lst += [(eListboxPythonMultiContent.TYPE_PROGRESS, xoffset+1, (self.itemHeight-height)/2, width, height, percent, 0, self.col['colorEventProgressbar'], self.col['colorEventProgressbarSelected'] ),
 							(eListboxPythonMultiContent.TYPE_PROGRESS, xoffset, (self.itemHeight-height)/2 -1, width+2, height+2, 0, 1, self.col['colorEventProgressbarBorder'], self.col['colorEventProgressbarBorderSelected'] )]	
 				xoffset += width+7
@@ -1244,8 +1246,9 @@ class ChannelList(MenuList):
 			lst += [(eListboxPythonMultiContent.TYPE_TEXT, xoffset, 0, width, self.itemHeight, 0, defaultFlag, text )]
 			xoffset += width+10
 			
-			if ktv.channels[cid].hasEpg():
-				text = '(%s)' % ktv.channels[cid].epg.progName #sholdn't contain \n
+			epg = ktv.channels[cid].epgCurrent()
+			if epg:
+				text = '(%s)' % epg.progName #sholdn't contain \n
 				#width = self.calculateWidth(text, 1)
 				lst += [(eListboxPythonMultiContent.TYPE_TEXT, xoffset, 0, self.itemWidth, self.itemHeight, 1, defaultFlag, text, self.col['colorServiceDescription'], self.col['colorServiceDescriptionSelected'] )]
 			
@@ -1337,7 +1340,7 @@ class KartinaChannelSelection(Screen):
 		timeout = not self.lastEpgUpdate or syncTime() - self.lastEpgUpdate > secTd(EPG_UPDATE_INTERVAL)
 		for x in ktv.channels.keys():
 			if isinstance(x, int):
-				if (not ktv.channels[x].hasEpg()) and (not ktv.channels[x].lastUpdateFailed or timeout):
+				if (not ktv.channels[x].epgCurrent()) and (not ktv.channels[x].lastUpdateFailed or timeout):
 					uplist += [x]
 		if uplist: 
 			try:
@@ -1438,8 +1441,8 @@ class KartinaChannelSelection(Screen):
 			cid = c.name
 			self["channelName"].setText(ktv.channels[cid].name)
 			self["channelName"].show()
-			if ktv.channels[cid].hasEpg():
-				curr = ktv.channels[cid].epg
+			curr = ktv.channels[cid].epgCurrent()
+			if curr:
 				self["epgTime"].setText("%s - %s" % (curr.tstart.strftime("%H:%M"), curr.tend.strftime("%H:%M")))
 				self["epgName"].setText(curr.progName)
 				self["epgName"].show()
@@ -1450,8 +1453,8 @@ class KartinaChannelSelection(Screen):
 				self["epgDescription"].show()
 			else:
 				self.hideEpgLabels()
-			if ktv.channels[cid].hasEpgNext():
-				curr = ktv.channels[cid].nepg
+			curr = ktv.channels[cid].epgNext()
+			if curr:
 				self["epgNextTime"].setText("%s - %s" % (curr.tstart.strftime("%H:%M"), curr.tend.strftime("%H:%M")))
 				self["epgNextName"].setText(curr.progName)
 				self["epgDescription"].setText(curr.progDescr)
@@ -2329,7 +2332,8 @@ def configEnded(session, aname, changed = False):
 
 def askForRetry(session):
 	print "[KartinaTV] start failed. Configure again?"
-	session.openWithCallback(editConfig, MessageBox, _("Login or initialization failed!\nEdit options?"))
+	exception = KartinaTV.instance.last_error
+	session.openWithCallback(editConfig, MessageBox, _("Login or initialization failed!\nEdit options?\n%s") % exception)
 	
 def editConfig(edit):
 	#If we went here, then KartinaPlayer is started for shure.
