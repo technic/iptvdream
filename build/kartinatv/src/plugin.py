@@ -325,7 +325,7 @@ MANUAL_ASPECT_RATIO = None
 if not os_path.exists(POSTER_PATH):
 	os_mkdir(POSTER_PATH)
 	
-def setServ():
+def setServ(): #FIXME: why this function is here?
 	global SERVICE_KARTINA
 	if cfg.usesrvicets.value:
 		SERVICE_KARTINA = 4112 #ServiceTS
@@ -740,8 +740,8 @@ class KartinaStreamPlayer(KartinaPlayer):
 		for x in favouritesList:
 			if x in ktv.channels.keys():
 				fav.append(Bouquet(Bouquet.TYPE_SERVICE, x))
-		bouquet.appendRoot(ktv.sortByName())
-		bouquet.appendRoot(ktv.sortByGroup())
+		bouquet.appendRoot(ktv.selectAll())
+		bouquet.appendRoot(ktv.selectByGroup())
 		bouquet.appendRoot(fav)
 		
 		#sort bouquets #TODO: move sorting to utils
@@ -856,13 +856,10 @@ class KartinaStreamPlayer(KartinaPlayer):
 		
 		#EPG is valid only if bouth tstart and tend specified!!! Check API.		
 		def setEpgCurrent():
-			if ktv.aTime:
-				if not ktv.channels[cid].hasAEpg(ktv.aTime): return False
-				curr = ktv.channels[cid].aepg
-			else:
-				if not  ktv.channels[cid].hasEpg(): return False
-				curr = ktv.channels[cid].epg
-			
+			curr = ktv.channels[cid].hasEpg(ktv.aTime)
+			if not curr:
+				return False
+
 			self.currentEpg = curr
 			self["currentName"].setText(curr.name)
 			self["currentTime"].setText(curr.tstart.strftime("%H:%M"))
@@ -883,7 +880,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 				if ktv.aTime:
 					ktv.getGmtEpg(cid)
 				else:
-					ktv.getChannelsEpg([cid])
+					ktv.epgCurrent(cid)
 			except:
 				print "[KartinaTV] ERROR load epg failed! cid =", cid, bool(ktv.aTime)		
 			if not setEpgCurrent():	
@@ -894,18 +891,17 @@ class KartinaStreamPlayer(KartinaPlayer):
 				self["progressBar"].setValue(0)	
 				
 		def setEpgNext():
-			if ktv.aTime: return False
-			if ktv.channels[cid].hasEpgNext():
-				next = ktv.channels[cid].nepg
-				self['nextName'].setText(next.name)
-				self['nextDuration'].setText("%d min" % (next.duration/ 60))
-				return True
-			return False
+			next = ktv.channels[cid].hasEpgNext(ktv.aTime)
+			if not next:
+				return False
+			self['nextName'].setText(next.name)
+			self['nextDuration'].setText("%d min" % (next.duration/ 60))
+			return True
 		
 		if not setEpgNext():
 			try:
 				if ktv.aTime:
-					pass
+					ktv.getGmtEpgNext(cid)
 				else:
 					ktv.epgNext(cid)
 			except:
@@ -1011,6 +1007,7 @@ class KartinaVideoPlayer(KartinaPlayer):
 		
 		sref = eServiceReference(4097, 0, uri) #TODO: think about serviceID
 		self.session.nav.playService(sref)
+		
 		self.is_playing = True
 		
 		if MANUAL_ASPECT_RATIO is not None:

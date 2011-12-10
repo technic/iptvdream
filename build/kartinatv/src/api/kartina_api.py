@@ -12,14 +12,10 @@ from abstract_api import MODE_STREAM, AbstractAPI
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 import datetime
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities
+from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities, Timezone
 
 #TODO: GLOBAL: add private! Get values by properties.
 
-global Timezone
-import time
-Timezone = -time.timezone / 3600
-print "[KartinaTV] dreambox timezone is GMT", Timezone
 			
 
 class KartinaAPI(AbstractAPI):
@@ -114,7 +110,7 @@ class KartinaAPI(AbstractAPI):
 		self.SID = True
 		return root
 
-class Ktv(KartinaAPI):
+class Ktv(KartinaAPI, AbstractStream):
 	
 	iName = "KartinaTV"
 	MODE = MODE_STREAM
@@ -126,35 +122,6 @@ class Ktv(KartinaAPI):
 		KartinaAPI.__init__(self, username, password)
 		self.channels = {}
 		self.aTime = 0
-	
-	def sortByName(self):
-		x = [(val.name, key) for (key, val) in self.channels.items()]
-		x.sort()
-		services = Bouquet(Bouquet.TYPE_MENU, 'all')
-		for item in x:
-			ch = self.channels[item[1]]
-			services.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num )) #two sort args [channel_name, number]
-		return services
-	
-	def sortByGroup(self):
-		x = [(val.group, key) for (key, val) in self.channels.items()]
-		x.sort()
-		groups = Bouquet(Bouquet.TYPE_MENU, 'By group')
-		groupname = x[0][0]
-		ch = self.channels[x[0][1]]
-		group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.gid) #two sort args [group_name, number]
-		for item in x:
-			ch = self.channels[item[1]]
-			if item[0] == groupname:
-				group.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num))
-			else:
-				groups.append(group)
-				groupname = item[0]
-				ch = self.channels[item[1]]
-				group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.gid) #two sort args [group_name, number]
-				group.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num))
-		groups.append(group)
-		return groups
 	
 	def setChannelsList(self):
 		root = self.getChannelsList()
@@ -230,17 +197,21 @@ class Ktv(KartinaAPI):
 			prog = e.findtext('epg_progname').encode('utf-8')
 			self.channels[id].epg = EpgEntry(prog, t_start, t_end)
 	
-	def getGmtEpg(self, id):
+	def getGmtEpg(self, cid):
 		params = {"m" : "channels",
 				  "act" : "get_stream_url",
-				  "cid" : id,
+				  "cid" : cid,
 				  "gmt": (syncTime() + secTd(self.aTime)).strftime("%s"),
 				  "just_info" : 1 }
-		root = self.getData("/?"+urllib.urlencode(params), "get GmtEpg of stream %s" % id)
+		root = self.getData("/?"+urllib.urlencode(params), "get GmtEpg of stream %s" % cid)
 		prog = unescapeEntities(root.attrib.get("programm")).encode("utf-8")
 		tstart = datetime.datetime.fromtimestamp( int(root.attrib.get("start").encode("utf-8")) ) #unix
 		tend = datetime.datetime.fromtimestamp( int(root.attrib.get("next").encode("utf-8")) )
-		self.channels[id].aepg = EpgEntry(prog, tstart,  tend)
+		self.channels[cid].aepg = EpgEntry(prog, tstart,  tend)
+
+	def getGmtEpgNext(self, cid):
+		date = syncTime()+secTd(ktv.aTime)
+		return getDayEpg(self, cid, date)
 		
 	
 	def getDayEpg(self, cid, date = None):
@@ -250,7 +221,7 @@ class Ktv(KartinaAPI):
 				  "act" : "show_day_xml",
 				  "day" : date.strftime("%d%m%y"),
 				  "cid" : cid}
-		root = self.getData("/?"+urllib.urlencode(params), "EPG for channel %s" % cid)
+		root = self.getData("/?"+urllib.urlencode(params), "day EPG for channel %s" % cid)
 		epglist = []
 		archive = int(root.attrib.get("have_archive").encode("utf-8"))
 		self.channels[cid].archive = archive
@@ -261,6 +232,9 @@ class Ktv(KartinaAPI):
 			pdescr =  unescapeEntities(program.attrib.get("pdescr")).encode("utf-8")
 			epglist += [(time, progname, pdescr)]
 		return epglist
+	
+	def epgCurrent(self, cid):
+		return self.epgNext(cid)
 	
 	def epgNext(self, cid):
 		params = {"cid": cid}
