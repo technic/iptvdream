@@ -1608,17 +1608,17 @@ class KartinaEpgList(Screen):
 		self.hideLabels("s%s")
 		self.list.show()
 		if self.epgDownloaded: return
-		d = syncTime()+datetime.timedelta(self.day)
+		d = datetime.datetime.date(syncTime()+secTd(ktv.aTime)+datetime.timedelta(self.day))
 		try:
 			ktv.getDayEpg(self.current, d)
 		except APIException:
 			print "[KartinaTV] load day epg failed cid = ", self.current
 			return
-		self.list.setList(map(self.kartinaEpgEntry, ktv.channels[self.current].epgDay))
+		self.list.setList(map(self.kartinaEpgEntry, ktv.channels[self.current].epgDay(d)))
 		self.setTitle("EPG / %s / %s %s" % (ktv.channels[self.current].name, d.strftime("%d"), _(d.strftime("%b")) ))
 		x = 0
 		for x in xrange(len(epglist)):
-			if epglist[x][0] and (epglist[x][0] > syncTime()):
+			if epglist[x].tstart > syncTime():
 				break
 		if x > 0: x-=1
 		self.list.moveToIndex(x)
@@ -1642,7 +1642,7 @@ class KartinaEpgList(Screen):
 	def fillEpgLabels(self, s = "%s"):
 		idx = self.list.getSelectionIndex()
 		cid = self.current
-		if ktv.channels[cid].hasDayEpg(date, idx):
+		if len(self.list.list):
 			entry = self.list.list[idx][0]
 			self[s % "epgName"].setText(entry.name)
 			self[s % "epgTime"].setText(entry.tstart.strftime("%d.%m %H:%M"))
@@ -1675,7 +1675,7 @@ class KartinaEpgList(Screen):
 		idx = self.list.getSelectionIndex()
 		if len(self.list.list) > idx:
 			if ktv.channels[self.current].archive:
-				self.close(self.list.list[idx][0][0])
+				self.close(self.list.list[idx][0].tstart)
 	
 	def exit(self):
 		if self.single: #If single view then go to list. Else close all

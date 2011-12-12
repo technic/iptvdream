@@ -102,7 +102,6 @@ class Channel(object):
 	
 	#EPG is valid only if bouth tstart and tend specified!!!
 	#in this case hasSmth returns True
-	#TODO: add Heuristik
 	
 	def pushEpg(self, epg):
 		self.pushEpgSorted([epg])
@@ -138,11 +137,13 @@ class Channel(object):
 		print "==>", ins_start, ins_end
 		print self.q
 	
+	#TODO: add Heuristik. continue search from last position
 	def findEpg(self, delta=0):
 		i = 0
 		while (i < len(self.q)) and not self.q[i].isNow(delta):
 			i += 1
 		if i == len(self.q):
+			print "[KartinaTV] epg not found for", syncTime() + secTd(delta)
 			return None
 		else:
 			return i
@@ -165,13 +166,24 @@ class Channel(object):
 			return self.q[i]
 		return False
 	
+	def checkContinuity(self, a, b):
+		i = a
+		while i < b:
+		  if self.q[i].tstart != self.q[i+1].tend:
+			print "[KartinaTV] checkContinuity fail at", self.q[i].tstart
+			return False
+		return True
+	
 	def epgPeriod(self, tstart, tend):
 		i = self.findEpg(tstart)
 		j = self.findEpg(tend)
-		if i and j:
+		if i and j and self.checkContinuity(i,j):
 			return self.q[i:j]
 		else:
 			return False
+	
+	def epgDay(self, date):
+		return self.epgPeriod(date, date + secTd(24*60*60))
 	
 	epg = property(fset = pushEpg)
 
