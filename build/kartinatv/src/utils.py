@@ -19,7 +19,7 @@ print "[KartinaTV] dreambox timezone is GMT", Timezone
 def tdSec(td):
 	return td.days * 86400 + td.seconds
 def tdmSec(td):
-	#Add +1. Timer should wait for next event until event happed exactly.
+	#Add +1. Timer should wait for next event until event happened exactly.
 	#Otherwise inaccuracy in round may lead to mistake.
 	return td.days * 86400*1000 + td.seconds * 1000 + td.microseconds/1000 +1
 def secTd(sec):
@@ -65,22 +65,19 @@ class EpgEntry():
 
 	duration = property(getDuration)
 	
-	def getTimePass(self, delta):
-		now = syncTime()+secTd(delta)
-		return tdSec(now-self.tstart)
+	def getTimePass(self, time):
+		return tdSec(time-self.tstart)
 	
-	def getTimeLeft(self, delta):
-		now = syncTime()+secTd(delta)
-		return tdSec(self.tend-now)
+	def getTimeLeft(self, time):
+		return tdSec(self.tend-time)
 	
-	def getTimeLeftmsec(self, delta): #More accurancy, milliseconds
-		now = syncTime()+secTd(delta)
-		return tdmSec(self.tend-now)
+	def getTimeLeftmsec(self, time): #More accurancy, milliseconds
+		return tdmSec(self.tend-time)
 
 	#programm is now and tstart and tend defined
-	def isNow(self, delta): 
+	def isNow(self, time): 
 		if self.isValid():
-			return self.tstart <= syncTime()+secTd(delta) and syncTime()+secTd(delta) < self.tend  
+			return self.tstart <= time and time < self.tend  
 		return None
 	
 	def __str__(self):
@@ -89,13 +86,14 @@ class EpgEntry():
 	def __repr__(self):
 		return self.__str__()
 
+#TODO: some verification algoritm, if tend is None
 #TODO: thread safe @decorator for future backgroud epg loader ;)
 class Channel(object):
-	def __init__(self, name, group, num, gid, archive=0):
+	def __init__(self, name, group, num, groupnum, archive=0):
 		self.name = name
-		self.gid = gid
-		self.num = num
 		self.group = group
+		self.num = num
+		self.groupnum = groupnum
 		self.archive = archive
 		self.q = []
 		self.lastUpdateFailed = False
@@ -122,8 +120,6 @@ class Channel(object):
 		
 		while (i < len(self.q)) and (self.q[i].tstart < l_start):
 			i += 1
-#		if self.q[i].tend > l_start
-#			self.q[i].tend = l_start
 		ins_start = i
 		
 		while (i < len(self.q)) and (self.q[i].tstart <= l_end):
@@ -138,28 +134,29 @@ class Channel(object):
 		print self.q
 	
 	#TODO: add Heuristik. continue search from last position
-	def findEpg(self, delta=0):
+	def findEpg(self, time):
 		i = 0
-		while (i < len(self.q)) and not self.q[i].isNow(delta):
+		while (i < len(self.q)) and not self.q[i].isNow(time):
 			i += 1
 		if i == len(self.q):
-			print "[KartinaTV] epg not found for", syncTime() + secTd(delta)
+			print "[KartinaTV] epg not found for", time
 			return None
 		else:
 			return i
 	
-	def epgCurrent(self, delta=0):
-		res = self.findEpg(delta)
+	def epgCurrent(self, time):
+		if not time: time = syncTime()
+		res = self.findEpg(time)
 		if res is None:
 			return None
 		else:
 			return self.q[res]
 	
-	def epgNext(self, delta=0):
-		i = self.findEpg(delta)
+	def epgNext(self, time):
+		if not time: time = syncTime()
+		i = self.findEpg(time)
 		if i is None:
 			return None
-		now = syncTime()+secTd(delta)
 		curr = self.q[i]
 		i += 1
 		if (i < len(self.q)) and self.q[i].isValid():

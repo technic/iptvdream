@@ -43,8 +43,7 @@ class AbstractAPI:
 	hashID = property(get_hashID)
 
 class AbstractStream(AbstractAPI):
-	def __init__(self, username, password):
-		AbstractAPI.__init__(self, username, password)
+	def __init__(self):
 		self.channels = {}
 	
 	def setTimeShift(self, timeShift):	
@@ -56,6 +55,11 @@ class AbstractStream(AbstractAPI):
 		   May depend on timeshift. setTimeShift() called first"""
 		pass
 	
+	def getStreamUrl(self, cid, time = None):
+		"""Return url of stream here. If <time> is specified then get stream from archive
+		   or raise APIException if feature is not supported"""
+		pass
+	
 	def getChannelsEpg(self, cids):
 		"""Plugin call this fucntion if it wants to access epg current (and next if available)
 		   of channel list <cids>.
@@ -64,7 +68,7 @@ class AbstractStream(AbstractAPI):
 	
 	def getCurrentEpg(self, cid):
 		"""Plugin call this fucntion if it wants to access epg current of channel <cid>.
-		   If you can download epg next also in this request, do it here to avoid future epgNext() calls"""
+		   If you can download epg next also in this request, do it here to avoid future getNextEpg() calls"""
 		pass
 
 	def getNextEpg(self, cid):
@@ -73,22 +77,21 @@ class AbstractStream(AbstractAPI):
 		pass
 	
 	def getDayEpg(self, cid, date = None):
-		"""Plugin call this fucntion if it wants to access epg for one day of the channel <cid>."""
-		#TODO: no list here! Use readable and abstract code!
+		"""Plugin call this fucntion if it wants to access epg for one day of the channel <cid>.
+		   Should return list of EpgEntry objects"""
 		return []
 	
 	def getPeriodEpg(self, cid, tstart, tend):
 		"""Plugin call this fucntion if it wants to access epg for the period from
-		   tstart to tend time in datetime format"""
-		#TODO: no list here! Use readable and abstract code!
+		   tstart to tend. Time is in datetime format. Should return list of EpgEntry objects"""
+		return []
+	
+	def getGmtEpg(self, cid, time):
+		"""Plugin call this function if it wants to access epg that was at give <time>.
+		   If you can download epg next that was at give <time> also in this request, do it here."""
 		pass
 	
-	def getGmtEpg(self, cid):
-		"""Plugin call this function if it wants to access epg that was self.aTime seconds before now.
-		   If you can download epg next that was self.aTime seconds before also in this request, do it here."""
-		pass
-	
-	def getGmtEpgNext(self, cid):
+	def getGmtEpgNext(self, cid, time):
 		pass
 	
 	def getPiconName(self, cid):
@@ -112,7 +115,7 @@ class AbstractStream(AbstractAPI):
 			ch = self.channels[cid]
 			groupname = ch.group
 			if not (groupname in glist.keys()):
-				group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.gid) #two sort args [group_name, number]
+				group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.groupnum) #two sort args [group_name, number]
 				groups.append(group)
 				glist[groupname] = group
 			glist[groupname].append(Bouquet(Bouquet.TYPE_SERVICE, cid, ch.name, ch.num))

@@ -525,9 +525,9 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			self.safeGo()
 		except APIException as e:
 			print "[KartinaTV] ERROR login/init failed!"
-			self.last_error = repr(e)
+			self.last_error = str(e)
 			print e
-			return False	
+			return False
 		self.doGo()
 		self.__running = True
 		return True
@@ -857,7 +857,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 		
 		#EPG is valid only if bouth tstart and tend specified!!! Check API.		
 		def setEpgCurrent():
-			curr = ktv.channels[cid].epgCurrent(ktv.aTime)
+			curr = ktv.channels[cid].epgCurrent(syncTime() + secTd(ktv.aTime))
 			if not curr:
 				return False
 
@@ -2332,8 +2332,8 @@ def configEnded(session, aname, changed = False):
 
 def askForRetry(session):
 	print "[KartinaTV] start failed. Configure again?"
-	exception = KartinaTV.instance.last_error
-	session.openWithCallback(editConfig, MessageBox, _("Login or initialization failed!\nEdit options?\n%s") % exception)
+	exception = KartinaPlayer.instance.last_error
+	session.openWithCallback(editConfig, MessageBox, _("Login or initialization failed!\nEdit options?") +'\n'+exception)
 	
 def editConfig(edit):
 	#If we went here, then KartinaPlayer is started for shure.
