@@ -210,8 +210,14 @@ int eServiceTS::openHttpConnection(std::string url)
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = *((in_addr_t*)h->h_addr_list[0]);
 	addr.sin_port = htons(port);
+	
+	struct timeval timeout;
+	timeout.tv_sec = 5;
+	timeout.tv_usec = 0;
+	
+	setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
 
-	eDebug("connecting to %s:%d", host.c_str(), port);
+	eDebug("connecting to %s:%d\ntimeout setted to 5sec", host.c_str(), port);
 
 	if (connect(fd, (sockaddr*)&addr, sizeof(addr)) == -1) {
 		std::string msg = "connect failed for: " + url;
