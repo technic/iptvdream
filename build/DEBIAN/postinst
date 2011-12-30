@@ -2,8 +2,7 @@
 mkdir -p /etc/iptvdream/ 
 F="/etc/iptvdream/playlist.m3u"
 if ! test -f $F; then
-	echo """
-	#EXTM3U
+	echo """#EXTM3U
 	#EXTINF:0,example stream
 	rtsp://82.177.67.61/axis-media/media.amp
 	""" > $F
