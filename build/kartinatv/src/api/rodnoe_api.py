@@ -193,7 +193,7 @@ class Ktv(RodnoeAPI):
 		if self.channels[id].is_protected:
 			params["protect_code"] = self.protect_code
 		if self.aTime:
-			params["lts"] = (syncTime() + secTd(self.aTime)).strftime("%s")		  
+			params["uts"] = (syncTime() + secTd(self.aTime)).strftime("%s")		  
 		root = self.getData(self.site+"/get_url_tv?"+urllib.urlencode(params), "stream url")
 		return root.findtext("url").encode("utf-8")
 	
