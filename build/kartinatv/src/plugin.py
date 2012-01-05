@@ -438,14 +438,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		self.__audioSelected = False
 		
 		self.__running = False
-		#TODO: actionmap add help.
-		
-		#disable/enable action map. This method used by e2 developers...
-		self["actions"] = ActionMap(["OkCancelActions", "InfobarActions"], 
-		{
-			"showTv" : self.close,
-			"showMovies" : self.nextAPI
-		}, -1)
+
 		
 		self.oldService = self.session.nav.getCurrentlyPlayingServiceReference()
 		self.oldAspectRatio = (config.av.policy_169.value, config.av.policy_43.value)
@@ -673,27 +666,31 @@ class KartinaStreamPlayer(KartinaPlayer):
 		self["KartinaInArchive"] = Boolean(False)
 		self["KartinaPiconRef"] = StaticText()
 		
-		self["live_actions"] = ActionMap(["OkCancelActions", "ColorActions", "ChannelSelectEPGActions", "InfobarChannelSelection", "InfobarActions"], 
+		#TODO: actionmap add help.
+		
+		#disable/enable action map. This method used by e2 developers...
+		self["actions"] = ActionMap(["IPdmInfobarActions"], 
 		{
-			"red" : self.showEpg,
+			"closePlugin" : self.close,
+			"openVideos" : self.nextAPI
+		}, -1)
+		
+		self["live_actions"] = ActionMap(["IPdmLiveInfobarActions"], 
+		{
 			"zapUp" : self.previousChannel,
-			"zapDown" : self.nextChannel, 
-			"switchChannelUp" : self.showList,  
-			"switchChannelDown" : self.showList, 
+			"zapDown" : self.nextChannel,
 			"openServiceList" : self.showList,  
 			"historyNext" : self.historyNext, 
 			"historyBack" : self.historyBack,
 			"showEPGList" : self.showEpg
 		}, -1)
 		
-		self["archive_actions"] = ActionMap(["OkCancelActions", "ColorActions", "ChannelSelectEPGActions", "InfobarChannelSelection", "InfobarActions"], 
+		self["archive_actions"] = ActionMap(["IPdmArchiveInfobarActions"], 
 		{
-			"red" : self.switchChannel,
-			"yellow" : self.playpauseArchive,
-			"zapUp" : self.archiveSeekRwd,
-			"zapDown" : self.archiveSeekFwd, 
-			"switchChannelUp" : self.showList,  
-			"switchChannelDown" : self.showList, 
+			"exitArchive" : self.switchChannel,
+			"playpause" : self.playpauseArchive,
+			"seekForward" : self.archiveSeekFwd, 
+			"seekBackward" : self.archiveSeekRwd,
 			"openServiceList" : self.showList,  
 			"historyNext" : self.historyNext, 
 			"historyBack" : self.historyBack,
@@ -979,14 +976,13 @@ class KartinaVideoPlayer(KartinaPlayer):
 	def __init__(self, session):
 		KartinaPlayer.__init__(self, session)
 			
-		self["video_actions"] = ActionMap(["OkCancelActions", "ColorActions", "ChannelSelectEPGActions", "InfobarChannelSelection", "InfobarActions"], 
+		self["video_actions"] = ActionMap(["IPdmVideoInfobarActions"], 
 		{
-			"zapUp" : self.previousChannel,
-			"zapDown" : self.nextChannel, 
-			"switchChannelUp" : self.showList,  
-			"switchChannelDown" : self.showList, 
+			"zapUp" : self.nextChannel,
+			"zapDown" : self.previousChannel, 
 			"openServiceList" : self.showList,  
-			"showMovies" : self.nextAPI
+			"openTV" : self.nextAPI,
+			"closePlugin" : self.close
 		}, -1)
 		
 		self["poster"] = WeatherIcon()
@@ -1278,13 +1274,13 @@ class KartinaChannelSelection(Screen):
 		if ktv.packet_expire:
 			self["packetExpire"].setText(_("Expire on")+" "+ktv.packet_expire.strftime('%d.%m %H:%M'))		
 		
-		self["actions"] = ActionMap(["OkCancelActions", "ChannelSelectBaseActions", "DirectionActions", "ChannelSelectEditActions", "ChannelSelectEPGActions"], 
+		self["actions"] = ActionMap(["OkCancelActions", "IPdmChannelListActions"], 
 		{
 			"cancel": self.exit,
 			"ok" : self.ok,
-			"showAllServices" : self.showAll,
-			"showSatellites" : self.showByGroup,
-			"showProviders" : self.addremoveFavourites,
+			"showAll" : self.showAll,
+			"showGroups" : self.showByGroup,
+			"addFavourites" : self.addremoveFavourites,
 			"showFavourites" : self.showFavourites,
 			"contextMenu" : self.showMenu,
 			"showEPGList" : self.showEpgList,
@@ -1574,16 +1570,16 @@ class KartinaEpgList(Screen):
 		self["sepgTime"] = Label()
 		self["sepgDuration"] = Label()
 		
-		self["actions"] = ActionMap(["OkCancelActions", "ColorActions", "DirectionActions", "EPGSelectActions"], 
+		self["actions"] = ActionMap(["OkCancelActions", "IPdmEpgListActions", "ColorActions"], 
 		{
 			"cancel": self.exit,
-			"red" : self.archive,
 			"ok": self.archive,
 		#	"yellow": self.selectChannel,
-			"nextBouquet" : self.nextDay,
-			"prevBouquet" :self.prevDay,
+			"nextDay" : self.nextDay,
+			"prevDay" :self.prevDay,
 			"green" : self.showSingle
-		}, -1)		
+		}, -1)
+		
 		self.lastroot = bouquet.current
 		self.current = current
 		self.day = 0
@@ -1911,18 +1907,17 @@ class KartinaVideoList(Screen, multiListHandler):
 		self["genres"] = Label()
 		self["genres"].setText(_("Genres: ")+_("all"))
 				
-		self["actions"] = ActionMap(["OkCancelActions","ColorActions",
-		                             "EPGSelectActions","ChannelSelectEPGActions"], 
+		self["actions"] = ActionMap(["OkCancelActions","IPdmVideoListActions"], 
 		{
 			"cancel": self.exit,
 			"ok": self.ok,
-			"red" : self.showLast,
-			"blue" : self.showBest,
-			"green": self.selectGenres,
-			"yellow": self.search,
-			"nextBouquet" : self.nextPage,
-			"prevBouquet" :self.prevPage,
-			"showEPGList" : self.showVidInfo
+			"last" : self.showLast,
+			"best" : self.showBest,
+			"genres": self.selectGenres,
+			"search": self.search,
+			"nextPage" : self.nextPage,
+			"prevPage" :self.prevPage,
+			"showInfo" : self.showVidInfo
 		}, -1)
 		
 		self["actions_info"] = ActionMap(["OkCancelActions"],

@@ -6,4 +6,5 @@ install_PYTHON = *.py
 
 install_DATA = \
 	*.png \
+	keymap.xml \
 	LICENCE
