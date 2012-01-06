@@ -982,6 +982,7 @@ class KartinaVideoPlayer(KartinaPlayer):
 			"zapDown" : self.previousChannel, 
 			"openServiceList" : self.showList,  
 			"openTV" : self.nextAPI,
+			"stopVideo" : self.stop,
 			"closePlugin" : self.close
 		}, -1)
 		
@@ -1037,8 +1038,6 @@ class KartinaVideoPlayer(KartinaPlayer):
 			self.current = bouquet.getCurrent()
 			bouquet.historyAppend()
 			self.switchChannel()
-			#print "[KartinaTV] seek to saved", play_pos
-			#self.doSeekRelative(play_pos)
 	
 	def event_seek(self):
 		if self.play_pos == 0: return
@@ -1071,8 +1070,6 @@ class KartinaVideoPlayer(KartinaPlayer):
 	def doEofInternal(self, playing):
 		#TODO: we can't figure out is it serial.
 		print "[KartinaTV] EOF. playing", playing
-		#self.session.nav.playService(self.oldService)
-		#self.showList()
 		seek = self.getSeek()
 		if seek is None:
 			return
@@ -1087,8 +1084,13 @@ class KartinaVideoPlayer(KartinaPlayer):
 				if self.execing: self.showList()
 				
 		print "[KartinaTV] l=", seek.getLength(), ' p=', seek.getPlayPosition()
-		#self.session.nav.playService(self.oldService)
-		#self.showList()
+	
+	def stop(self):
+		self.session.nav.stopService()
+		self.is_playing = False
+		print "[KartinaTV] movie stop."
+		bouquet.goOut()
+		self.showList()
 	
 	def seekFwd(self):
 		self.seekFwdManual()
@@ -1952,8 +1954,9 @@ class KartinaVideoList(Screen, multiListHandler):
 			self.onShown.remove(self.start)
 			#On first fill...
 			self.exitInfo()
-			if bouquet.current.type == Bouquet.TYPE_SERVICE:
-				bouquet.goOut()
+			if bouquet.current != bouquet.root:
+				if bouquet.current.type == Bouquet.TYPE_SERVICE:
+					bouquet.goOut()
 				self.fillSingle()
 				return
 		
