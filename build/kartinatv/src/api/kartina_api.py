@@ -166,14 +166,7 @@ class Ktv(KartinaAPI, AbstractStream):
 			params["gmt"] = time.strftime("%s")
 		params["protect_code"] = self.password
 		root = self.getData("/api/xml/get_url?"+urllib.urlencode(params), "URL of stream %s" % cid)
-		if time:
-			prog = unescapeEntities(root.attrib.get("programm"))
-			if prog:
-				prog = prog.encode("utf-8")
-				tstart = datetime.fromtimestamp( int(root.attrib.get("start").encode("utf-8")) ) #unix
-				tend = datetime.fromtimestamp( int(root.attrib.get("next").encode("utf-8")) )
-				self.channels[cid].pushEpg( EpgEntry(prog, tstart, tend) )
-		return root.attrib.get("url").encode("utf-8").split(' ')[0].replace('http/ts://', 'http://')
+		return root.findtext("url").encode("utf-8").split(' ')[0].replace('http/ts://', 'http://')
 	
 	def getChannelsEpg(self, cids):
 		params = {"cids" : ",".join(map(str, cids))}
