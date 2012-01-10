@@ -65,7 +65,8 @@ class EpgEntry():
 
 	duration = property(getDuration)
 	
-	def getTimePass(self, time):
+	def getTimePass(self, time = None):
+		if not time: time = syncTime()
 		return tdSec(time-self.tstart)
 	
 	def getTimeLeft(self, time):
@@ -144,15 +145,15 @@ class Channel(object):
 		else:
 			return i
 	
-	def epgCurrent(self, time):
+	def epgCurrent(self, time = None):
 		if not time: time = syncTime()
 		res = self.findEpg(time)
 		if res is None:
 			return None
 		else:
-			return self.q[res]
+			return self.q[res].isValid() and self.q[res]
 	
-	def epgNext(self, time):
+	def epgNext(self, time = None):
 		if not time: time = syncTime()
 		i = self.findEpg(time)
 		if i is None:

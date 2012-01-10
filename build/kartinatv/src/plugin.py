@@ -591,7 +591,7 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 #TODO: Try pause when exit.
 #		FIXME: This feature is brocken
 #			self.videomode = False
-#			if ktv.aTime:
+#			if bouquet.aTime:
 #				self.playpauseArchive()
 #			else:
 #				self.play()
@@ -773,6 +773,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 			parentalControl.protectService(sref.toCompareString())
 		
 		#startup service	
+		self.setArchivemode(0)
 		print "[KartinaTV] set path to", cfg.lastroot.value, cfg.lastcid.value
 		bouquet.setPath(eval(cfg.lastroot.value), cfg.lastcid.value)
 		print "[KartinaTV] now bouquet.current is", bouquet.current.name 
@@ -801,19 +802,19 @@ class KartinaStreamPlayer(KartinaPlayer):
 	
 	def fwdJumpTo(self, minutes):
 		print "[KartinaTV] Seek", minutes, "minutes forward"
-		ktv.aTime += minutes*60
-		if ktv.aTime > 0:
+		bouquet.aTime += minutes*60
+		if bouquet.aTime > 0:
 			self.setArchivemode(0)
 		self.play()
 
 	def rwdJumpTo(self, minutes):
 		print "[KartinaTV] rwdSeekTo", minutes
-		ktv.aTime -= minutes*60
+		bouquet.aTime -= minutes*60
 		self.play()
 		
 	def playpauseArchive(self):
 		if self.archive_pause: #do unpause
-			ktv.aTime -= tdSec(syncTime()-self.archive_pause)-ARCHIVE_TIME_FIX 
+			bouquet.aTime -= tdSec(syncTime()-self.archive_pause)-ARCHIVE_TIME_FIX
 			self.archive_pause = None
 			self.play()
 			self.unlockShow()
@@ -855,9 +856,10 @@ class KartinaStreamPlayer(KartinaPlayer):
 		self.epgProgressTimer.stop()
 		cid = self.current
 		
-		#EPG is valid only if bouth tstart and tend specified!!! Check API.		
+		#EPG is valid only if bouth tstart and tend specified!!! Check utils.
+		time = syncTime() + secTd(bouquet.aTime)
 		def setEpgCurrent():
-			curr = ktv.channels[cid].epgCurrent(syncTime() + secTd(ktv.aTime))
+			curr = ktv.channels[cid].epgCurrent(time)
 			if not curr:
 				return False
 
@@ -865,11 +867,11 @@ class KartinaStreamPlayer(KartinaPlayer):
 			self["currentName"].setText(curr.name)
 			self["currentTime"].setText(curr.tstart.strftime("%H:%M"))
 			self["nextTime"].setText(curr.tend.strftime("%H:%M"))
-			self.epgTimer.start(curr.getTimeLeftmsec(ktv.aTime) +1000) #milliseconds
-			self["currentDuration"].setText("+%d min" % (curr.getTimeLeft(ktv.aTime) / 60) )
-			self["progressBar"].setValue(PROGRESS_SIZE * curr.getTimePass(ktv.aTime) / curr.duration)
+			self.epgTimer.start(curr.getTimeLeftmsec(time) +1000) #milliseconds
+			self["currentDuration"].setText("+%d min" % (curr.getTimeLeft(time) / 60) )
+			self["progressBar"].setValue(PROGRESS_SIZE * curr.getTimePass(time) / curr.duration)
 			self.epgProgressTimer.start(PROGRESS_TIMER)
-			if ktv.aTime:
+			if bouquet.aTime:
 				self["archiveDate"].setText(curr.tstart.strftime("%d.%m"))
 				self["archiveDate"].show()
 			else:
@@ -878,12 +880,12 @@ class KartinaStreamPlayer(KartinaPlayer):
 		
 		if not setEpgCurrent():
 			try:
-				if ktv.aTime:
-					ktv.getGmtEpg(cid)
+				if bouquet.aTime:
+					ktv.getGmtEpg(cid, time)
 				else:
 					ktv.getCurrentEpg(cid)
 			except APIException:
-				print "[KartinaTV] ERROR load epg failed! cid =", cid, bool(ktv.aTime)		
+				print "[KartinaTV] ERROR load epg failed! cid =", cid, bool(bouquet.aTime)
 			if not setEpgCurrent():
 				self["currentName"].setText('')
 				self["currentTime"].setText('')
@@ -892,7 +894,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 				self["progressBar"].setValue(0)	
 				
 		def setEpgNext():
-			next = ktv.channels[cid].epgNext(ktv.aTime)
+			next = ktv.channels[cid].epgNext(time)
 			if not next:
 				return False
 			self['nextName'].setText(next.name)
@@ -901,8 +903,8 @@ class KartinaStreamPlayer(KartinaPlayer):
 		
 		if not setEpgNext():
 			try:
-				if ktv.aTime:
-					ktv.getNextGmtEpg(cid)
+				if bouquet.aTime:
+					ktv.getNextGmtEpg(cid, time)
 				else:
 					ktv.getNextEpg(cid)
 			except APIException:
@@ -914,12 +916,13 @@ class KartinaStreamPlayer(KartinaPlayer):
 		self.serviceStarted() #ShowInfoBar #FIXME: only if focused
 		
 	def epgUpdateProgress(self):
-		self["currentDuration"].setText("+%d min" % (self.currentEpg.getTimeLeft(ktv.aTime)/60) )
-		self["progressBar"].setValue(PROGRESS_SIZE * self.currentEpg.getTimePass(ktv.aTime) / self.currentEpg.duration)
+		time = syncTime() + secTd(bouquet.aTime)
+		self["currentDuration"].setText("+%d min" % (self.currentEpg.getTimeLeft(time)/60) )
+		self["progressBar"].setValue(PROGRESS_SIZE * self.currentEpg.getTimePass(time) / self.currentEpg.duration)
 		self.epgProgressTimer.start(PROGRESS_TIMER)
 	
 	def setArchivemode(self, aTime):
-		ktv.aTime = aTime
+		bouquet.aTime = aTime
 		if aTime:
 			self.archive_pause = None
 			self["live_actions"].setEnabled(0)
@@ -1229,13 +1232,14 @@ class ChannelList(MenuList):
 				if ktv.channels[cid].archive:
 					lst += [(eListboxPythonMultiContent.TYPE_PIXMAP_ALPHATEST, xoffset, (self.itemHeight-height)/2, width, height, self.pixmapArchive)]  	
 				xoffset += width+5
-				
+			
+			epg = ktv.channels[cid].epgCurrent()
+			
 			if self.showEpgProgress: 
 				width = 52
 				height = 6
-				epg = ktv.channels[cid].epgCurrent()
 				if epg:
-					percent = 100*epg.getTimePass(0) / epg.duration
+					percent = 100*epg.getTimePass() / epg.duration
 					lst += [(eListboxPythonMultiContent.TYPE_PROGRESS, xoffset+1, (self.itemHeight-height)/2, width, height, percent, 0, self.col['colorEventProgressbar'], self.col['colorEventProgressbarSelected'] ),
 							(eListboxPythonMultiContent.TYPE_PROGRESS, xoffset, (self.itemHeight-height)/2 -1, width+2, height+2, 0, 1, self.col['colorEventProgressbarBorder'], self.col['colorEventProgressbarBorderSelected'] )]	
 				xoffset += width+7
@@ -1246,7 +1250,6 @@ class ChannelList(MenuList):
 			lst += [(eListboxPythonMultiContent.TYPE_TEXT, xoffset, 0, width, self.itemHeight, 0, defaultFlag, text )]
 			xoffset += width+10
 			
-			epg = ktv.channels[cid].epgCurrent()
 			if epg:
 				text = '(%s)' % epg.progName #sholdn't contain \n
 				#width = self.calculateWidth(text, 1)
@@ -1608,17 +1611,18 @@ class KartinaEpgList(Screen):
 		self.hideLabels("s%s")
 		self.list.show()
 		if self.epgDownloaded: return
-		d = datetime.datetime.date(syncTime()+secTd(ktv.aTime)+datetime.timedelta(self.day))
+		d = syncTime()+secTd(bouquet.aTime)+datetime.timedelta(self.day)
 		try:
 			ktv.getDayEpg(self.current, d)
 		except APIException:
 			print "[KartinaTV] load day epg failed cid = ", self.current
 			return
-		self.list.setList(map(self.kartinaEpgEntry, ktv.channels[self.current].epgDay(d)))
+		epglist = ktv.channels[self.current].epgDay(d)
+		self.list.setList(map(self.kartinaEpgEntry, epglist))
 		self.setTitle("EPG / %s / %s %s" % (ktv.channels[self.current].name, d.strftime("%d"), _(d.strftime("%b")) ))
 		x = 0
 		for x in xrange(len(epglist)):
-			if epglist[x].tstart > syncTime():
+			if epglist[x].tstart > d:
 				break
 		if x > 0: x-=1
 		self.list.moveToIndex(x)
