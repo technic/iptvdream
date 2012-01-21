@@ -34,6 +34,7 @@ from Components.SelectionList import SelectionList
 from Screens.VirtualKeyBoard import VirtualKeyBoard, VirtualKeyBoardList
 from Tools.BoundFunction import boundFunction
 from enigma import eServiceReference, iServiceInformation, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, gFont, eTimer, iPlayableServicePtr, iStreamedServicePtr, getDesktop, eLabel, eSize, ePoint, getPrevAsciiCode, iPlayableService, ePicLoad
+from Screens.Standby import TryQuitMainloop
 from Components.AVSwitch import AVSwitch
 from urllib import urlretrieve
 from Components.ParentalControl import parentalControl
@@ -294,6 +295,16 @@ class RunManager():
 
 global runManager
 runManager = RunManager()	
+
+#We need to save settings before shutdown.
+#Small hack here, sorry no alternative
+orig_fnc = TryQuitMainloop.close
+def edited_fnc(obj, value):
+	if value and runManager.running():
+		"[KartinaTV] shutting down... doExit()"
+		KartinaPlayer.instance.doExit()
+	orig_fnc(obj, value)
+TryQuitMainloop.close = edited_fnc
 
 def AOpen(aname, session, **kwargs):	
 	print "[KartinaTV] %s plugin starting" % aname
