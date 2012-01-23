@@ -1615,7 +1615,7 @@ class KartinaEpgList(Screen):
 		self.hideLabels("s%s")
 		self.list.show()
 		if self.epgDownloaded: return
-		d = syncTime()+datetime.timedelta(self.day)
+		d = syncTime()+datetime.timedelta(self.day)+secTd(ktv.aTime)
 		try:
 			epglist = ktv.getDayEpg(self.current, d)
 		except:
@@ -1625,7 +1625,7 @@ class KartinaEpgList(Screen):
 		self.setTitle("EPG / %s / %s %s" % (ktv.channels[self.current].name, d.strftime("%d"), _(d.strftime("%b")) ))
 		x = 0
 		for x in xrange(len(epglist)):
-			if epglist[x][0] and (epglist[x][0] > syncTime()):
+			if epglist[x][0] and (epglist[x][0] > d):
 				break
 		if x > 0: x-=1
 		self.list.moveToIndex(x)
