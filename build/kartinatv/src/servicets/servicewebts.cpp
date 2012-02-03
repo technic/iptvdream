@@ -939,7 +939,7 @@ void eStreamThread::thread() {
 			scan_pos = get;
 		} else {
 			rc = 0;
-			eDebug("Wateing for pids");
+			eDebug("Waiting for pids");
 		}
 
 		if (rc < 0) {
@@ -963,6 +963,8 @@ void eStreamThread::thread() {
 					pthread_cond_wait(&m_startsig, &m_startmut);
 				}
 				pthread_mutex_unlock(&m_startmut);
+			} else {
+				scan_pos += blocksize;
 			}
 		}
 		get += rc;
@@ -1029,6 +1031,13 @@ void eStreamThreadPut::start(int srcfd, unsigned char *buffer, struct RingBuffer
 
 void eStreamThreadPut::stop() {
 	m_stop = true;
+	if(m_running) {
+		//mutex lock
+		pthread_mutex_lock(m_mutex);
+		pthread_cond_signal(m_empty);
+		pthread_mutex_unlock(m_mutex);
+		//mutex unlock
+	}
 	kill();
 }
 
