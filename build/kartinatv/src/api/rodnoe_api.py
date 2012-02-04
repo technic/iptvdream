@@ -188,7 +188,7 @@ class Ktv(RodnoeAPI):
 		params = {  }
 		return self.getData(self.site+"/get_list_tv"+urllib.urlencode(params), "channels list") 
 
-	def getStreamUrl(self, id):
+	def getStreamUrl(self, id, pin):
 		params = {"cid": id}
 		if self.channels[id].is_protected:
 			params["protect_code"] = self.protect_code

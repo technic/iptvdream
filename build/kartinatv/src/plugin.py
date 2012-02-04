@@ -30,6 +30,7 @@ from Screens.MessageBox import MessageBox
 from Screens.MinuteInput import MinuteInput
 from Screens.ChoiceBox import ChoiceBox
 from Screens.InputBox import PinInput, InputBox
+from Components.Input import Input
 from Components.SelectionList import SelectionList
 from Screens.VirtualKeyBoard import VirtualKeyBoard, VirtualKeyBoardList
 from Tools.BoundFunction import boundFunction
@@ -573,6 +574,10 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			return
 		self.session.nav.stopService()
 		
+		if ktv.HAS_PIN and cid in ktv.locked_cids:
+			print "[KartinaTV] protected by api"
+			self.session.openWithCallback(self.pinEntered, InputBox, title=_("Enter protect password"),windowTitle = _("Channel Locked"), type=Input.PIN)
+			return
 		#Use many hacks, because it's no possibility to change enigma :(
 		#fake reference has no path and used for parental control
 		fakeref = fakeReference(cid)
@@ -582,10 +587,16 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		else:
 			self["channelName"].setText(ktv.channels[cid].name)
 			self.epgEvent()	
+	def pinEntered(self, pin):
+		if self.startPlay(pin=pin) == 0:
+			#this means api access denied
+			self.session.openWithCallback(self.retryPlay, MessageBox, _("Access denied!\nTry again?"))
+	
+	def retryPlay(self, result):
+		if result: self.play()
 
 	def startPlay(self, **kwargs): #TODO: think more..
 		print "[KartinaTV] play channel id=", self.current 
-		self.oldcid = self.current
 		self.__audioSelected = False
 				
 
@@ -829,15 +840,21 @@ class KartinaStreamPlayer(KartinaPlayer):
 	
 	def startPlay(self, **kwargs):
 		KartinaPlayer.startPlay(self)
+		if kwargs.has_key('pin'):
+			pin = kwargs['pin']
+		else:
+			pin = None
 		
 		cid = self.current
 		try:
-			uri = ktv.getStreamUrl(cid)
+			uri = ktv.getStreamUrl(cid, pin)
 		except:
 			print "[KartinaTV] Error: getting stream uri failed!"
 			#self.session.open(MessageBox, _("Error while getting stream uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
 			return -1
 		
+		if not uri:
+			return 0
 		srv = SERVICE_KARTINA
 		if not uri.startswith('http://'):
 			srv = 4097
@@ -848,6 +865,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 			
 		sref = eServiceReference(srv, 0, uri)
 		self.session.nav.playService(sref)
+		self.oldcid = self.current
 		
 		self["KartinaPiconRef"].text = ktv.getPiconName(cid)
 		self["channelName"].setText(ktv.channels[cid].name)

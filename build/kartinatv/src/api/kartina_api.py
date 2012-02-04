@@ -121,6 +121,7 @@ class Ktv(KartinaAPI):
 	NEXT_API = "KartinaMovies"
 	
 	locked_cids = [155, 159, 161, 257, 311]
+	HAS_PIN = True
 	
 	def __init__(self, username, password):
 		KartinaAPI.__init__(self, username, password)
@@ -198,22 +199,24 @@ class Ktv(KartinaAPI):
 		xmlstream = self.getData("/api/xml/channel_list?"+urllib.urlencode(params), "channels list") 
 		return xmlstream
 	
-	def getStreamUrl(self, id):
+	def getStreamUrl(self, cid, pin):
 		params = {"m" : "channels",
 				  "act" : "get_stream_url",
-				  "cid" : id}
+				  "cid" : cid}
 		if self.aTime:
 			params["gmt"] = (syncTime() + secTd(self.aTime)).strftime("%s")
-		params["protect_code"] = self.password
-		root = self.getData("/?"+urllib.urlencode(params), "URL of stream %s" % id)
+		params["protect_code"] = pin
+		root = self.getData("/?"+urllib.urlencode(params), "URL of stream %s" % cid)
 		if self.aTime:
 			prog = unescapeEntities(root.attrib.get("programm"))
 			if prog:
 				prog = prog.encode("utf-8")
 				tstart = datetime.datetime.fromtimestamp( int(root.attrib.get("start").encode("utf-8")) ) #unix
 				tend = datetime.datetime.fromtimestamp( int(root.attrib.get("next").encode("utf-8")) )
-				self.channels[id].aepg = EpgEntry(prog, tstart, tend)
-		return root.attrib.get("url").encode("utf-8").split(' ')[0].replace('http/ts://', 'http://')
+				self.channels[cid].aepg = EpgEntry(prog, tstart, tend)
+		url = root.attrib.get("url").encode("utf-8").split(' ')[0].replace('http/ts://', 'http://')
+		if url == "protected": return 0
+		return url
 	
 	def getChannelsEpg(self, cids):
 		if len(cids) == 1:
@@ -285,6 +288,6 @@ if __name__ == "__main__":
 	ktv.start()
 	#ktv.setTimeShift(0)
 	#ktv.setChannelsList()
-	print ktv.getStreamUrl(39)
+	print ktv.getStreamUrl(257, 12)
 	ktv.setChannelsList()
 	ktv.getChannelsEpg(ktv.channels.keys())
