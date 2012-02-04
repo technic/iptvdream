@@ -1,5 +1,5 @@
 #Define where is your duckbox toolchain
-duckbox_path = /home/tech/sh/tdt/
+duckbox_path = /home/schpuntik/tdt-amiko
 #And what box do you have
 CUBEREVO =
 CUBEREVO_MINI =
@@ -31,7 +31,7 @@ targetprefix = $(duckbox_path)/tdt/tufsbox/cdkroot
 driverdir = $(duckbox_path)/tdt/cvs/driver
 export BUILDPREFIX = $(duckbox_path)/tdt/cvs/cdk
 buildprefix = $(duckbox_path)/tdt/cvs/cdk
-KERNEL_DIR = linux-sh4-2.6.23.17_stm23_0123
+KERNEL_DIR = linux-sh4
 crossprefix = $(duckbox_path)/tdt/tufsbox/devkit/sh4
 
 #Add paths to enigma2 modules.
