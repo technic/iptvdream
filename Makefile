@@ -1,5 +1,5 @@
 #Define where is your duckbox toolchain
-duckbox_path = /home/schpuntik/tdt-amiko
+duckbox_path = /home/tech/tdt-amiko
 #And what box do you have
 CUBEREVO =
 CUBEREVO_MINI =
