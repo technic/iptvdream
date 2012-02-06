@@ -12,7 +12,7 @@ from abstract_api import MODE_STREAM, AbstractAPI
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 import datetime
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities
+from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities, SettEntry
 
 #TODO: GLOBAL: add private! Get values by properties.
 
@@ -44,7 +44,8 @@ class KartinaAPI(AbstractAPI):
 		#self.trace("username = %s" % self.username)
 		self.cookiejar.clear()
 		params = urllib.urlencode({"login" : self.username,
-								  "pass" : self.password})
+								  "pass" : self.password,
+								  "settings" : "all"})
 		reply = self.opener.open(self.site+'/api/xml/login?', params).read()
 		
 		#checking cookies
@@ -68,6 +69,24 @@ class KartinaAPI(AbstractAPI):
 		if (deleted):
 			raise Exception(self.username+": Wrong authorization request")
 		self.packet_expire = datetime.datetime.fromtimestamp(int(reply.find('account').findtext('packet_expire')))
+		
+		#Load settings here, because kartina api is't friendly
+		self.settings = []
+		sett = reply.find("settings")
+		for s in sett:
+			if s.tag == "http_caching": continue
+			value = s.findtext('value')
+			vallist = []
+			if s.tag == "stream_server":
+				for x in s.find('list'):
+					vallist += [(x.findtext('ip'), x.findtext('descr'))]
+			elif s.find('list'):
+				for x in s.find('list'):
+					vallist += [x.text]
+			self.settings += [SettEntry(s.tag, value, vallist)]
+		for x in self.settings:
+			print x
+		
 		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 		self.trace("Packet expire: %s" % self.packet_expire)
 		self.SID = True	
@@ -280,12 +299,21 @@ class Ktv(KartinaAPI):
 		if len(lst)>2:
 			self.channels[cid].nepg = EpgEntry(parseepg(lst[1])[1], parseepg(lst[1])[0], parseepg(lst[2])[0])	
 
+	def getSettings(self):
+		return self.settings
+	
+	def pushSettings(self, sett):
+		for x in sett:
+			params = {"var" : x[0],
+			          "val" : x[1]}
+			self.getData("/api/xml/settings_set?"+urllib.urlencode(params), "setting %s" % x[0])
 	
 
 if __name__ == "__main__":
 	import sys
 	ktv = Ktv(sys.argv[1], sys.argv[2])
 	ktv.start()
+	ktv.pushSettings([('bitrate', 900)])
 	#ktv.setTimeShift(0)
 	#ktv.setChannelsList()
 	print ktv.getStreamUrl(257, 12)
