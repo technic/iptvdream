@@ -13,6 +13,9 @@ import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring, ElementTree
 import datetime
 from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel
+from os import listdir, path
+
+DIRECTORY = '/etc/iptvdream/'
 
 class Ktv(AbstractAPI):
 	
@@ -24,6 +27,7 @@ class Ktv(AbstractAPI):
 		self.channels = {}
 		self.aTime = 0
 
+		self.groups = {}
 	def start(self):
 		pass		
 					
@@ -61,16 +65,20 @@ class Ktv(AbstractAPI):
 		return groups
 	
 	def setChannelsList(self):
-		FILENAME = '/etc/iptvdream/playlist.m3u' 
-		fd = open(FILENAME, 'r')
+		for fname in os.listdir(DIRECTORY):
+			if fname.endswith('.m3u'):
+				self.loadFile(path.join(DIRECTORY, fname))
+	
+	def loadFile(self, filename):
+		self.trace("parsing %s", filename)
+		fd = open(filename, 'r')
 		if fd.readline().rstrip() != "#EXTM3U":
 			raise Exception("Wrong header. #EXTM3U expected")
 		
-		default_group = FILENAME.split('/')[-1]
+		default_group = filename.split('/')[-1]
 		needinfo = True
-		cid = 0
-		gid = 0
-		groups = {}
+		cid = len(self.channels)
+		gid = len(self.groups)
 		while True:
 			line = fd.readline()
 			if line == '':
@@ -95,10 +103,10 @@ class Ktv(AbstractAPI):
 					raise Exception("Error while parsing m3u file %s" % line)
 				else:
 					url = line
-					if group not in groups.keys():
-						groups[group] = gid
+					if group not in self.groups.keys():
+						self.groups[group] = gid
 						gid += 1
-					self.channels[cid] = Channel(name, group, cid, groups[group])
+					self.channels[cid] = Channel(name, group, cid, self.groups[group])
 					self.channels[cid].stream_url = url
 					cid += 1
 					needinfo = True
