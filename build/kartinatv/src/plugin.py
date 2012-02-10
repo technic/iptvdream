@@ -84,6 +84,9 @@ else:
 	NUMS_ON_PAGE = 12
 
 
+class StaticTextService(StaticText):
+	service = property(StaticText.getText, StaticText.setText)
+	
 #text that contain only 0-9 characters..	
 class ConfigNumberText(ConfigText):
 	def __init__(self, default = ""):
@@ -686,7 +689,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 		self["archiveDate"] = Label("")
 		self["state"] = Label("")
 		self["KartinaInArchive"] = Boolean(False)
-		self["KartinaPiconRef"] = StaticText()
+		self["KartinaPiconRef"] = StaticTextService()
 		
 		#TODO: actionmap add help.
 		
