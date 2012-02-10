@@ -1447,7 +1447,7 @@ class KartinaChannelSelection(Screen):
 				self["epgName"].setText(curr.progName)
 				self["epgName"].show()
 				self["epgTime"].show()
-				self["epgProgress"].setValue(100*curr.getTimePass(0) / curr.duration) #Not ktv.aTime but zero
+				self["epgProgress"].setValue(100*curr.getTimePass() / curr.duration) #Not bouquet.aTime but zero
 				self["epgProgress"].show()
 				self["epgDescription"].setText(curr.progDescr)
 				self["epgDescription"].show()
