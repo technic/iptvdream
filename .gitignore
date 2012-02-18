@@ -1,0 +1,5 @@
+#Kate backups
+*~
+*.swp
+#python
+*.pyc

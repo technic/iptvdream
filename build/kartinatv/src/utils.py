@@ -434,3 +434,19 @@ class APIException(Exception):
 	  self.msg = msg
 	def __str__(self):
 	  return repr(self.msg)
+
+class SettEntry():
+	def __init__(self, name, value, vallist = None, limits = None):
+		self.name = name
+		if not len(vallist): vallist = None
+		try:
+			if not vallist: value = int(value)
+		except:
+			pass
+		self.value = value
+		i = 0
+		self.vallist = vallist
+		self.limits = limits or (-9999, 9999)
+	
+	def __repr__(self):
+		return "Name: %s current value: %s Available values: %s" % (self.name,  self.value, self.vallist)

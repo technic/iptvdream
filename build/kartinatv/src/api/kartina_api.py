@@ -12,7 +12,7 @@ from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 from datetime import datetime
-from . import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities, Timezone, APIException
+from . import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities, Timezone, APIException, SettEntry
 
 #TODO: GLOBAL: add private! Get values by properties.
 
@@ -40,7 +40,8 @@ class KartinaAPI(AbstractAPI):
 		self.trace("username = %s" % self.username)
 		self.cookiejar.clear()
 		params = urllib.urlencode({"login" : self.username,
-		                           "pass" : self.password})
+								  "pass" : self.password,
+								  "settings" : "all"})
 		reply = self.opener.open(self.site+'/api/xml/login?', params).read()
 		
 		#checking cookies
@@ -64,6 +65,24 @@ class KartinaAPI(AbstractAPI):
 		if (deleted):
 			raise APIException(self.username+": Wrong authorization request")
 		self.packet_expire = datetime.fromtimestamp(int(reply.find('account').findtext('packet_expire')))
+		
+		#Load settings here, because kartina api is't friendly
+		self.settings = []
+		sett = reply.find("settings")
+		for s in sett:
+			if s.tag == "http_caching": continue
+			value = s.findtext('value')
+			vallist = []
+			if s.tag == "stream_server":
+				for x in s.find('list'):
+					vallist += [(x.findtext('ip'), x.findtext('descr'))]
+			elif s.find('list'):
+				for x in s.find('list'):
+					vallist += [x.text]
+			self.settings += [SettEntry(s.tag, value, vallist)]
+		for x in self.settings:
+			print x
+		
 		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 		self.trace("Packet expire: %s" % self.packet_expire)
 		self.SID = True	
@@ -117,6 +136,7 @@ class Ktv(KartinaAPI, AbstractStream):
 	NEXT_API = "KartinaMovies"
 	
 	locked_cids = [155, 159, 161, 257, 311]
+	HAS_PIN = True
 	
 	def __init__(self, username, password):
 		KartinaAPI.__init__(self, username, password)
@@ -159,14 +179,15 @@ class Ktv(KartinaAPI, AbstractStream):
 				  "val" : timeShift}
 		self.getData("/api/xml/settings_set?"+urllib.urlencode(params), "time shift new api %s" % timeShift) 
 
-	def getStreamUrl(self, cid, time = None):
-		params = {"protect_code" : self.password,
-				  "cid" : cid}
+	def getStreamUrl(self, cid, pin, time = None):
+		params = {"cid" : cid}
 		if time:
 			params["gmt"] = time.strftime("%s")
-		params["protect_code"] = self.password
+		params["protect_code"] = pin
 		root = self.getData("/api/xml/get_url?"+urllib.urlencode(params), "URL of stream %s" % cid)
-		return root.findtext("url").encode("utf-8").split(' ')[0].replace('http/ts://', 'http://')
+		url = root.attrib.get("url").encode("utf-8").split(' ')[0].replace('http/ts://', 'http://')
+		if url == "protected": return 0
+		return url
 	
 	def getChannelsEpg(self, cids):
 		params = {"cids" : ",".join(map(str, cids))}
@@ -216,3 +237,13 @@ class Ktv(KartinaAPI, AbstractStream):
 			title = epg.findtext('progname').encode('utf-8')
 			lst += [EpgEntry(title, tstart, None)]
 		self.channels[cid].pushEpgSorted(lst)
+	def getSettings(self):
+		return self.settings
+	
+	def pushSettings(self, sett):
+		for x in sett:
+			params = {"var" : x[0],
+			          "val" : x[1]}
+			self.getData("/api/xml/settings_set?"+urllib.urlencode(params), "setting %s" % x[0])
+	ktv.pushSettings([('bitrate', 900)])
+	print ktv.getStreamUrl(257, 12)

@@ -16,7 +16,7 @@ import servicewebts
 from Plugins.Plugin import PluginDescriptor
 from Screens.Screen import Screen
 from Components.ActionMap import ActionMap, NumberActionMap, HelpableActionMap
-from Components.config import config, ConfigSubsection, ConfigText, ConfigInteger, getConfigListEntry, ConfigYesNo, ConfigSubDict, ConfigElement, getKeyNumber, KEY_ASCII, KEY_NUMBERS
+from Components.config import config, ConfigSubsection, ConfigText, ConfigInteger, ConfigSelection, getConfigListEntry, ConfigYesNo, ConfigSubDict, ConfigElement, getKeyNumber, KEY_ASCII, KEY_NUMBERS
 from Components.ConfigList import ConfigListScreen
 from Components.Label import Label
 from Components.Slider import Slider
@@ -30,10 +30,12 @@ from Screens.MessageBox import MessageBox
 from Screens.MinuteInput import MinuteInput
 from Screens.ChoiceBox import ChoiceBox
 from Screens.InputBox import PinInput, InputBox
+from Components.Input import Input
 from Components.SelectionList import SelectionList
 from Screens.VirtualKeyBoard import VirtualKeyBoard, VirtualKeyBoardList
 from Tools.BoundFunction import boundFunction
 from enigma import eServiceReference, iServiceInformation, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, gFont, eTimer, iPlayableServicePtr, iStreamedServicePtr, getDesktop, eLabel, eSize, ePoint, getPrevAsciiCode, iPlayableService, ePicLoad
+from Screens.Standby import TryQuitMainloop
 from Components.AVSwitch import AVSwitch
 from urllib import urlretrieve
 from Components.ParentalControl import parentalControl
@@ -82,6 +84,9 @@ else:
 	NUMS_ON_PAGE = 12
 
 
+class StaticTextService(StaticText):
+	service = property(StaticText.getText, StaticText.setText)
+	
 #text that contain only 0-9 characters..	
 class ConfigNumberText(ConfigText):
 	def __init__(self, default = ""):
@@ -294,6 +299,16 @@ class RunManager():
 
 global runManager
 runManager = RunManager()	
+
+#We need to save settings before shutdown.
+#Small hack here, sorry no alternative
+orig_fnc = TryQuitMainloop.close
+def edited_fnc(obj, value):
+	if value and runManager.running():
+		"[KartinaTV] shutting down... doExit()"
+		KartinaPlayer.instance.doExit()
+	orig_fnc(obj, value)
+TryQuitMainloop.close = edited_fnc
 
 def AOpen(aname, session, **kwargs):	
 	print "[KartinaTV] %s plugin starting" % aname
@@ -563,6 +578,10 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			return
 		self.session.nav.stopService()
 		
+		if ktv.HAS_PIN and cid in ktv.locked_cids:
+			print "[KartinaTV] protected by api"
+			self.session.openWithCallback(self.pinEntered, InputBox, title=_("Enter protect password"),windowTitle = _("Channel Locked"), type=Input.PIN)
+			return
 		#Use many hacks, because it's no possibility to change enigma :(
 		#fake reference has no path and used for parental control
 		fakeref = fakeReference(cid)
@@ -572,10 +591,16 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		else:
 			self["channelName"].setText(ktv.channels[cid].name)
 			self.epgEvent()	
+	def pinEntered(self, pin):
+		if self.startPlay(pin=pin) == 0:
+			#this means api access denied
+			self.session.openWithCallback(self.retryPlay, MessageBox, _("Access denied!\nTry again?"))
+	
+	def retryPlay(self, result):
+		if result: self.play()
 
 	def startPlay(self, **kwargs): #TODO: think more..
 		print "[KartinaTV] play channel id=", self.current 
-		self.oldcid = self.current
 		self.__audioSelected = False
 				
 
@@ -665,15 +690,16 @@ class KartinaStreamPlayer(KartinaPlayer):
 		self["archiveDate"] = Label("")
 		self["state"] = Label("")
 		self["KartinaInArchive"] = Boolean(False)
-		self["KartinaPiconRef"] = StaticText()
+		self["KartinaPiconRef"] = StaticTextService()
 		
 		#TODO: actionmap add help.
 		
 		#disable/enable action map. This method used by e2 developers...
-		self["actions"] = ActionMap(["IPdmInfobarActions"], 
+		self["actions"] = ActionMap(["IPdmInfobarActions", "ColorActions"], 
 		{
 			"closePlugin" : self.close,
-			"openVideos" : self.nextAPI
+			"openVideos" : self.nextAPI,
+			"green" : self.openSettings
 		}, -1)
 		
 		self["live_actions"] = ActionMap(["IPdmLiveInfobarActions"], 
@@ -718,6 +744,9 @@ class KartinaStreamPlayer(KartinaPlayer):
 		self.epgProgressTimer.callback.append(self.epgUpdateProgress)
 		
 		self.archive_pause = 0
+	
+	def openSettings(self):
+		self.session.open(RemoteConfig)
 				
 	def leaveStandby(self):
 		KartinaPlayer.leaveStandby(self)
@@ -820,15 +849,21 @@ class KartinaStreamPlayer(KartinaPlayer):
 	
 	def startPlay(self, **kwargs):
 		KartinaPlayer.startPlay(self)
+		if kwargs.has_key('pin'):
+			pin = kwargs['pin']
+		else:
+			pin = None
 		
 		cid = self.current
 		try:
-			uri = ktv.getStreamUrl(cid)
+			uri = ktv.getStreamUrl(cid, pin)
 		except APIException:
 			print "[KartinaTV] Error: getting stream uri failed!"
 			#self.session.open(MessageBox, _("Error while getting stream uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
 			return -1
 		
+		if not uri:
+			return 0
 		srv = SERVICE_KARTINA
 		if not uri.startswith('http://'):
 			srv = 4097
@@ -839,6 +874,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 			
 		sref = eServiceReference(srv, 0, uri)
 		self.session.nav.playService(sref)
+		self.oldcid = self.current
 		
 		self["KartinaPiconRef"].text = ktv.getPiconName(cid)
 		self["channelName"].setText(ktv.channels[cid].name)
@@ -2386,6 +2422,52 @@ class KartinaConfig(ConfigListScreen, Screen):
 	def keySave(self):
 		self.saveAll()
 		self.close(True)
+
+class RemoteConfig(ConfigListScreen, Screen):
+	skin = """
+		<screen name="RemoteConfig" position="center,center" size="550,250" title="IPTV">
+			<widget name="config" position="20,10" size="520,150" scrollbarMode="showOnDemand" />
+			<ePixmap name="red"	position="0,200" zPosition="4" size="140,40" pixmap="skin_default/buttons/red.png" transparent="1" alphatest="on" />
+			<ePixmap name="green" position="140,200" zPosition="4" size="140,40" pixmap="skin_default/buttons/green.png" transparent="1" alphatest="on" />
+			<widget name="key_red" position="0,200" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
+			<widget name="key_green" position="140,200" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
+		</screen>"""
+	
+	def __init__(self, session):
+		Screen.__init__(self, session)
+		
+		self["actions"] = NumberActionMap(["SetupActions", "ColorActions"],
+		{
+			"green": self.pushSettings,
+			"red": self.keyCancel,
+			"cancel": self.keyCancel
+		}, -2)
+		
+		self["key_red"] = Button(_("Cancel"))
+		self["key_green"] = Button(_("OK"))
+		
+		cfgs = ktv.getSettings()
+		cfglist = []
+		for x in cfgs:
+			if x.vallist is not None:
+				cfglist.append(getConfigListEntry(x.name, ConfigSelection(x.vallist, x.value) ))
+			elif isinstance(x.value, int):
+				cfglist.append(getConfigListEntry(x.name, ConfigInteger(x.value, x.limits) ))
+			elif isinstance(x.value, str):
+				cfglist.append(getConfigListEntry(x.name, ConfigText(x.value, False) ))
+		
+		ConfigListScreen.__init__(self, cfglist, session)
+		#sets = ktv.getSettings()
+		#for entry in sets:
+	
+	def pushSettings(self):
+		topush = []
+		for x in self["config"].list:
+			if x[1].isChanged():
+				print "[KartinaTV] setting to push:", x[0], x[1].value
+				topush.append((x[0], x[1].value))
+		ktv.pushSettings(topush)
+		self.close()
 
 #gettext HACK:
 [_("Jan"), _("Feb"), _("Mar"), _("Apr"), _("May"), _("Jun"), _("Jul"), _("Aug"), _("Sep"), _("Oct"), _("Nov") ] 
