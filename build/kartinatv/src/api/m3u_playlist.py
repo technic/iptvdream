@@ -8,23 +8,23 @@
 # Software Foundation; either version 2, or (at your option) any later
 # version.
 
-from abstract_api import MODE_STREAM, AbstractAPI
+from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring, ElementTree
 import datetime
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel
+from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, APIException
 from os import listdir, path
 
 DIRECTORY = '/etc/iptvdream/'
 
-class Ktv(AbstractAPI):
+class Ktv(AbstractAPI, AbstractStream):
 	
 	iName = "m3uPlaylist"		
 	locked_cids = []
 	
 	def __init__(self, username, password):
 		AbstractAPI.__init__(self, username, password)
-		self.channels = {}
+		AbstractStream.__init__(self)
 		self.aTime = 0
 
 		self.groups = {}
@@ -65,15 +65,15 @@ class Ktv(AbstractAPI):
 		return groups
 	
 	def setChannelsList(self):
-		for fname in os.listdir(DIRECTORY):
+		for fname in listdir(DIRECTORY):
 			if fname.endswith('.m3u'):
 				self.loadFile(path.join(DIRECTORY, fname))
 	
 	def loadFile(self, filename):
-		self.trace("parsing %s", filename)
+		self.trace("parsing %s" % filename)
 		fd = open(filename, 'r')
 		if fd.readline().rstrip() != "#EXTM3U":
-			raise Exception("Wrong header. #EXTM3U expected")
+			raise APIException("Wrong header. #EXTM3U expected")
 		
 		default_group = filename.split('/')[-1]
 		needinfo = True
@@ -87,7 +87,7 @@ class Ktv(AbstractAPI):
 			if line.startswith('#EXTINF:'):
 				line = line.split('#')[1]
 				if not needinfo or not (line.find(',') > -1):
-					raise Exception("Error while parsing m3u file")
+					raise APIException("Error while parsing m3u file")
 				title = line.split(',')[1]
 				if title.find(' - ') > -1:
 					title = title.partition(' - ')
@@ -100,7 +100,7 @@ class Ktv(AbstractAPI):
 			elif line != '':
 				line = line.partition('#')[0]
 				if needinfo:
-					raise Exception("Error while parsing m3u file %s" % line)
+					raise APIException("Error while parsing m3u file %s" % line)
 				else:
 					url = line
 					if group not in self.groups.keys():
