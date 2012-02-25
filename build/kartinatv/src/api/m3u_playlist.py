@@ -10,7 +10,7 @@
 
 from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 import cookielib, urllib, urllib2 #TODO: optimize imports
-from xml.etree.cElementTree import fromstring, ElementTree
+from xml.etree.cElementTree import fromstring
 import datetime
 from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, APIException
 from os import listdir, path
@@ -25,45 +25,16 @@ class Ktv(AbstractAPI, AbstractStream):
 	def __init__(self, username, password):
 		AbstractAPI.__init__(self, username, password)
 		AbstractStream.__init__(self)
-		self.aTime = 0
 
 		self.groups = {}
+
 	def start(self):
 		pass		
 					
 	def setTimezone(self):
 		pass
 
-	
-	def sortByName(self):
-		x = [(val.name, key) for (key, val) in self.channels.items()]
-		x.sort()
-		services = Bouquet(Bouquet.TYPE_MENU, 'all')
-		for item in x:
-			ch = self.channels[item[1]]
-			services.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num )) #two sort args [channel_name, number]
-		return services
-	
-	def sortByGroup(self):
-		x = [(val.group, key) for (key, val) in self.channels.items()]
-		x.sort()
-		groups = Bouquet(Bouquet.TYPE_MENU, 'By group')
-		groupname = x[0][0]
-		ch = self.channels[x[0][1]]
-		group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.gid) #two sort args [group_name, number]
-		for item in x:
-			ch = self.channels[item[1]]
-			if item[0] == groupname:
-				group.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num))
-			else:
-				groups.append(group)
-				groupname = item[0]
-				ch = self.channels[item[1]]
-				group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.gid) #two sort args [group_name, number]
-				group.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num))
-		groups.append(group)
-		return groups
-	
+
 	def setChannelsList(self):
 		for fname in listdir(DIRECTORY):
 			if fname.endswith('.m3u'):
@@ -116,18 +87,6 @@ class Ktv(AbstractAPI, AbstractStream):
 
 	def getStreamUrl(self, id):
 		return self.channels[id].stream_url 
-	
-	def getChannelsEpg(self, cids):
-		pass		
-			
-	def getGmtEpg(self, id):
-		pass		
-	
-	def getDayEpg(self, cid, date = None):
-		return []
-		
-	def epgNext(self, cid):
-		pass
 
 if __name__ == "__main__":
 	import sys
