@@ -245,5 +245,3 @@ class Ktv(KartinaAPI, AbstractStream):
 			params = {"var" : x[0],
 			          "val" : x[1]}
 			self.getData("/api/xml/settings_set?"+urllib.urlencode(params), "setting %s" % x[0])
-	ktv.pushSettings([('bitrate', 900)])
-	print ktv.getStreamUrl(257, 12)
