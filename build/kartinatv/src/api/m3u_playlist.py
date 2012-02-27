@@ -17,7 +17,7 @@ from os import listdir, path
 
 DIRECTORY = '/etc/iptvdream/'
 
-class Ktv(AbstractAPI, AbstractStream):
+class Playlist(AbstractAPI, AbstractStream):
 	
 	iName = "m3uPlaylist"		
 	locked_cids = []
@@ -43,15 +43,19 @@ class Ktv(AbstractAPI, AbstractStream):
 	def loadFile(self, filename):
 		self.trace("parsing %s" % filename)
 		fd = open(filename, 'r')
-		if fd.readline().rstrip() != "#EXTM3U":
-			raise APIException("Wrong header. #EXTM3U expected")
-		
-		default_group = filename.split('/')[-1]
-		needinfo = True
+		self.parse_m3u(fd.readlines(), filename.split('/')[-1])
+
+class M3UReader():
+	def parse_m3u(self, lines, default_group):
+		linen = 0
+		if lines[linen].rstrip() != "#EXTM3U":
+			raise Exception("Wrong header. #EXTM3U expected")
+		linen += 1
 		cid = len(self.channels)
 		gid = len(self.groups)
-		while True:
-			line = fd.readline()
+		needinfo = True
+		while linen < len(lines):
+			line = lines[linen]
 			if line == '':
 				break #end of file
 			line = line.rstrip()
@@ -81,12 +85,16 @@ class Ktv(AbstractAPI, AbstractStream):
 					self.channels[cid].stream_url = url
 					cid += 1
 					needinfo = True
+			linen += 1;
 				
 	def setTimeShift(self, timeShift):
 		pass
 
 	def getStreamUrl(self, id):
-		return self.channels[id].stream_url 
+		return self.channels[id].stream_url
+
+class Ktv(Playlist, M3UReader):
+	pass
 
 if __name__ == "__main__":
 	import sys
