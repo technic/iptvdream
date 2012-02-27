@@ -1,0 +1,72 @@
+<keymap>
+	<map context="IPdmInfobarActions">
+		<key id="KEY_TV2" mapto="closePlugin" flags="m" />
+		<key id="KEY_VIDEO" mapto="openVideos" flags="m" />
+	</map>
+	
+	<map context="IPdmLiveInfobarActions">
+		<key id="KEY_LEFT" mapto="zapUp" flags="mr" />
+		<key id="KEY_RIGHT" mapto="zapDown" flags="mr" />
+		<key id="KEY_UP" mapto="openServiceList" flags="mr" />
+		<key id="KEY_DOWN" mapto="openServiceList" flags="mr" />
+		<key id="KEY_CHANNELUP" mapto="openServiceList" flags="m" />
+		<key id="KEY_CHANNELDOWN" mapto="openServiceList" flags="m" />
+		<key id="KEY_INFO" mapto="showEPGList" flags="m" />
+		<key id="KEY_PREVIOUS" mapto="historyBack" flags="mr" />
+		<key id="KEY_NEXT" mapto="historyNext" flags="mr" />
+		<key id="KEY_BACK" mapto="historyBack" flags="mr" />
+		<key id="KEY_FORWARD" mapto="historyNext" flags="mr" />
+	</map>
+	
+	<map context="IPdmArchiveInfobarActions">
+		<key id="KEY_RED" mapto="exitArchive" flags="m" />
+		<key id="KEY_YELLOW" mapto="playpause" flags="m" />
+		<key id="KEY_LEFT" mapto="seekBackward" flags="mr" />
+		<key id="KEY_RIGHT" mapto="seekForward" flags="mr" />
+		<key id="KEY_UP" mapto="openServiceList" flags="mr" />
+		<key id="KEY_DOWN" mapto="openServiceList" flags="mr" />
+		<key id="KEY_CHANNELUP" mapto="openServiceList" flags="m" />
+		<key id="KEY_CHANNELDOWN" mapto="openServiceList" flags="m" />
+		<key id="KEY_INFO" mapto="showEPGList" flags="m" />
+		<key id="KEY_PREVIOUS" mapto="historyBack" flags="mr" />
+		<key id="KEY_NEXT" mapto="historyNext" flags="mr" />
+		<key id="KEY_BACK" mapto="historyBack" flags="mr" />
+		<key id="KEY_FORWARD" mapto="historyNext" flags="mr" />
+	</map>
+	
+	<map context="IPdmVideoInfobarActions">
+		<key id="KEY_UP" mapto="openServiceList" flags="mr" />
+		<key id="KEY_DOWN" mapto="openServiceList" flags="mr" />
+		<key id="KEY_CHANNELUP" mapto="zapUp" flags="m" />
+		<key id="KEY_CHANNELDOWN" mapto="zapDown" flags="m" />
+		<key id="KEY_TV" mapto="closePlugin" flags="m" />
+		<key id="KEY_VIDEO" mapto="openTV" flags="m" />
+	</map>
+	
+	<map context="IPdmChannelListActions">
+		<key id="KEY_RED" mapto="showAll" flags="m" />
+		<key id="KEY_GREEN" mapto="showGroups" flags="m" />
+		<key id="KEY_YELLOW" mapto="addFavourites" flags="m" />
+		<key id="KEY_BLUE" mapto="showFavourites" flags="m" />
+		<key id="KEY_MENU" mapto="contextMenu" flags="m" />
+		<key id="KEY_INFO" mapto="showEPGList" flags="m" />
+		<key id="KEY_CHANNELUP" mapto="nextBouquet" flags="m" />
+		<key id="KEY_CHANNELDOWN" mapto="prevBouquet" flags="m" />
+	</map>
+	
+	<map context="IPdmEpgListActions">
+		<key id="KEY_RED" mapto="ok" flags="m" />
+		<key id="KEY_CHANNELUP" mapto="nextDay" flags="m" />
+		<key id="KEY_CHANNELDOWN" mapto="prevDay" flags="m" />
+	</map>
+	
+	<map context="IPdmVideoListActions">
+		<key id="KEY_RED" mapto="last" flags="m" />
+		<key id="KEY_GREEN" mapto="genres" flags="m" />
+		<key id="KEY_YELLOW" mapto="search" flags="m" />
+		<key id="KEY_BLUE" mapto="best" flags="m" />
+		<key id="KEY_INFO" mapto="showInfo" flags="m" />
+		<key id="KEY_CHANNELUP" mapto="nextPage" flags="m" />
+		<key id="KEY_CHANNELDOWN" mapto="prevPage" flags="m" />
+	</map>
+</keymap>

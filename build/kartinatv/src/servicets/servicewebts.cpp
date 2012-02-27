@@ -211,8 +211,14 @@ int eServiceTS::openHttpConnection(std::string url)
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = *((in_addr_t*)h->h_addr_list[0]);
 	addr.sin_port = htons(port);
+	
+	struct timeval timeout;
+	timeout.tv_sec = 5;
+	timeout.tv_usec = 0;
+	
+	setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
 
-	eDebug("connecting to %s:%d", host.c_str(), port);
+	eDebug("connecting to %s:%d\ntimeout setted to 5sec", host.c_str(), port);
 
 	if (connect(fd, (sockaddr*)&addr, sizeof(addr)) == -1) {
 		std::string msg = "connect failed for: " + url;
@@ -933,7 +939,7 @@ void eStreamThread::thread() {
 			scan_pos = get;
 		} else {
 			rc = 0;
-			eDebug("Wateing for pids");
+			eDebug("Waiting for pids");
 		}
 
 		if (rc < 0) {
@@ -957,6 +963,8 @@ void eStreamThread::thread() {
 					pthread_cond_wait(&m_startsig, &m_startmut);
 				}
 				pthread_mutex_unlock(&m_startmut);
+			} else {
+				scan_pos += blocksize;
 			}
 		}
 		get += rc;
@@ -1023,6 +1031,13 @@ void eStreamThreadPut::start(int srcfd, unsigned char *buffer, struct RingBuffer
 
 void eStreamThreadPut::stop() {
 	m_stop = true;
+	if(m_running) {
+		//mutex lock
+		pthread_mutex_lock(m_mutex);
+		pthread_cond_signal(m_empty);
+		pthread_mutex_unlock(m_mutex);
+		//mutex unlock
+	}
 	kill();
 }
 

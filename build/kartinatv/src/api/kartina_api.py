@@ -120,7 +120,7 @@ class Ktv(KartinaAPI):
 	MODE = MODE_STREAM
 	NEXT_API = "KartinaMovies"
 	
-	locked_cids = [155, 159, 161, 257]
+	locked_cids = [155, 159, 161, 257, 311]
 	
 	def __init__(self, username, password):
 		KartinaAPI.__init__(self, username, password)

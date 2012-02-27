@@ -1,3 +1,4 @@
 installdir = /DEBIAN
 
-install_DATA = control postinst
+install_DATA = control
+install_SCRIPTS = postinst
