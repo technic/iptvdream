@@ -19,7 +19,7 @@ print "[KartinaTV] dreambox timezone is GMT", Timezone
 def tdSec(td):
 	return td.days * 86400 + td.seconds
 def tdmSec(td):
-	#Add +1. Timer should wait for next event until event happed exactly.
+	#Add +1. Timer should wait for next event until event happened exactly.
 	#Otherwise inaccuracy in round may lead to mistake.
 	return td.days * 86400*1000 + td.seconds * 1000 + td.microseconds/1000 +1
 def secTd(sec):
@@ -65,51 +65,126 @@ class EpgEntry():
 
 	duration = property(getDuration)
 	
-	def getTimePass(self, delta):
-		now = syncTime()+secTd(delta)
-		return tdSec(now-self.tstart)
+	def getTimePass(self, time = None):
+		if not time: time = syncTime()
+		return tdSec(time-self.tstart)
 	
-	def getTimeLeft(self, delta):
-		now = syncTime()+secTd(delta)
-		return tdSec(self.tend-now)
+	def getTimeLeft(self, time):
+		return tdSec(self.tend-time)
 	
-	def getTimeLeftmsec(self, delta): #More accurancy, milliseconds
-		now = syncTime()+secTd(delta)
-		return tdmSec(self.tend-now)
+	def getTimeLeftmsec(self, time): #More accurancy, milliseconds
+		return tdmSec(self.tend-time)
 
 	#programm is now and tstart and tend defined
-	def isNow(self, delta): 
+	def isNow(self, time): 
 		if self.isValid():
-			return self.tstart <= syncTime()+secTd(delta) and syncTime()+secTd(delta) < self.tend  
+			return self.tstart <= time and time < self.tend  
 		return None
+	
+	def __str__(self):
+		return ("%s -- %s %s") % (self.tstart.__str__(), self.tend.__str__(), self.progName)
+	
+	def __repr__(self):
+		return self.__str__()
 
-class Channel():
-	def __init__(self, name, group, num, gid, archive=0):
+#TODO: some verification algoritm, if tend is None
+#TODO: thread safe @decorator for future backgroud epg loader ;)
+class Channel(object):
+	def __init__(self, name, group, num, groupnum, archive=0):
 		self.name = name
-		self.gid = gid
-		self.num = num
 		self.group = group
+		self.num = num
+		self.groupnum = groupnum
 		self.archive = archive
-		self.epg = None #epg for current program
-		self.aepg = None #epg of archive
-		self.nepg = None #epg for next program
-		self.lepg = {}
+		self.q = []
 		self.lastUpdateFailed = False
 	
 	#EPG is valid only if bouth tstart and tend specified!!!
 	#in this case hasSmth returns True
 	
-	def hasEpg(self):
-		return self.epg and self.epg.isNow(0)
+	def pushEpg(self, epg):
+		self.pushEpgSorted([epg])
 	
-	def hasAEpg(self, delta):
-		return self.aepg and self.aepg.isNow(delta)
+	def pushEpgSorted(self, epglist):
+		#prepare list
+		i = 0
+		while i < len(epglist)-1:
+			if epglist[i].tend is None:
+				epglist[i].tend = epglist[i+1].tstart
+			i += 1
+		#push
+		print "--------------------------------------------------"
+		i = 0
+		l_start = epglist[0].tstart
+		l_end = epglist[-1].tstart
+		print "+++", epglist, l_end
+		
+		while (i < len(self.q)) and (self.q[i].tstart < l_start):
+			i += 1
+		ins_start = i
+		
+		while (i < len(self.q)) and (self.q[i].tstart <= l_end):
+			i += 1
+		ins_end = i
+		
+		if ins_start == ins_end:
+			ins_end += 1
+		print self.q
+		self.q = self.q[:ins_start] + epglist + self.q[ins_end:]
+		print "==>", ins_start, ins_end
+		print self.q
 	
-	def hasEpgNext(self):
-		if self.epg and self.epg.isValid() and self.nepg and self.nepg.isValid():
-			return self.epg.tend <= self.nepg.tstart and self.nepg.tstart > syncTime()
+	#TODO: add Heuristik. continue search from last position
+	def findEpg(self, time):
+		i = 0
+		while (i < len(self.q)) and not self.q[i].isNow(time):
+			i += 1
+		if i == len(self.q):
+			print "[KartinaTV] epg not found for", time
+			return None
+		else:
+			return i
+	
+	def epgCurrent(self, time = None):
+		if not time: time = syncTime()
+		res = self.findEpg(time)
+		if res is None:
+			return None
+		else:
+			return self.q[res].isValid() and self.q[res]
+	
+	def epgNext(self, time = None):
+		if not time: time = syncTime()
+		i = self.findEpg(time)
+		if i is None:
+			return None
+		curr = self.q[i]
+		i += 1
+		if (i < len(self.q)) and self.q[i].isValid():
+			return self.q[i]
 		return False
 	
+	def checkContinuity(self, a, b):
+		i = a
+		while i < b:
+		  if self.q[i].tstart != self.q[i+1].tend:
+			print "[KartinaTV] checkContinuity fail at", self.q[i].tstart
+			return False
+		return True
+	
+	def epgPeriod(self, tstart, tend):
+		i = self.findEpg(tstart)
+		j = self.findEpg(tend)
+		if i and j and self.checkContinuity(i,j):
+			return self.q[i:j]
+		else:
+			return False
+	
+	def epgDay(self, date):
+		return self.epgPeriod(date, date + secTd(24*60*60))
+	
+	epg = property(fset = pushEpg)
+
 class Bouquet():
 	TYPE_SERVICE = 0
 	TYPE_MENU = 1
@@ -353,6 +428,12 @@ def unescapeEntities(text):
                 pass
         return text # leave as is
     return re.sub("&#?\w+;", fixup, text)
+
+class APIException(Exception):
+	def __init__(self, msg):
+	  self.msg = msg
+	def __str__(self):
+	  return repr(self.msg)
 
 class SettEntry():
 	def __init__(self, name, value, vallist = None, limits = None):

@@ -8,21 +8,25 @@
 # Software Foundation; either version 2, or (at your option) any later
 # version.
 
-from abstract_api import MODE_STREAM, AbstractAPI
+from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 import cookielib, urllib, urllib2 #TODO: optimize imports
-from xml.etree.cElementTree import fromstring, ElementTree
+from xml.etree.cElementTree import fromstring
 import datetime
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel
+from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, APIException
+from os import listdir, path
 
-class Ktv(AbstractAPI):
+DIRECTORY = '/etc/iptvdream/'
+
+class Playlist(AbstractAPI, AbstractStream):
 	
 	iName = "m3uPlaylist"		
 	locked_cids = []
 	
 	def __init__(self, username, password):
 		AbstractAPI.__init__(self, username, password)
-		self.channels = {}
-		self.aTime = 0
+		AbstractStream.__init__(self)
+
+		self.groups = {}
 
 	def start(self):
 		pass		
@@ -30,56 +34,35 @@ class Ktv(AbstractAPI):
 	def setTimezone(self):
 		pass
 
-	
-	def sortByName(self):
-		x = [(val.name, key) for (key, val) in self.channels.items()]
-		x.sort()
-		services = Bouquet(Bouquet.TYPE_MENU, 'all')
-		for item in x:
-			ch = self.channels[item[1]]
-			services.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num )) #two sort args [channel_name, number]
-		return services
-	
-	def sortByGroup(self):
-		x = [(val.group, key) for (key, val) in self.channels.items()]
-		x.sort()
-		groups = Bouquet(Bouquet.TYPE_MENU, 'By group')
-		groupname = x[0][0]
-		ch = self.channels[x[0][1]]
-		group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.gid) #two sort args [group_name, number]
-		for item in x:
-			ch = self.channels[item[1]]
-			if item[0] == groupname:
-				group.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num))
-			else:
-				groups.append(group)
-				groupname = item[0]
-				ch = self.channels[item[1]]
-				group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.gid) #two sort args [group_name, number]
-				group.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num))
-		groups.append(group)
-		return groups
-	
+
 	def setChannelsList(self):
-		FILENAME = '/etc/iptvdream/playlist.m3u' 
-		fd = open(FILENAME, 'r')
-		if fd.readline().rstrip() != "#EXTM3U":
+		for fname in listdir(DIRECTORY):
+			if fname.endswith('.m3u'):
+				self.loadFile(path.join(DIRECTORY, fname))
+	
+	def loadFile(self, filename):
+		self.trace("parsing %s" % filename)
+		fd = open(filename, 'r')
+		self.parse_m3u(fd.readlines(), filename.split('/')[-1])
+
+class M3UReader():
+	def parse_m3u(self, lines, default_group):
+		linen = 0
+		if lines[linen].rstrip() != "#EXTM3U":
 			raise Exception("Wrong header. #EXTM3U expected")
-		
-		default_group = FILENAME.split('/')[-1]
+		linen += 1
+		cid = len(self.channels)
+		gid = len(self.groups)
 		needinfo = True
-		cid = 0
-		gid = 0
-		groups = {}
-		while True:
-			line = fd.readline()
+		while linen < len(lines):
+			line = lines[linen]
 			if line == '':
 				break #end of file
 			line = line.rstrip()
 			if line.startswith('#EXTINF:'):
 				line = line.split('#')[1]
 				if not needinfo or not (line.find(',') > -1):
-					raise Exception("Error while parsing m3u file")
+					raise APIException("Error while parsing m3u file")
 				title = line.split(',')[1]
 				if title.find(' - ') > -1:
 					title = title.partition(' - ')
@@ -92,34 +75,26 @@ class Ktv(AbstractAPI):
 			elif line != '':
 				line = line.partition('#')[0]
 				if needinfo:
-					raise Exception("Error while parsing m3u file %s" % line)
+					raise APIException("Error while parsing m3u file %s" % line)
 				else:
 					url = line
-					if group not in groups.keys():
-						groups[group] = gid
+					if group not in self.groups.keys():
+						self.groups[group] = gid
 						gid += 1
-					self.channels[cid] = Channel(name, group, cid, groups[group])
+					self.channels[cid] = Channel(name, group, cid, self.groups[group])
 					self.channels[cid].stream_url = url
 					cid += 1
 					needinfo = True
+			linen += 1;
 				
 	def setTimeShift(self, timeShift):
 		pass
 
 	def getStreamUrl(self, id):
-		return self.channels[id].stream_url 
-	
-	def getChannelsEpg(self, cids):
-		pass		
-			
-	def getGmtEpg(self, id):
-		pass		
-	
-	def getDayEpg(self, cid, date = None):
-		return []
-		
-	def epgNext(self, cid):
-		pass
+		return self.channels[id].stream_url
+
+class Ktv(Playlist, M3UReader):
+	pass
 
 if __name__ == "__main__":
 	import sys

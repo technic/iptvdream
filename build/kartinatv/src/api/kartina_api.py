@@ -8,32 +8,28 @@
 # Software Foundation; either version 2, or (at your option) any later
 # version.
 
-from abstract_api import MODE_STREAM, AbstractAPI
+from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
-import datetime
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities, SettEntry
+from datetime import datetime
+from . import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities, Timezone, APIException, SettEntry
 
 #TODO: GLOBAL: add private! Get values by properties.
 
-global Timezone
-import time
-Timezone = -time.timezone / 3600
-print "[KartinaTV] dreambox timezone is GMT", Timezone
 			
 
 class KartinaAPI(AbstractAPI):
 	
 	iProvider = "kartinatv"
 	NUMBER_PASS = True
-		
+
 	site = "http://iptv.kartina.tv"
 	def __init__(self, username, password):
 		AbstractAPI.__init__(self, username, password)
 
 		self.cookiejar = cookielib.CookieJar()
 		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
-		self.opener.addheaders = [('User-Agent', 'Mozilla/5.0 technic-plugin-1.5')]
+		self.opener.addheaders = [('User-Agent', 'Mozilla/5.0 technic-plugin-2.0')]
 	
 	def start(self):
 		self.authorize()
@@ -41,7 +37,7 @@ class KartinaAPI(AbstractAPI):
 		
 	def authorize(self):
 		self.trace("Authorization started")
-		#self.trace("username = %s" % self.username)
+		self.trace("username = %s" % self.username)
 		self.cookiejar.clear()
 		params = urllib.urlencode({"login" : self.username,
 								  "pass" : self.password,
@@ -56,7 +52,7 @@ class KartinaAPI(AbstractAPI):
 		
 		reply = fromstring(reply)
 		if reply.find("error"):
-			raise Exception(reply.find('error').findtext('message'))
+			raise APIException(reply.find('error').findtext('message'))
 		
 		for cookie in cookies:
 			cookiesdict[cookie.name] = cookie.value
@@ -65,10 +61,10 @@ class KartinaAPI(AbstractAPI):
 			if (cookie.value.find('deleted') != -1):
 				deleted = True
 		if (not hasSSID):
-			raise Exception(self.username+": Authorization of user failed!")
+			raise APIException(self.username+": Authorization of user failed!")
 		if (deleted):
-			raise Exception(self.username+": Wrong authorization request")
-		self.packet_expire = datetime.datetime.fromtimestamp(int(reply.find('account').findtext('packet_expire')))
+			raise APIException(self.username+": Wrong authorization request")
+		self.packet_expire = datetime.fromtimestamp(int(reply.find('account').findtext('packet_expire')))
 		
 		#Load settings here, because kartina api is't friendly
 		self.settings = []
@@ -106,11 +102,11 @@ class KartinaAPI(AbstractAPI):
 		self.SID = False
 		url = self.site + url
 		
-		self.trace("Getting %s" % (name))
-		#self.trace("Getting %s (%s)" % (name, url))
+		#self.trace("Getting %s" % (name))
+		self.trace("Getting %s (%s)" % (name, url))
 		try:
 			reply = self.opener.open(url).read()
-			#print reply
+			print reply
 		except:
 			reply = ""
 
@@ -120,20 +116,20 @@ class KartinaAPI(AbstractAPI):
 			self.trace("Second try to get %s (%s)" % (name, url))
 			reply = self.opener.open(url).read()
 			if ((reply.find("code_login") != -1)and(reply.find("code_pass") != -1)):
-				raise Exception("Failed to get %s:\n%s" % (name, reply))
+				raise APIException("Failed to get %s:\n%s" % (name, reply))
 		
 		try:
 			root = fromstring(reply)
 		except:
-			raise Exception("Failed to parse xml response")
+			raise APIException("Failed to parse xml response")
 		if root.find('error'):
 			err = root.find('error')
-			raise Exception(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8'))
+			raise APIException(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8'))
 		
 		self.SID = True
 		return root
 
-class Ktv(KartinaAPI):
+class Ktv(KartinaAPI, AbstractStream):
 	
 	iName = "KartinaTV"
 	MODE = MODE_STREAM
@@ -144,60 +140,30 @@ class Ktv(KartinaAPI):
 	
 	def __init__(self, username, password):
 		KartinaAPI.__init__(self, username, password)
-		self.channels = {}
-		self.aTime = 0
-	
-	def sortByName(self):
-		x = [(val.name, key) for (key, val) in self.channels.items()]
-		x.sort()
-		services = Bouquet(Bouquet.TYPE_MENU, 'all')
-		for item in x:
-			ch = self.channels[item[1]]
-			services.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num )) #two sort args [channel_name, number]
-		return services
-	
-	def sortByGroup(self):
-		x = [(val.group, key) for (key, val) in self.channels.items()]
-		x.sort()
-		groups = Bouquet(Bouquet.TYPE_MENU, 'By group')
-		groupname = x[0][0]
-		ch = self.channels[x[0][1]]
-		group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.gid) #two sort args [group_name, number]
-		for item in x:
-			ch = self.channels[item[1]]
-			if item[0] == groupname:
-				group.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num))
-			else:
-				groups.append(group)
-				groupname = item[0]
-				ch = self.channels[item[1]]
-				group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.gid) #two sort args [group_name, number]
-				group.append(Bouquet(Bouquet.TYPE_SERVICE, item[1], ch.name, ch.num))
-		groups.append(group)
-		return groups
+		AbstractStream.__init__(self)
 	
 	def setChannelsList(self):
-		root = self.getChannelsList()
+	  	root = self.getData("/api/xml/channel_list?", "channels list")
 		lst = []
 		t_str = root.findtext("servertime").encode("utf-8")
-		t_cur = datetime.datetime.fromtimestamp(int(t_str))
+		t_cur = datetime.fromtimestamp(int(t_str))
 		setSyncTime(t_cur)
 		num = -1
 		for group in root.find("groups"):
 			title = group.findtext("name").encode("utf-8")
-			gid = int(group.findtext("id"))
+			gnum = int(group.findtext("id"))
 			for channel in group.find("channels"):
 				num += 1
 				name = channel.findtext("name").encode("utf-8")
 				id = int(channel.findtext("id").encode("utf-8"))
 				archive = channel.findtext("have_archive") or 0
-				self.channels[id] = Channel(name, title, num, gid, archive)
+				self.channels[id] = Channel(name, title, num, gnum, archive)
 				if channel.findtext("epg_progname") and channel.findtext("epg_end"):
 					prog = channel.findtext("epg_progname").encode("utf-8")
 					t_str = channel.findtext("epg_start").encode("utf-8")
-					t_start = datetime.datetime.fromtimestamp(int(t_str))
+					t_start = datetime.fromtimestamp(int(t_str))
 					t_str = channel.findtext("epg_end").encode("utf-8")
-					t_end = datetime.datetime.fromtimestamp(int(t_str))
+					t_end = datetime.fromtimestamp(int(t_str))
 					#print "[KartinaTV] updating epg for cid = ", id
 					self.channels[id].epg = EpgEntry(prog, t_start, t_end)
 				else:
@@ -213,92 +179,64 @@ class Ktv(KartinaAPI):
 				  "val" : timeShift}
 		self.getData("/api/xml/settings_set?"+urllib.urlencode(params), "time shift new api %s" % timeShift) 
 
-	def getChannelsList(self):
-		params = { }
-		xmlstream = self.getData("/api/xml/channel_list?"+urllib.urlencode(params), "channels list") 
-		return xmlstream
-	
-	def getStreamUrl(self, cid, pin):
-		params = {"m" : "channels",
-				  "act" : "get_stream_url",
-				  "cid" : cid}
-		if self.aTime:
-			params["gmt"] = (syncTime() + secTd(self.aTime)).strftime("%s")
+	def getStreamUrl(self, cid, pin, time = None):
+		params = {"cid" : cid}
+		if time:
+			params["gmt"] = time.strftime("%s")
 		params["protect_code"] = pin
-		root = self.getData("/?"+urllib.urlencode(params), "URL of stream %s" % cid)
-		if self.aTime:
-			prog = unescapeEntities(root.attrib.get("programm"))
-			if prog:
-				prog = prog.encode("utf-8")
-				tstart = datetime.datetime.fromtimestamp( int(root.attrib.get("start").encode("utf-8")) ) #unix
-				tend = datetime.datetime.fromtimestamp( int(root.attrib.get("next").encode("utf-8")) )
-				self.channels[cid].aepg = EpgEntry(prog, tstart, tend)
+		root = self.getData("/api/xml/get_url?"+urllib.urlencode(params), "URL of stream %s" % cid)
 		url = root.attrib.get("url").encode("utf-8").split(' ')[0].replace('http/ts://', 'http://')
 		if url == "protected": return 0
 		return url
 	
 	def getChannelsEpg(self, cids):
-		if len(cids) == 1:
-			return self.epgNext(cids[0])
 		params = {"cids" : ",".join(map(str, cids))}
 		root = self.getData("/api/xml/epg_current?"+urllib.urlencode(params), "getting epg of cids = %s" % cids)
 		for channel in root.find('epg'):
-			id = int(channel.findtext("cid").encode("utf-8"))
+			cid = int(channel.findtext("cid").encode("utf-8"))
 			e = channel.find("epg")
 			t = int(e.findtext('epg_start').encode("utf-8"))
-			t_start = datetime.datetime.fromtimestamp(t)
+			t_start = datetime.fromtimestamp(t)
 			t = int(e.findtext('epg_end').encode("utf-8"))
-			t_end = datetime.datetime.fromtimestamp(t)
+			t_end = datetime.fromtimestamp(t)
 			prog = e.findtext('epg_progname').encode('utf-8')
-			self.channels[id].epg = EpgEntry(prog, t_start, t_end)
+			self.channels[cid].pushEpg( EpgEntry(prog, t_start, t_end) )
 	
-	def getGmtEpg(self, id):
-		params = {"m" : "channels",
-				  "act" : "get_stream_url",
-				  "cid" : id,
-				  "gmt": (syncTime() + secTd(self.aTime)).strftime("%s"),
-				  "just_info" : 1 }
-		root = self.getData("/?"+urllib.urlencode(params), "get GmtEpg of stream %s" % id)
-		prog = unescapeEntities(root.attrib.get("programm")).encode("utf-8")
-		tstart = datetime.datetime.fromtimestamp( int(root.attrib.get("start").encode("utf-8")) ) #unix
-		tend = datetime.datetime.fromtimestamp( int(root.attrib.get("next").encode("utf-8")) )
-		self.channels[id].aepg = EpgEntry(prog, tstart,  tend)
+	def getGmtEpg(self, cid, time):
+		self.getDayEpg(cid, time)
+		self.getDayEpg(cid, time-secTd(24*60*60))
+
+	def getNextGmtEpg(self, cid, time):
+		return getDayEpg(self, cid, datetime.date(time))
 		
 	
-	def getDayEpg(self, cid, date = None):
+	def getDayEpg(self, cid, date):
 		if not date:
 			date = syncTime()
-		params = {"m" : "epg",
-				  "act" : "show_day_xml",
-				  "day" : date.strftime("%d%m%y"),
-				  "cid" : cid}
-		root = self.getData("/?"+urllib.urlencode(params), "EPG for channel %s" % cid)
+		params = {"day" : date.strftime("%d%m%y"),
+		          "cid" : cid}
+		root = self.getData("/api/xml/epg?"+urllib.urlencode(params), "day EPG for channel %s" % cid)
 		epglist = []
-		archive = int(root.attrib.get("have_archive").encode("utf-8"))
-		self.channels[cid].archive = archive
-		for program in root:
-			t = int(program.attrib.get("t_start").encode("utf-8"))
-			time = datetime.datetime.fromtimestamp(t)
-			progname = unescapeEntities(program.attrib.get("progname")).encode("utf-8")
-			pdescr =  unescapeEntities(program.attrib.get("pdescr")).encode("utf-8")
-			epglist += [(time, progname, pdescr)]
-		return epglist
-	
-	def epgNext(self, cid):
+		for program in root.find('epg'):
+			t = int(program.findtext("ut_start").encode("utf-8"))
+			time = datetime.fromtimestamp(t)
+			progname = unescapeEntities(program.findtext("progname")).encode("utf-8")
+			epglist += [EpgEntry(progname, time, None)]
+		self.channels[cid].pushEpgSorted(epglist)
+
+	def getCurrentEpg(self, cid):
+		return self.getNextEpg(cid)
+
+	def getNextEpg(self, cid):
 		params = {"cid": cid}
 		root = self.getData("/api/xml/epg_next?"+urllib.urlencode(params), "EPG next for channel %s" % cid)
-		lst = root.find('epg')
-		def parseepg(epg):
+		lst = []
+		for epg in root.find('epg'):
 			t = int(epg.findtext('ts').encode("utf-8"))
-			tstart = datetime.datetime.fromtimestamp(t)
+			tstart = datetime.fromtimestamp(t)
 			title = epg.findtext('progname').encode('utf-8')
-			return (tstart, title)
-		if len(lst)>1:
-			#print parseepg(lst[0])[0]
-			self.channels[cid].epg = EpgEntry(parseepg(lst[0])[1], parseepg(lst[0])[0], parseepg(lst[1])[0])	
-		if len(lst)>2:
-			self.channels[cid].nepg = EpgEntry(parseepg(lst[1])[1], parseepg(lst[1])[0], parseepg(lst[2])[0])	
-
+			lst += [EpgEntry(title, tstart, None)]
+		self.channels[cid].pushEpgSorted(lst)
 	def getSettings(self):
 		return self.settings
 	
@@ -307,15 +245,3 @@ class Ktv(KartinaAPI):
 			params = {"var" : x[0],
 			          "val" : x[1]}
 			self.getData("/api/xml/settings_set?"+urllib.urlencode(params), "setting %s" % x[0])
-	
-
-if __name__ == "__main__":
-	import sys
-	ktv = Ktv(sys.argv[1], sys.argv[2])
-	ktv.start()
-	ktv.pushSettings([('bitrate', 900)])
-	#ktv.setTimeShift(0)
-	#ktv.setChannelsList()
-	print ktv.getStreamUrl(257, 12)
-	ktv.setChannelsList()
-	ktv.getChannelsEpg(ktv.channels.keys())
