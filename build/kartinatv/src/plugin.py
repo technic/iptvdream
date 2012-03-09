@@ -864,6 +864,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 		
 		if not uri:
 			return 0
+		print "[KartinaTV] play", uri
 		srv = SERVICE_KARTINA
 		if not uri.startswith('http://'):
 			srv = 4097
