@@ -90,7 +90,7 @@ class M3UReader():
 	def setTimeShift(self, timeShift):
 		pass
 
-	def getStreamUrl(self, id):
+	def getStreamUrl(self, id, pin, time = None):
 		return self.channels[id].stream_url
 
 class Ktv(M3UReader, Playlist):
