@@ -113,11 +113,11 @@ class Channel(object):
 				epglist[i].tend = epglist[i+1].tstart
 			i += 1
 		#push
-		print "--------------------------------------------------"
+		#print "--------------------------------------------------"
 		i = 0
 		l_start = epglist[0].tstart
 		l_end = epglist[-1].tstart
-		print "+++", epglist, l_end
+		#print "+++", epglist, l_end
 		
 		while (i < len(self.q)) and (self.q[i].tstart < l_start):
 			i += 1
@@ -129,10 +129,10 @@ class Channel(object):
 		
 		if ins_start == ins_end:
 			ins_end += 1
-		print self.q
+		#print self.q
 		self.q = self.q[:ins_start] + epglist + self.q[ins_end:]
-		print "==>", ins_start, ins_end
-		print self.q
+		#print "==>", ins_start, ins_end
+		#print self.q
 	
 	#TODO: add Heuristik. continue search from last position
 	def findEpg(self, time):
@@ -140,7 +140,7 @@ class Channel(object):
 		while (i < len(self.q)) and not self.q[i].isNow(time):
 			i += 1
 		if i == len(self.q):
-			print "[KartinaTV] epg not found for", time
+			#print "[KartinaTV] epg not found for", time
 			return None
 		else:
 			return i
