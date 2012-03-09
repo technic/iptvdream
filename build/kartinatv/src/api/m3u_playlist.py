@@ -93,7 +93,7 @@ class M3UReader():
 	def getStreamUrl(self, id):
 		return self.channels[id].stream_url
 
-class Ktv(Playlist, M3UReader):
+class Ktv(M3UReader, Playlist):
 	pass
 
 if __name__ == "__main__":
