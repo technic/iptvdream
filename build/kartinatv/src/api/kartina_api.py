@@ -185,7 +185,7 @@ class Ktv(KartinaAPI, AbstractStream):
 			params["gmt"] = time.strftime("%s")
 		params["protect_code"] = pin
 		root = self.getData("/api/xml/get_url?"+urllib.urlencode(params), "URL of stream %s" % cid)
-		url = root.attrib.get("url").encode("utf-8").split(' ')[0].replace('http/ts://', 'http://')
+		url = root.findtext("url").encode("utf-8").split(' ')[0].replace('http/ts://', 'http://')
 		if url == "protected": return 0
 		return url
 	
