@@ -353,3 +353,19 @@ def unescapeEntities(text):
                 pass
         return text # leave as is
     return re.sub("&#?\w+;", fixup, text)
+
+class SettEntry():
+	def __init__(self, name, value, vallist = None, limits = None):
+		self.name = name
+		if not len(vallist): vallist = None
+		try:
+			if not vallist: value = int(value)
+		except:
+			pass
+		self.value = value
+		i = 0
+		self.vallist = vallist
+		self.limits = limits or (-9999, 9999)
+	
+	def __repr__(self):
+		return "Name: %s current value: %s Available values: %s" % (self.name,  self.value, self.vallist)

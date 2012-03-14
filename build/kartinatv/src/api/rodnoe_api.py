@@ -132,8 +132,8 @@ class Ktv(RodnoeAPI):
 	def sortByGroup(self):
 		x = [(val.group, key) for (key, val) in self.channels.items()]
 		x.sort()
-		if not x: return groups
 		groups = Bouquet(Bouquet.TYPE_MENU, 'By group')
+		if not x: return groups
 		groupname = x[0][0]
 		ch = self.channels[x[0][1]]
 		group = Bouquet(Bouquet.TYPE_MENU, groupname, ch.group, ch.gid) #two sort args [group_name, number]
@@ -188,7 +188,7 @@ class Ktv(RodnoeAPI):
 		params = {  }
 		return self.getData(self.site+"/get_list_tv"+urllib.urlencode(params), "channels list") 
 
-	def getStreamUrl(self, id):
+	def getStreamUrl(self, id, pin):
 		params = {"cid": id}
 		if self.channels[id].is_protected:
 			params["protect_code"] = self.protect_code

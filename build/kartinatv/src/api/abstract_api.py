@@ -20,6 +20,7 @@ class AbstractAPI:
 	iTitle = None #Defaults to iName
 	NEXT_API = None 
 	NUMBER_PASS = False
+	HAS_PIN = False
 	
 	def __init__(self, username, password):
 		self.username = username

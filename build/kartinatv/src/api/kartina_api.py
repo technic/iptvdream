@@ -12,7 +12,7 @@ from abstract_api import MODE_STREAM, AbstractAPI
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 import datetime
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities
+from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities, SettEntry
 
 #TODO: GLOBAL: add private! Get values by properties.
 
@@ -44,7 +44,8 @@ class KartinaAPI(AbstractAPI):
 		#self.trace("username = %s" % self.username)
 		self.cookiejar.clear()
 		params = urllib.urlencode({"login" : self.username,
-								  "pass" : self.password})
+								  "pass" : self.password,
+								  "settings" : "all"})
 		reply = self.opener.open(self.site+'/api/xml/login?', params).read()
 		
 		#checking cookies
@@ -68,6 +69,24 @@ class KartinaAPI(AbstractAPI):
 		if (deleted):
 			raise Exception(self.username+": Wrong authorization request")
 		self.packet_expire = datetime.datetime.fromtimestamp(int(reply.find('account').findtext('packet_expire')))
+		
+		#Load settings here, because kartina api is't friendly
+		self.settings = []
+		sett = reply.find("settings")
+		for s in sett:
+			if s.tag == "http_caching": continue
+			value = s.findtext('value')
+			vallist = []
+			if s.tag == "stream_server":
+				for x in s.find('list'):
+					vallist += [(x.findtext('ip'), x.findtext('descr'))]
+			elif s.find('list'):
+				for x in s.find('list'):
+					vallist += [x.text]
+			self.settings += [SettEntry(s.tag, value, vallist)]
+		for x in self.settings:
+			print x
+		
 		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 		self.trace("Packet expire: %s" % self.packet_expire)
 		self.SID = True	
@@ -120,7 +139,8 @@ class Ktv(KartinaAPI):
 	MODE = MODE_STREAM
 	NEXT_API = "KartinaMovies"
 	
-	locked_cids = [155, 159, 161, 257]
+	locked_cids = [155, 159, 161, 257, 311]
+	HAS_PIN = True
 	
 	def __init__(self, username, password):
 		KartinaAPI.__init__(self, username, password)
@@ -198,22 +218,24 @@ class Ktv(KartinaAPI):
 		xmlstream = self.getData("/api/xml/channel_list?"+urllib.urlencode(params), "channels list") 
 		return xmlstream
 	
-	def getStreamUrl(self, id):
+	def getStreamUrl(self, cid, pin):
 		params = {"m" : "channels",
 				  "act" : "get_stream_url",
-				  "cid" : id}
+				  "cid" : cid}
 		if self.aTime:
 			params["gmt"] = (syncTime() + secTd(self.aTime)).strftime("%s")
-		params["protect_code"] = self.password
-		root = self.getData("/?"+urllib.urlencode(params), "URL of stream %s" % id)
+		params["protect_code"] = pin
+		root = self.getData("/?"+urllib.urlencode(params), "URL of stream %s" % cid)
 		if self.aTime:
 			prog = unescapeEntities(root.attrib.get("programm"))
 			if prog:
 				prog = prog.encode("utf-8")
 				tstart = datetime.datetime.fromtimestamp( int(root.attrib.get("start").encode("utf-8")) ) #unix
 				tend = datetime.datetime.fromtimestamp( int(root.attrib.get("next").encode("utf-8")) )
-				self.channels[id].aepg = EpgEntry(prog, tstart, tend)
-		return root.attrib.get("url").encode("utf-8").split(' ')[0].replace('http/ts://', 'http://')
+				self.channels[cid].aepg = EpgEntry(prog, tstart, tend)
+		url = root.attrib.get("url").encode("utf-8").split(' ')[0].replace('http/ts://', 'http://')
+		if url == "protected": return 0
+		return url
 	
 	def getChannelsEpg(self, cids):
 		if len(cids) == 1:
@@ -277,14 +299,23 @@ class Ktv(KartinaAPI):
 		if len(lst)>2:
 			self.channels[cid].nepg = EpgEntry(parseepg(lst[1])[1], parseepg(lst[1])[0], parseepg(lst[2])[0])	
 
+	def getSettings(self):
+		return self.settings
+	
+	def pushSettings(self, sett):
+		for x in sett:
+			params = {"var" : x[0],
+			          "val" : x[1]}
+			self.getData("/api/xml/settings_set?"+urllib.urlencode(params), "setting %s" % x[0])
 	
 
 if __name__ == "__main__":
 	import sys
 	ktv = Ktv(sys.argv[1], sys.argv[2])
 	ktv.start()
+	ktv.pushSettings([('bitrate', 900)])
 	#ktv.setTimeShift(0)
 	#ktv.setChannelsList()
-	print ktv.getStreamUrl(39)
+	print ktv.getStreamUrl(257, 12)
 	ktv.setChannelsList()
 	ktv.getChannelsEpg(ktv.channels.keys())
