@@ -107,6 +107,8 @@ class Channel(object):
 	
 	def pushEpgSorted(self, epglist):
 		#prepare list
+		if not epglist:
+			return
 		i = 0
 		while i < len(epglist)-1:
 			if epglist[i].tend is None:
