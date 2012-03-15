@@ -121,7 +121,7 @@ class Ktv(M3UReader, AbstractAPI, AbstractStream):
 		try:
 			jtv = jtv_read(fname)
 		except:
-			pass
+			return -1
 		lepg = [EpgEntry(x[1], utcfromtimestamp(x[0]), None) for x in jtv]
 		self.channels[cid].pushEpgSorted(lepg)
 
