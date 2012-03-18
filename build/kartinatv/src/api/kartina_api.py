@@ -22,6 +22,7 @@ class KartinaAPI(AbstractAPI):
 	
 	iProvider = "kartinatv"
 	NUMBER_PASS = True
+	
 
 	site = "http://iptv.kartina.tv"
 	def __init__(self, username, password):
@@ -81,7 +82,7 @@ class KartinaAPI(AbstractAPI):
 					vallist += [x.text]
 			self.settings += [SettEntry(s.tag, value, vallist)]
 		for x in self.settings:
-			print x
+			self.trace(x)
 		
 		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 		self.trace("Packet expire: %s" % self.packet_expire)
@@ -106,7 +107,6 @@ class KartinaAPI(AbstractAPI):
 		self.trace("Getting %s (%s)" % (name, url))
 		try:
 			reply = self.opener.open(url).read()
-			print reply
 		except:
 			reply = ""
 
@@ -137,6 +137,7 @@ class Ktv(KartinaAPI, AbstractStream):
 	
 	locked_cids = [155, 159, 161, 257, 311]
 	HAS_PIN = True
+	epg_day_edge = (20, 00)
 	
 	def __init__(self, username, password):
 		KartinaAPI.__init__(self, username, password)
