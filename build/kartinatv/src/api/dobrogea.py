@@ -118,11 +118,12 @@ class Ktv(M3UReader, AbstractAPI, AbstractStream):
 		f = self.channels[cid].name
 		f = f.encode('CP866').replace(' ', '_')
 		fname = EPG_DIR + f
+		self.trace("epg for cid %s" % cid)
 		try:
 			jtv = jtv_read(fname)
 		except:
 			return -1
-		lepg = [EpgEntry(x[1], utcfromtimestamp(x[0]), None) for x in jtv]
+		lepg = [EpgEntry(x[1].encode('utf-8'), datetime.utcfromtimestamp(x[0]), None) for x in jtv]
 		self.channels[cid].pushEpgSorted(lepg)
 
 if __name__ == "__main__":
