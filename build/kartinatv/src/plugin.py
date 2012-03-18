@@ -46,7 +46,6 @@ from Tools.LoadPixmap import LoadPixmap
 from skin import loadSkin, parseFont, colorNames, SkinError
 def parseColor(str): #FIXME: copy-paste form skin source
 	if str[0] != '#':
-		print colorNames
 		try:
 			return colorNames[str]
 		except:
@@ -63,20 +62,14 @@ from utils import Bouquet, BouquetManager, tdSec, secTd, syncTime, APIException
 #for localized messages
 from . import _
 
-sz_w = 0
+SKIN_PATH = '/usr/share/enigma2/KartinaTV_skin'
 try:
 	sz_w = getDesktop(0).size().width()
-	if sz_w > 1000:
-		skinHD = True
-	else:
-		skinHD = False
 	print "[KartinaTV] skin width = ", sz_w
 except:
-	skinHD = False
-	
-SKIN_PATH = '/usr/share/enigma2/KartinaTV_skin'
-
-if skinHD:
+	sz_w = 0
+	print "[KartinaTV] getDesktop fail!"
+if sz_w > 1000:
 	loadSkin(SKIN_PATH + '/kartina_skin.xml')
 	NUMS_ON_PAGE = 18
 else:
