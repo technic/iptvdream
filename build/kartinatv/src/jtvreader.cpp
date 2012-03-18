@@ -17,6 +17,9 @@ using namespace std;
 
 #define error(test,str) if(test){printf(str);return 1;}
 
+#define WINUNIX_FACTOR 10000000
+#define WINUNIX_DIFF 11644473600LL
+
 static PyObject *
 jtvread_curr(PyObject *self, PyObject *args)
 {
@@ -78,7 +81,7 @@ jtvread_curr(PyObject *self, PyObject *args)
 		read(f2,&ft,8);
 	
 		long ftsec;
-		ftsec = ft / 1e7 - 11644473600;
+		ftsec = ft / WINUNIX_FACTOR - WINUNIX_DIFF;
 		
 // 		cout << ftsec << endl;
 
@@ -109,7 +112,7 @@ jtvread_curr(PyObject *self, PyObject *args)
 		read(f2,&ft,8);
 		
 		long ftsec;
-		ftsec = ft / 1e7 - 11644473600;
+		ftsec = ft / WINUNIX_FACTOR - WINUNIX_DIFF;
 		
 		long offset=0;
 		read(f2,&offset,2);
@@ -179,7 +182,7 @@ jtvread(PyObject *self, PyObject *args)
 		read(f2,&ft,8);
 		
 		long ftsec;
-		ftsec = ft / 1e7 - 11644473600;
+		ftsec = ft / WINUNIX_FACTOR - WINUNIX_DIFF;
 
 		long offset=0;
 		read(f2,&offset,2);

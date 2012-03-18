@@ -48,6 +48,7 @@ class AbstractAPI:
 	hashID = property(get_hashID)
 
 class AbstractStream(AbstractAPI):
+	epg_day_edge = None # default is midnight
 	def __init__(self):
 		self.channels = {}
 	
