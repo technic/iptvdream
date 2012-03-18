@@ -24,6 +24,8 @@ def tdmSec(td):
 	return td.days * 86400*1000 + td.seconds * 1000 + td.microseconds/1000 +1
 def secTd(sec):
 	return datetime.timedelta(sec / 86400, sec % 86400)
+def tupleTd(tup):
+	return secTd(tup[0]*60*60 + tup[1]*60)
 	
 print "[KartinaTV] resetting time delta !!!"
 time_delta = secTd(0)
@@ -50,6 +52,7 @@ class EpgEntry():
 			self.progDescr = name_split[1]
 		else:
 			self.progDescr = ''
+		#TODO: assertation checks for valid time
 		self.tstart = t_start
 		self.tend = t_end
 	
@@ -100,12 +103,18 @@ class Channel(object):
 		self.lastUpdateFailed = False
 	
 	#EPG is valid only if bouth tstart and tend specified!!!
-	#in this case hasSmth returns True
+	#in this case epgSmth() returns True
+	
+	#TODO: GLOBAL currently epg is stored in ram and handeld by python
+	#It is for algoritm testing purpose, db backend should be implemented.
 	
 	def pushEpg(self, epg):
 		self.pushEpgSorted([epg])
 	
 	def pushEpgSorted(self, epglist):
+		#Check epg validity
+		if len(epglist) == 0:
+		    return
 		#prepare list
 		if not epglist:
 			return
@@ -137,6 +146,7 @@ class Channel(object):
 		#print self.q
 	
 	#TODO: add Heuristik. continue search from last position
+	#TODO: And optimisations.. binary search
 	def findEpg(self, time):
 		i = 0
 		while (i < len(self.q)) and not self.q[i].isNow(time):
@@ -146,6 +156,10 @@ class Channel(object):
 			return None
 		else:
 			return i
+	
+	def findEpgFirst(self, start, end, stype):
+		"""stype=0 closer to start. stype=1 closer to end"""
+		
 	
 	def epgCurrent(self, time = None):
 		if not time: time = syncTime()
@@ -169,21 +183,46 @@ class Channel(object):
 	def checkContinuity(self, a, b):
 		i = a
 		while i < b:
-		  if self.q[i].tstart != self.q[i+1].tend:
+		  if self.q[i+1].tstart != self.q[i].tend:
 			print "[KartinaTV] checkContinuity fail at", self.q[i].tstart
 			return False
+			i += 1
 		return True
 	
-	def epgPeriod(self, tstart, tend):
-		i = self.findEpg(tstart)
-		j = self.findEpg(tend)
-		if i and j and self.checkContinuity(i,j):
-			return self.q[i:j]
+	#A bit dirty here, but I hope service api feed us.
+	def epgPeriod(self, start, end, duration):
+		print "epgPeriod", start, end, duration
+		i = 0
+		while (i < len(self.q)) and self.q[i].tstart < start:
+			i += 1
+		if i == len(self.q):
+			return []
+		a = i
+		print "start at", self.q[a].tstart
+		while (i < len(self.q)) and self.q[i].tstart < end:
+			i += 1
+		if i == len(self.q):
+			return []
+		b = i-1
+		print "end at", self.q[b].tstart
+		end_t = self.q[b].tend or self.q[b].tstart
+		if self.checkContinuity(a, b) and (end_t - self.q[a].tstart) > duration:
+			print "found entries", b-a
+			return self.q[a:b]
 		else:
-			return False
-	
-	def epgDay(self, date):
-		return self.epgPeriod(date, date + secTd(24*60*60))
+			return []
+
+	def epgDay(self, date, day_edge):
+		if day_edge:
+			day_edge = tupleTd(day_edge)
+		else:
+			day_edge = tupleTd((0,0))
+		date = datetime.datetime(date.year, date.month, date.day)
+		
+		if day_edge > secTd(12*60*60):
+			return self.epgPeriod(date + day_edge - secTd(24*60*60), date + day_edge, secTd(18*60*60))
+		else:
+			return self.epgPeriod(date + day_edge, date + day_edge + secTd(24*60*60), secTd(18*60*60))
 	
 	epg = property(fset = pushEpg)
 
