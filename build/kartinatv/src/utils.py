@@ -183,9 +183,9 @@ class Channel(object):
 	def checkContinuity(self, a, b):
 		i = a
 		while i < b:
-		  if self.q[i+1].tstart != self.q[i].tend:
-			print "[KartinaTV] checkContinuity fail at", self.q[i].tstart
-			return False
+			if self.q[i+1].tstart != self.q[i].tend:
+				print "[KartinaTV] checkContinuity fail at", self.q[i].tstart
+				return False
 			i += 1
 		return True
 	
