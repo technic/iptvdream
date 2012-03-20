@@ -22,6 +22,7 @@ EPG_DIR = EPG_ZIP[:-4]+'/'
 urlnew = "http://www.teleguide.info/download/new3/jtv.zip"
 urlold = "http://www.teleguide.info/download/old/jtv.zip"
 
+deltat = 4*60*60 #Moscow time
 class Ktv(M3UReader, AbstractAPI, AbstractStream):
 	
 	iName = "dobrogeatv"
@@ -54,7 +55,7 @@ class Ktv(M3UReader, AbstractAPI, AbstractStream):
 		try:
 			reply = self.opener.open(urllib2.Request('http://tv.team-dobrogea.ru/plugin.php?playlist', params)).readlines()
 		except Exception as e:
-			raise APIException(e[1])
+			raise APIException(e)
 		self.readlines = reply
 					
 	def setTimezone(self):
@@ -87,9 +88,9 @@ class Ktv(M3UReader, AbstractAPI, AbstractStream):
 				return -1
 			else:
 				raise(e)
-		lepg = [EpgEntry(x[1].encode('utf-8'), datetime.utcfromtimestamp(x[0]), None) for x in jtv]
+		lepg = [EpgEntry(x[1].encode('utf-8'), datetime.fromtimestamp(x[0]-deltat), None) for x in jtv]
 		print jtv
-		if datetime.utcfromtimestamp(jtv[0][0]) > syncTime():
+		if datetime.fromtimestamp(jtv[0][0]-deltat) > syncTime() and self.act_url == urlnew:
 			self.act_url = urlold
 			self.load_epg()
 		self.channels[cid].pushEpgSorted(lepg)
@@ -123,7 +124,7 @@ class Ktv(M3UReader, AbstractAPI, AbstractStream):
 			jtv = jtv_read(fname)
 		except:
 			return -1
-		lepg = [EpgEntry(x[1].encode('utf-8'), datetime.utcfromtimestamp(x[0]), None) for x in jtv]
+		lepg = [EpgEntry(x[1].encode('utf-8'), datetime.fromtimestamp(x[0]-deltat), None) for x in jtv]
 		self.channels[cid].pushEpgSorted(lepg)
 
 if __name__ == "__main__":

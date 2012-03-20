@@ -19,6 +19,7 @@ using namespace std;
 
 #define WINUNIX_FACTOR 10000000
 #define WINUNIX_DIFF 11644473600LL
+#define MOSCOW_TIME 14400
 
 static PyObject *
 jtvread_curr(PyObject *self, PyObject *args)
@@ -53,15 +54,15 @@ jtvread_curr(PyObject *self, PyObject *args)
 	}
 	
 	time_t t = time(0);
-    struct tm* data;
-    data = localtime(&t);
-    data->tm_isdst = 0;
-    time_t t1 = mktime(data);
-    data = gmtime(&t);
-    data->tm_isdst = 0;
-    time_t t2 = mktime(data);
-    int gmtoffset = (t1 - t2);
-	long now = t + gmtoffset;
+//     struct tm* data;
+//     data = localtime(&t);
+//     data->tm_isdst = 0;
+//     time_t t1 = mktime(data);
+//     data = gmtime(&t);
+//     data->tm_isdst = 0;
+//     time_t t2 = mktime(data);
+//     int gmtoffset = (t1 - t2);
+	long now = t + MOSCOW_TIME;
 //	printf("tz %d\n", gmtoffset);
 
 	int a = 0;
