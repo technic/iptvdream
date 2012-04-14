@@ -100,6 +100,9 @@ class AbstractStream(AbstractAPI):
 	def getGmtEpgNext(self, cid, time):
 		pass
 	
+	def getSettings(self):
+		return []
+	
 	def getPiconName(self, cid):
 		"""You can return reference to cid or to channel name, anything you want ;)"""
 		return "%s_%s" % (self.iName, cid)
