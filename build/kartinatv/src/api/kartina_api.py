@@ -34,7 +34,6 @@ class KartinaAPI(AbstractAPI):
 	
 	def start(self):
 		self.authorize()
-		self.setTimezone()
 		
 	def authorize(self):
 		self.trace("Authorization started")
@@ -88,17 +87,6 @@ class KartinaAPI(AbstractAPI):
 		self.trace("Packet expire: %s" % self.packet_expire)
 		self.SID = True	
 	
-	def setTimezone(self):
-		params = {"act": "x_set_timezone",
-				  "m": "clients",
-				  "tzn": Timezone }
-		self.getData("/?"+urllib.urlencode(params), "(setting) timezone (old api) GMT %s" % Timezone)
-		params = {"var" : "timezone",
-				  "val" : Timezone}
-		#not necessary because we use timestamp 
-		#self.getData("/api/xml/settings_set?"+urllib.urlencode(params), "time zone new api %s" % Timezone) 
-
-		
 	def getData(self, url, name):
 		self.SID = False
 		url = self.site + url
@@ -238,6 +226,7 @@ class Ktv(KartinaAPI, AbstractStream):
 			title = epg.findtext('progname').encode('utf-8')
 			lst += [EpgEntry(title, tstart, None)]
 		self.channels[cid].pushEpgSorted(lst)
+
 	def getSettings(self):
 		return self.settings
 	
