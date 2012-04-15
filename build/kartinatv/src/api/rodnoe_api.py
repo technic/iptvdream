@@ -119,6 +119,7 @@ class Ktv(RodnoeAPI, AbstractStream):
 		self.channels = {}
 		self.aTime = 0
 	
+		if not x: return groups
 	def setChannelsList(self):
 		root = self.getChannelsList()
 		t = int(root.findtext('servertime'))

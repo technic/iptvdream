@@ -101,7 +101,7 @@ class AbstractStream(AbstractAPI):
 	
 	def getPiconName(self, cid):
 		"""You can return reference to cid or to channel name, anything you want ;)"""
-		return "%s_%s" % (self.iName, cid)
+		return "%s:%s:" % (self.iName, cid)
 	
 	#TODO: check this and fix!!!
 	def selectAll(self):
