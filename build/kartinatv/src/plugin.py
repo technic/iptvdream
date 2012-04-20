@@ -1067,15 +1067,15 @@ class KartinaVideoPlayer(KartinaPlayer):
 		return 0
 	
 	def doExit(self):
-		if bouquet.current.type == Bouquet.TYPE_MENU:
-			return
-		fid = self.current
-		vid = bouquet.current.parent.name #Video is parent, episode is current		
-		play_pos = 0
-		if self.is_playing:
+		if bouquet.current.type == Bouquet.TYPE_MENU or self.is_playing == False:
+			last = (0, 0, 0)
+		elif self.is_playing:
+			fid = self.current
+			vid = bouquet.current.parent.name #Video is parent, episode is current
 			play_pos = self.ptsGetPosition()
-		print "[KartinaTV] save play position", play_pos
-		cfg.lastroot.value = str((vid, fid, play_pos))
+			last = (vid, fid, play_pos)
+		print "[KartinaTV] save play position", last[2]
+		cfg.lastroot.value = str(last)
 		cfg.lastroot.save()
 	
 	def doEofInternal(self, playing):
