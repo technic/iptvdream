@@ -191,46 +191,21 @@ def Plugins(path, **kwargs):
 	return res
 
 class VirtualKeyBoardRu(VirtualKeyBoard):
-	def __init__(self, session, title="", text=""):
-		Screen.__init__(self, session)
-		self.keys_list = []
-		self.shiftkeys_list = []
+
+	def setLang(self):
 		self.keys_list = [
 			[u"EXIT", u"1", u"2", u"3", u"4", u"5", u"6", u"7", u"8", u"9", u"0", u"BACKSPACE"],
 			[u"а", u"б", u"в", u"г", u"д", u"е", u"ж", u"з", u"и", u"й", u"к", u"л"],
 			[u"м", u"н", u"о", u"п", u"р", u"с", u"т", u"у", u"ф", u"х", u"ц", "ч"],
 			[u"ш", u"щ", u"ь", u"ы", u"ъ", u"э", u"ю", u"я", u"-", ".", u",", u"CLEAR"],
 			[u"SHIFT", u"SPACE", u"OK"]]
-			
 		self.shiftkeys_list = [
 			[u"EXIT", u"!", u'"', u"§", u"$", u"%", u"&", u"/", u"(", u")", u"=", u"BACKSPACE"],
 			[u"Q", u"W", u"E", u"R", u"T", u"Z", u"U", u"I", u"O", u"P", u"*"],
 			[u"A", u"S", u"D", u"F", u"G", u"H", u"J", u"K", u"L", u"'", u"?"],
 			[u">", u"Y", u"X", u"C", u"V", u"B", u"N", u"M", u";", u":", u"_", u"CLEAR"],
 			[u"SHIFT", u"SPACE", u"OK"]]
-		
-		self.shiftMode = False
-		self.text = text
-		self.selectedKey = 0
-		
-		self["header"] = Label(title)
-		self["text"] = Label(self.text)
-		self["list"] = VirtualKeyBoardList([])
-		
-		self["actions"] = ActionMap(["OkCancelActions", "WizardActions", "ColorActions"],
-			{
-				"ok": self.okClicked,
-				"cancel": self.exit,
-				"left": self.left,
-				"right": self.right,
-				"up": self.up,
-				"down": self.down,
-				"red": self.backClicked,
-				"green": self.ok
-			}, -2)
-		
-		self.onLayoutFinish.append(self.buildVirtualKeyBoard)
-	
+		self["country"].setText("ru/en")
 		self.max_key=47+len(self.keys_list[4])
 
 def menuOpen(aname, menuid):
