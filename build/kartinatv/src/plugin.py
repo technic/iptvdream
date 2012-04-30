@@ -10,7 +10,7 @@
 # version.
 
 #using external player by A. Latsch & Dr. Best (c)
-#Hardly improved by technic(c) for KartinaTV/RodnoeTV compatibility and buffering possibility!!!
+#substantially improved by technic(c) for KartinaTV/RodnoeTV compatibility and buffering possibility!!!
 import servicewebts
 
 from Plugins.Plugin import PluginDescriptor
@@ -32,7 +32,7 @@ from Screens.ChoiceBox import ChoiceBox
 from Screens.InputBox import PinInput, InputBox
 from Components.Input import Input
 from Components.SelectionList import SelectionList
-from Screens.VirtualKeyBoard import VirtualKeyBoard, VirtualKeyBoardList
+from Screens.VirtualKeyBoard import VirtualKeyBoard as VirtualKeyBoard_generic
 from Tools.BoundFunction import boundFunction
 from enigma import eServiceReference, iServiceInformation, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, gFont, eTimer, iPlayableServicePtr, iStreamedServicePtr, getDesktop, eLabel, eSize, ePoint, getPrevAsciiCode, iPlayableService, ePicLoad
 from Screens.Standby import TryQuitMainloop
@@ -188,22 +188,40 @@ def Plugins(path, **kwargs):
 	res.append(PluginDescriptor(name="IPtvDream config", description="Configure all IPtvDream services", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = selectConfig, icon="iptvdream.png" ))
 	return res
 
-class VirtualKeyBoardRu(VirtualKeyBoard):
+class VirtualKeyBoard(VirtualKeyBoard_generic):
 
 	def setLang(self):
-		self.keys_list = [
-			[u"EXIT", u"1", u"2", u"3", u"4", u"5", u"6", u"7", u"8", u"9", u"0", u"BACKSPACE"],
-			[u"а", u"б", u"в", u"г", u"д", u"е", u"ж", u"з", u"и", u"й", u"к", u"л"],
-			[u"м", u"н", u"о", u"п", u"р", u"с", u"т", u"у", u"ф", u"х", u"ц", "ч"],
-			[u"ш", u"щ", u"ь", u"ы", u"ъ", u"э", u"ю", u"я", u"-", ".", u",", u"CLEAR"],
-			[u"SHIFT", u"SPACE", u"OK"]]
-		self.shiftkeys_list = [
-			[u"EXIT", u"!", u'"', u"§", u"$", u"%", u"&", u"/", u"(", u")", u"=", u"BACKSPACE"],
-			[u"Q", u"W", u"E", u"R", u"T", u"Z", u"U", u"I", u"O", u"P", u"*"],
-			[u"A", u"S", u"D", u"F", u"G", u"H", u"J", u"K", u"L", u"'", u"?"],
-			[u">", u"Y", u"X", u"C", u"V", u"B", u"N", u"M", u";", u":", u"_", u"CLEAR"],
-			[u"SHIFT", u"SPACE", u"OK"]]
-		self["country"].setText("ru/en")
+		if self.lang == 'ru_RU':
+			self.keys_list = [
+				[u"EXIT", u"1", u"2", u"3", u"4", u"5", u"6", u"7", u"8", u"9", u"0", u"BACKSPACE"],
+				[u"а", u"б", u"в", u"г", u"д", u"е", u"ж", u"з", u"и", u"й", u"к", u"л"],
+				[u"м", u"н", u"о", u"п", u"р", u"с", u"т", u"у", u"ф", u"х", u"ц", "ч"],
+				[u"ш", u"щ", u"ь", u"ы", u"ъ", u"э", u"ю", u"я", u"-", ".", u",", u"CLEAR"],
+				[u"SHIFT", u"SPACE", u"OK"]]
+			self.shiftkeys_list = [
+				[u"EXIT", u"!", u'"', u"№", u";", u"%", u":", u"?", u"*", u"(", u")", u"BACKSPACE"],
+				[u"А", u"Б", u"В", u"Г", u"Д", u"Е", u"Ж", u"З", u"И", u"Й", u"К", u"Л"],
+				[u"М", u"Н", u"О", u"П", u"Р", u"С", u"Т", u"У", u"Ф", u"Х", u"Ц", "Ч"],
+				[u"Ш", u"Щ", u"Ь", u"Ы", u"Ъ", u"Э", u"Ю", u"Я", u"ё", "\\", u"/", u"CLEAR"],
+				[u"SHIFT", u"SPACE", u"OK"]]
+			self.lang = 'ru_RU'
+			self.nextLang = 'en_EN'
+		else:
+			self.keys_list = [
+				[u"EXIT", u"1", u"2", u"3", u"4", u"5", u"6", u"7", u"8", u"9", u"0", u"BACKSPACE"],
+				[u"q", u"w", u"e", u"r", u"t", u"z", u"u", u"i", u"o", u"p", u"+", u"@"],
+				[u"a", u"s", u"d", u"f", u"g", u"h", u"j", u"k", u"l", u"#", u"\\"],
+				[u"<", u"y", u"x", u"c", u"v", u"b", u"n", u"m", u",", ".", u"-", u"CLEAR"],
+				[u"SHIFT", u"SPACE", u"OK"]]
+			self.shiftkeys_list = [
+				[u"EXIT", u"!", u'"', u"§", u"$", u"%", u"&", u"/", u"(", u")", u"=", u"BACKSPACE"],
+				[u"Q", u"W", u"E", u"R", u"T", u"Z", u"U", u"I", u"O", u"P", u"*"],
+				[u"A", u"S", u"D", u"F", u"G", u"H", u"J", u"K", u"L", u"'", u"?"],
+				[u">", u"Y", u"X", u"C", u"V", u"B", u"N", u"M", u";", u":", u"_", u"CLEAR"],
+				[u"SHIFT", u"SPACE", u"OK"]]
+			self.lang = 'en_EN'
+			self.nextLang = 'ru_RU'
+		self["country"].setText(self.lang)
 		self.max_key=47+len(self.keys_list[4])
 
 def menuOpen(aname, menuid):
@@ -2227,7 +2245,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.start()
 	
 	def search(self):
-		self.session.openWithCallback(self.searchCB, VirtualKeyBoardRu, _("Search films"))
+		self.session.openWithCallback(self.searchCB, VirtualKeyBoard, _("Search films"))
 	
 	def searchCB(self, text):
 		if text:

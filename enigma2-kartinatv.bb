@@ -7,7 +7,7 @@ SECTION = "extra"
 PN="enigma2-plugin-extensions-kartinatv"
 
 PV="2.0.7"
-VVV = "r1"
+VVV = "r2"
 PR = "${VVV}_new0"
 
 SRC_URI = "file://${FILE_DIRNAME}/build"
