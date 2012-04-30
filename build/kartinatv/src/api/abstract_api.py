@@ -37,6 +37,13 @@ class AbstractAPI:
 	
 	def start(self):
 		pass
+
+	def getSettings(self):
+		return []
+	
+	def pushSettings(self, sett):
+		pass
+
 	
 	def trace(self, msg):
 		if DEBUG:
