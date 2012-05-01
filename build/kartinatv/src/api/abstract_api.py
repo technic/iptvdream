@@ -99,6 +99,9 @@ class AbstractStream(AbstractAPI):
 	def getSettings(self):
 		return []
 	
+	def pushSettings(self, sett):
+		pass
+		
 	def getPiconName(self, cid):
 		"""You can return reference to cid or to channel name, anything you want ;)"""
 		return "%s:%s:" % (self.iName, cid)
