@@ -224,6 +224,11 @@ class VirtualKeyBoard(VirtualKeyBoard_generic):
 		self["country"].setText(self.lang)
 		self.max_key=47+len(self.keys_list[4])
 
+	def backClicked(self):
+		self.text = self["text"].getText().decode('utf-8')[:-1].encode('utf-8')
+		self["text"].setText(self.text)
+
+
 def menuOpen(aname, menuid):
 	if menuid == "mainmenu" and config.iptvdream[aname].in_mainmenu.value:
 		return [(aname, boundFunction(AOpen, aname), "iptvdream_"+aname, -4)]
