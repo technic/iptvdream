@@ -160,10 +160,6 @@ class Ktv(KartinaAPI, AbstractStream):
 					pass
 	
 	def setTimeShift(self, timeShift):
-		params = {"act" : "x_set_timeshift",
-				  "m" : "clients",
-				  "ts" : timeShift}
-		self.getData("/?"+urllib.urlencode(params), "(setting) time shift %s" % timeShift)
 		params = {"var" : "timeshift",
 				  "val" : timeShift}
 		self.getData("/api/xml/settings_set?"+urllib.urlencode(params), "time shift new api %s" % timeShift) 
