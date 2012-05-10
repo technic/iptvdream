@@ -29,6 +29,7 @@ class AbstractAPI:
 		self.password = password
 		self.SID = False
 		self.packet_expire = None
+		self.settings = []
 	
 	def start(self):
 		"""Functions that runs on start, and needs exception handling"""
@@ -44,7 +45,7 @@ class AbstractAPI:
 	hashID = property(get_hashID)
 
 class AbstractStream(AbstractAPI):
-	epg_day_edge = None # default is midnight
+
 	def __init__(self):
 		self.channels = {}
 	

@@ -125,7 +125,6 @@ class Ktv(KartinaAPI, AbstractStream):
 	
 	locked_cids = [155, 159, 161, 257, 311]
 	HAS_PIN = True
-	epg_day_edge = (20, 00)
 	
 	def __init__(self, username, password):
 		KartinaAPI.__init__(self, username, password)
