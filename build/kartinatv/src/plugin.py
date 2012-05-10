@@ -1625,7 +1625,7 @@ class KartinaEpgList(Screen):
 		except APIException:
 			print "[KartinaTV] load day epg failed cid = ", self.current
 			return
-		epglist = ktv.channels[self.current].epgDay(d, ktv.epg_day_edge)
+		epglist = ktv.channels[self.current].epgDay(d)
 		self.list.setList(map(self.kartinaEpgEntry, epglist))
 		self.setTitle("EPG / %s / %s %s" % (ktv.channels[self.current].name, d.strftime("%d"), _(d.strftime("%b")) ))
 		x = 0
