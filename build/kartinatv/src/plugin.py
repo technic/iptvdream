@@ -283,6 +283,12 @@ def AOpen(aname, session, **kwargs):
 	runManager.init(session)
 	runManager.run(aname)
 
+def atime():
+	if bouquet.aTime:
+		return syncTime() + secTd(bouquet.aTime)
+	else:
+		return None
+
 	
 rec_png = LoadPixmap(cached=True, path='/usr/share/enigma2/KartinaTV_skin/rec.png')
 EPG_UPDATE_INTERVAL = 60 #Seconds, in channel list.
@@ -824,7 +830,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 		
 		cid = self.current
 		try:
-			uri = ktv.getStreamUrl(cid, pin)
+			uri = ktv.getStreamUrl(cid, pin, atime())
 		except APIException:
 			print "[KartinaTV] Error: getting stream uri failed!"
 			#self.session.open(MessageBox, _("Error while getting stream uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
