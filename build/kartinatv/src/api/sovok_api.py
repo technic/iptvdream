@@ -17,8 +17,6 @@ from kartina_api import Ktv as Kartina
 
 #TODO: GLOBAL: add private! Get values by properties.
 
-			
-
 class Ktv(Kartina):
 	
 	iProvider = "sovoktv"
@@ -28,6 +26,8 @@ class Ktv(Kartina):
 	NUMBER_PASS = False
 
 	site = "http://sovok.tv"
+	
+	HAS_PIN = False
 	
 	def authorize(self):
 		self.trace("Authorization started")
@@ -62,21 +62,7 @@ class Ktv(Kartina):
 		
 		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 		self.trace("Packet expire: %s" % self.packet_expire)
-		self.SID = True	
+		self.SID = True
 	
-	#locked_cids = [155, 159, 161, 257, 311]
-	#HAS_PIN = True
-	#epg_day_edge = (20, 00)
-	
-	#def getChannelsEpg(self, cids):
-		#params = {"cids" : ",".join(map(str, cids))}
-		#root = self.getData("/api/xml/epg_current?"+urllib.urlencode(params), "getting epg of cids = %s" % cids)
-		#for channel in root.find('epg'):
-			#cid = int(channel.findtext("cid").encode("utf-8"))
-			#e = channel.find("epg")
-			#t = int(e.findtext('epg_start').encode("utf-8"))
-			#t_start = datetime.fromtimestamp(t)
-			#t = int(e.findtext('epg_end').encode("utf-8"))
-			#t_end = datetime.fromtimestamp(t)
-			#prog = e.findtext('epg_progname').encode('utf-8')
-			#self.channels[cid].pushEpg( EpgEntry(prog, t_start, t_end) )
+	def setTimeShift(self, timeShift):
+		pass
