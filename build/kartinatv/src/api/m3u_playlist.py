@@ -49,7 +49,7 @@ class M3UReader():
 	def parse_m3u(self, lines, default_group):
 		linen = 0
 		if lines[linen].rstrip() != "#EXTM3U":
-			raise Exception("Wrong header. #EXTM3U expected")
+			raise APIException("Wrong header. #EXTM3U expected")
 		linen += 1
 		cid = len(self.channels)
 		gid = len(self.groups)

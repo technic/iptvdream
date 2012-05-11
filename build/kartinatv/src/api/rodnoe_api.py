@@ -13,7 +13,7 @@ import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 import datetime
 from md5 import md5
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager, EpgEntry, Channel, Timezone
+from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager, EpgEntry, Channel, Timezone, APIException
 
 class RodnoeAPI(AbstractAPI):
 	
@@ -60,7 +60,7 @@ class RodnoeAPI(AbstractAPI):
 		root = fromstring(httpstr)
 		if root.find('error'):
 			err = root.find('error')
-			raise Exception(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8')) 
+			raise APIException(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8')) 
 		self.sid = root.find('sid').text.encode('utf-8')
 		#checking cookies
 		cookies = list(self.cookiejar)
@@ -99,10 +99,10 @@ class RodnoeAPI(AbstractAPI):
 		try:
 			root = fromstring(reply)
 		except:
-			raise Exception("Failed to parse xml response")
+			raise APIException("Failed to parse xml response")
 		if root.find('error'):
 			err = root.find('error')
-			raise Exception(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8'))
+			raise APIException(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8'))
 		self.SID = True
 		return root
 
