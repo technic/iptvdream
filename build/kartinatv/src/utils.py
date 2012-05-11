@@ -90,7 +90,7 @@ class EpgEntry():
 	time = property(get_time)
 	
 	def __str__(self):
-		return ("%s -- %s %s") % (self.tstart.__str__(), self.tend.__str__(), self.progName)
+		return ("%s--%s %s") % (self.tstart.__str__(), self.tend.__str__(), self.progName)
 	
 	def __repr__(self):
 		return self.__str__()
@@ -202,7 +202,7 @@ class Channel(object):
 		maxoveridx = (a,a)
 		print "start at", self.q[a].tstart
 		while (i < len(self.q)) and self.q[i].tstart < end:
-			print self.q[i]
+			#print self.q[i]
 			if i+1 == len(self.q) or self.q[i+1].tstart >= end or self.q[i].tend != self.q[i+1].tstart:
 				print i
 				over = self.overlap(self.q[a].tstart, self.q[i].time, start, end)
@@ -220,7 +220,7 @@ class Channel(object):
 
 	def epgDay(self, date):
 		date = datetime.datetime(date.year, date.month, date.day)
-		return self.epgPeriod(date - secTd(6*60*60), date + secTd(6*60*60), secTd(18*60*60))
+		return self.epgPeriod(date - secTd(6*60*60), date + secTd(30*60*60), secTd(18*60*60))
 		
 	epg = property(fset = pushEpg)
 
