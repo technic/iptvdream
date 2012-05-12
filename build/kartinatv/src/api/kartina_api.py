@@ -191,7 +191,7 @@ class Ktv(KartinaAPI, AbstractStream):
 		self.getDayEpg(cid, time-secTd(24*60*60))
 
 	def getNextGmtEpg(self, cid, time):
-		return getDayEpg(self, cid, datetime.date(time))
+		return self.getDayEpg(self, cid, datetime.date(time))
 		
 	
 	def getDayEpg(self, cid, date):

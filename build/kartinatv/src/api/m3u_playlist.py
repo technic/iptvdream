@@ -48,7 +48,7 @@ class Playlist(AbstractAPI, AbstractStream):
 class M3UReader():
 	def parse_m3u(self, lines, default_group):
 		linen = 0
-		if lines[linen].rstrip() != "#EXTM3U":
+		if not lines[linen].rstrip().startswith("#EXTM3U"):
 			raise APIException("Wrong header. #EXTM3U expected")
 		linen += 1
 		cid = len(self.channels)
@@ -62,7 +62,7 @@ class M3UReader():
 			if line.startswith('#EXTINF:'):
 				line = line.split('#')[1]
 				if not needinfo or not (line.find(',') > -1):
-					raise APIException("Error while parsing m3u file")
+					raise APIException("Error while parsing m3u file at line %s" % linen+1)
 				title = line.split(',')[1]
 				if title.find(' - ') > -1:
 					title = title.partition(' - ')
