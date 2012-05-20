@@ -94,7 +94,7 @@ class AbstractStream(AbstractAPI):
 		   If you can download epg next that was at give <time> also in this request, do it here."""
 		pass
 	
-	def getGmtEpgNext(self, cid, time):
+	def getNextGmtEpg(self, cid, time):
 		pass
 	
 	def getSettings(self):

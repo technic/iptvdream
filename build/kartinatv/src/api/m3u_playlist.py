@@ -47,6 +47,12 @@ class Playlist(AbstractAPI, AbstractStream):
 
 class M3UReader():
 	def parse_m3u(self, lines, default_group):
+		if len(lines) == 0:
+			raise APIException("Empty M3U list")
+		BOM = u'\ufeff'.encode('utf-8')
+		if lines[0].find(BOM) > -1:
+			print 'remove BOM'
+			lines[0] = lines[0][3:]
 		linen = 0
 		if not lines[linen].rstrip().startswith("#EXTM3U"):
 			raise APIException("Wrong header. #EXTM3U expected")
