@@ -23,8 +23,8 @@ class KartinaAPI(AbstractAPI):
 	iProvider = "kartinatv"
 	NUMBER_PASS = True
 	
-
 	site = "http://iptv.kartina.tv"
+	
 	def __init__(self, username, password):
 		AbstractAPI.__init__(self, username, password)
 
@@ -191,8 +191,7 @@ class Ktv(KartinaAPI, AbstractStream):
 		self.getDayEpg(cid, time-secTd(24*60*60))
 
 	def getNextGmtEpg(self, cid, time):
-		return self.getDayEpg(self, cid, datetime.date(time))
-		
+		return self.getDayEpg(cid, time)
 	
 	def getDayEpg(self, cid, date):
 		if not date:
