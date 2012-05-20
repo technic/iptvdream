@@ -193,7 +193,8 @@ class Channel(object):
 			return min(b,d)-c
 		return secTd(0)
 
-	def epgPeriod(self, start, end, duration):    
+	def epgPeriod(self, start, end, duration):
+		if not self.q: return []
 		i = 0
 		while (i < len(self.q)-1) and self.q[i].time < start:
 			i += 1
