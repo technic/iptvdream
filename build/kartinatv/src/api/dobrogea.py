@@ -66,10 +66,6 @@ class Ktv(M3UReader, AbstractAPI, AbstractStream):
 	
 	def setChannelsList(self):
 		lines = self.readlines
-		BOM = u'\ufeff'.encode('utf-8')
-		if lines[0].find(BOM) > -1:
-			print 'remove BOM'
-			lines[0] = lines[0][3:]
 		self.parse_m3u(lines, self.iTitle)
 	
 	def getChannelsEpg(self, cids):
