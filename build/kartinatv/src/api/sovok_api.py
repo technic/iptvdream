@@ -21,6 +21,7 @@ class Ktv(Kartina):
 	
 	iProvider = "sovoktv"
 	iName = "SovokTV"
+	iTitle = "SovokTV"
 	NEXT_API = None 
 	MODE = MODE_STREAM
 	NUMBER_PASS = False
