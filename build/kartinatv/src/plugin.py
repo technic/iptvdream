@@ -165,6 +165,8 @@ for afile in os_listdir(API_PREFIX + API_DIR):
 			config.iptvdream[aname].sortkey["all"] = ConfigInteger(1, (1,2))
 			config.iptvdream[aname].sortkey["By group"] = ConfigInteger(1, (1,2))
 			config.iptvdream[aname].sortkey["in group"] = ConfigInteger(1,(1,2))
+		if _api.HAS_PIN == True:
+			config.iptvdream[aname].parental_code = ConfigNumberText(default="")
 		print "[KartinaTV] import api %s:%s" % (aprov, aname)
 
 #buftime is general
@@ -575,27 +577,43 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			return
 		self.session.nav.stopService()
 		
+		print "[KartinaTV] api has pin", ktv.HAS_PIN
 		if ktv.HAS_PIN and cid in ktv.locked_cids:
+			codeval = cfg.parental_code.value
+		else:
+			codeval = None
+		if codeval == '':
 			print "[KartinaTV] protected by api"
 			self.session.openWithCallback(self.pinEntered, InputBox, title=_("Enter protect password"),windowTitle = _("Channel Locked"), type=Input.PIN)
 			return
+		
 		#Use many hacks, because it's no possibility to change enigma :(
 		#fake reference has no path and used for parental control
 		fakeref = fakeReference(cid)
 		print fakeref.toCompareString()
 		if parentalControl.isServicePlayable(fakeref, boundFunction(self.startPlay)):
-			self.startPlay()
+			self.pinEntered(codeval)
 		else:
-			self["channelName"].setText(ktv.channels[cid].name)
-			self.epgEvent()	
+			self.playDenied()
+
 	def pinEntered(self, pin):
 		if self.startPlay(pin=pin) == 0:
 			#this means api access denied
 			self.session.openWithCallback(self.retryPlay, MessageBox, _("Access denied!\nTry again?"))
 	
 	def retryPlay(self, result):
-		if result: self.play()
+		if result:
+			self.play()
+		else:
+			self.playDenied()
+	
+	def playDenied(self):
+		# clear all infobar fields
+		pass
 
+	#return codes:
+	#-1 = error
+	# 0 = access denied
 	def startPlay(self, **kwargs): #TODO: think more..
 		print "[KartinaTV] play channel id=", self.current 
 		self.__audioSelected = False
@@ -877,6 +895,12 @@ class KartinaStreamPlayer(KartinaPlayer):
 		self["KartinaPiconRef"].text = ktv.getPiconName(cid)
 		self["channelName"].setText(ktv.channels[cid].name)
 		self.epgEvent()
+	
+	def playDenied(self):
+		#show channel name infobar
+		self["channelName"].setText(ktv.channels[self.current].name)
+		self.epgEvent()
+
 
 	
 	def epgEvent(self):
@@ -1374,7 +1398,7 @@ class KartinaChannelSelection(Screen):
 		timeout = not self.lastEpgUpdate or syncTime() - self.lastEpgUpdate > secTd(EPG_UPDATE_INTERVAL)
 		for x in ktv.channels.keys():
 			if isinstance(x, int):
-				if (not ktv.channels[x].epgCurrent()) and (not ktv.channels[x].lastUpdateFailed or timeout):
+				if (not ktv.channels[x].epgCurrent()) and (not timeout):
 					uplist += [x]
 		if uplist: 
 			try:
@@ -2413,6 +2437,8 @@ class KartinaConfig(ConfigListScreen, Screen):
 		]
 		if apis[aname][0].MODE == MODE_STREAM:
 			cfglist.append(getConfigListEntry(_("Timeshift"), config.iptvdream[aname].timeshift))
+		if apis[aname][0].HAS_PIN == True:
+			cfglist.append(getConfigListEntry(_("Auto send parental code"), config.iptvdream[aname].parental_code))
 			
 		ConfigListScreen.__init__(self, cfglist, session)
 		self.setTitle(_("Configuration of ")+aname)
