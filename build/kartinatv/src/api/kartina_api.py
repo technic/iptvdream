@@ -170,7 +170,7 @@ class Ktv(KartinaAPI, AbstractStream):
 		params["protect_code"] = pin
 		root = self.getData("/api/xml/get_url?"+urllib.urlencode(params), "URL of stream %s" % cid)
 		url = root.findtext("url").encode("utf-8").split(' ')[0].replace('http/ts://', 'http://')
-		if url == "protected": return 0
+		if url == "protected": return self.ACCESS_DENIED
 		return url
 	
 	def getChannelsEpg(self, cids):
@@ -194,8 +194,6 @@ class Ktv(KartinaAPI, AbstractStream):
 		return self.getDayEpg(cid, time)
 	
 	def getDayEpg(self, cid, date):
-		if not date:
-			date = syncTime()
 		params = {"day" : date.strftime("%d%m%y"),
 		          "cid" : cid}
 		root = self.getData("/api/xml/epg?"+urllib.urlencode(params), "day EPG for channel %s" % cid)
