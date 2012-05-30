@@ -45,7 +45,9 @@ class AbstractAPI:
 	hashID = property(get_hashID)
 
 class AbstractStream(AbstractAPI):
-
+	
+	ACCESS_DENIED = 0
+	
 	def __init__(self):
 		self.channels = {}
 	
@@ -58,9 +60,10 @@ class AbstractStream(AbstractAPI):
 		   May depend on timeshift. setTimeShift() called first"""
 		pass
 	
-	def getStreamUrl(self, cid, time = None):
+	def getStreamUrl(self, cid, pin, time = None):
 		"""Return url of stream here. If <time> is specified then get stream from archive
-		   or raise APIException if feature is not supported"""
+		   or raise APIException if feature is not supported
+		   if <cid> is in locked_cids then <pin> is not None"""
 		pass
 	
 	def getChannelsEpg(self, cids):
@@ -79,9 +82,9 @@ class AbstractStream(AbstractAPI):
 		   Note, usually epgCurrent() was called just before."""
 		pass
 	
-	def getDayEpg(self, cid, date = None):
-		"""Plugin call this fucntion if it wants to access epg for one day of the channel <cid>.
-		   Should return list of EpgEntry objects"""
+	def getDayEpg(self, cid, date):
+		"""Plugin call this fucntion if it wants to access epg for one day(date) of the channel <cid>.
+		   Should push epg to channel."""
 		return []
 	
 	def getPeriodEpg(self, cid, tstart, tend):
@@ -107,7 +110,6 @@ class AbstractStream(AbstractAPI):
 		"""You can return reference to cid or to channel name, anything you want ;)"""
 		return "%s:%s:" % (self.iName, cid)
 	
-	#TODO: check this and fix!!!
 	def selectAll(self):
 		"""You don't need to override this function"""
 		services = Bouquet(Bouquet.TYPE_MENU, 'all')
