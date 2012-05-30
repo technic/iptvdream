@@ -1186,6 +1186,7 @@ class ChannelList(MenuList):
 		
 		
 	def applySkin(self, desktop, parent):
+		attribs = [ ]
 		if self.skinAttributes is not None:
 			attribs = [ ]
 			for (attrib, value) in self.skinAttributes:
@@ -1398,7 +1399,7 @@ class KartinaChannelSelection(Screen):
 		timeout = not self.lastEpgUpdate or syncTime() - self.lastEpgUpdate > secTd(EPG_UPDATE_INTERVAL)
 		for x in ktv.channels.keys():
 			if isinstance(x, int):
-				if (not ktv.channels[x].epgCurrent()) and (not timeout):
+				if (not ktv.channels[x].epgCurrent(syncTime())) and (not timeout):
 					uplist += [x]
 		if uplist: 
 			try:
