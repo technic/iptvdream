@@ -48,7 +48,7 @@ class Ktv(RodnoeAPI, AbstractStream):
 		params = {  }
 		return self.getData(self.site+"/get_list_radio"+urllib.urlencode(params), "channels list") 
 
-	def getStreamUrl(self, id):
-		params = {"cid": id}
+	def getStreamUrl(self, cid, pin, time = None):
+		params = {"cid": cid}
 		root = self.getData(self.site+"/get_url_radio?"+urllib.urlencode(params), "stream url")
 		return root.findtext("url").encode("utf-8")
