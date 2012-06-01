@@ -1259,7 +1259,7 @@ class ChannelList(MenuList):
 	
 	def calculateWidth(self, text, font):
 		self.fontCalc[font].setText(text)
-		return self.fontCalc[font].calculateSize().width()
+		return int(round(self.fontCalc[font].calculateSize().width()*1.1))
 	
 	
 	def buildChannelEntry(self, entry):
@@ -1399,7 +1399,7 @@ class KartinaChannelSelection(Screen):
 		timeout = not self.lastEpgUpdate or syncTime() - self.lastEpgUpdate > secTd(EPG_UPDATE_INTERVAL)
 		for x in ktv.channels.keys():
 			if isinstance(x, int):
-				if (not ktv.channels[x].epgCurrent(syncTime())) and (not timeout):
+				if (not ktv.channels[x].epgCurrent(syncTime())) and timeout:
 					uplist += [x]
 		if uplist: 
 			try:
