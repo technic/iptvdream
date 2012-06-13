@@ -13,7 +13,7 @@ import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 from datetime import datetime
 from md5 import md5
-from . import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager, EpgEntry, Channel, Timezone, APIException
+from . import tdSec, secTd, setSyncTime, syncTime, EpgEntry, Channel, Timezone, APIException
 
 class RodnoeAPI(AbstractAPI):
 	
