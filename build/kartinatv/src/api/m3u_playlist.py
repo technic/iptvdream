@@ -9,7 +9,7 @@
 # version.
 
 from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, APIException
+from . import tdSec, secTd, setSyncTime, syncTime, EpgEntry, Channel, APIException
 from os import listdir, path
 
 DIRECTORY = '/etc/iptvdream/'
