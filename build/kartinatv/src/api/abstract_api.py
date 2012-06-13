@@ -47,6 +47,7 @@ class AbstractAPI:
 class AbstractStream(AbstractAPI):
 	
 	ACCESS_DENIED = 0
+	locked_cids = []
 	
 	def __init__(self):
 		self.channels = {}
