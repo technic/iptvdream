@@ -101,14 +101,3 @@ class M3UReader():
 
 class Ktv(M3UReader, Playlist):
 	pass
-
-if __name__ == "__main__":
-	import sys
-	ktv = Ktv(sys.argv[1], sys.argv[2])
-	ktv.start()
-	ktv.setChannelsList()
-	print ktv.getStreamUrl(39)	
-	ktv.getChannelsEpg(ktv.channels.keys())
-	for x in ktv.channels.keys():
-		y = ktv.channels[x]
-		print x, y.name, y.group, y.num, y.gid
