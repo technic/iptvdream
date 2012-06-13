@@ -9,11 +9,11 @@
 # version.
 
 from abstract_api import MODE_STREAM, AbstractStream
-import cookielib, urllib, urllib2 #TODO: optimize imports
+import urllib
 from xml.etree.cElementTree import fromstring
 import datetime
 from md5 import md5
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager, EpgEntry, Channel
+from . import tdSec, secTd, setSyncTime, syncTime, EpgEntry, Channel
 from rodnoe_api import RodnoeAPI
 
 class Ktv(RodnoeAPI, AbstractStream):
