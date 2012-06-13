@@ -11,6 +11,8 @@
 from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 from . import tdSec, secTd, setSyncTime, syncTime, EpgEntry, Channel, APIException
 from os import listdir, path
+from jtvepg import JTVEpg
+import re
 
 DIRECTORY = '/etc/iptvdream/'
 
@@ -30,7 +32,6 @@ class Playlist(AbstractAPI, AbstractStream):
 					
 	def setTimezone(self):
 		pass
-
 
 	def setChannelsList(self):
 		for fname in listdir(DIRECTORY):
@@ -57,6 +58,7 @@ class M3UReader():
 		cid = len(self.channels)
 		gid = len(self.groups)
 		needinfo = True
+		tvgregexp = re.compile('#EXTINF:.*tvg-name="(.*)"')
 		while linen < len(lines):
 			line = lines[linen]
 			if line == '':
@@ -74,6 +76,11 @@ class M3UReader():
 				else:
 					name = title
 					group = default_group
+				epginfo = tvgregexp.match(line)
+				if epginfo:
+					epginfo = epginfo.group(1)
+				else:
+					epginfo = name
 				needinfo = False
 			elif line != '':
 				line = line.partition('#')[0]
@@ -86,6 +93,7 @@ class M3UReader():
 						gid += 1
 					self.channels[cid] = Channel(name, group, cid, self.groups[group])
 					self.channels[cid].stream_url = url
+					self.channels[cid].epg_name = epginfo
 					cid += 1
 					needinfo = True
 			linen += 1;
@@ -96,5 +104,10 @@ class M3UReader():
 	def getStreamUrl(self, id, pin, time = None):
 		return self.channels[id].stream_url
 
-class Ktv(M3UReader, Playlist):
-	pass
+class Ktv(M3UReader, JTVEpg, Playlist):
+	def __init__(self, username, password):
+		Playlist.__init__(self, username, password)
+		JTVEpg.__init__(self)
+
+	def start(self):
+		self.load_epg()
