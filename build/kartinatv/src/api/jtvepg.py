@@ -8,12 +8,9 @@
 # Software Foundation; either version 2, or (at your option) any later
 # version.
 
-from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
-import cookielib, urllib, urllib2 #TODO: optimize imports
-from xml.etree.cElementTree import fromstring
 from datetime import datetime
-from m3u_playlist import M3UReader
-from . import tdSec, secTd, setSyncTime, syncTime, EpgEntry, Channel, APIException
+import urllib
+from . import tdSec, secTd, setSyncTime, syncTime, EpgEntry, Channel, APIException, jtvreader
 from jtvreader import read as jtv_read, current as jtv_current
 import os
 
@@ -23,50 +20,14 @@ urlnew = "http://www.teleguide.info/download/new3/jtv.zip"
 urlold = "http://www.teleguide.info/download/old/jtv.zip"
 
 deltat = 4*60*60 #Moscow time
-class Ktv(M3UReader, AbstractAPI, AbstractStream):
+class JTVEpg:
 	
-	iName = "dobrogeatv"
-	iProvider = "dobrogea"		
-	locked_cids = []
-	iTitle = "Team-dobrogea"
-	
-	def __init__(self, username, password):
-		AbstractAPI.__init__(self, username, password)
-		AbstractStream.__init__(self)
-		self.groups = {}
-		
-		self.cookiejar = cookielib.CookieJar()
-		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
-		self.opener.addheaders = [('User-Agent', 'Mozilla/5.0 technic-plugin-1.5')]
-		
-		self.readlines = '';
+	def __init__(self):
 		self.act_url = urlnew
 		self.lastload = syncTime()
-		
-	def start(self):
-		self.authorize()
-		self.load_epg()
-		pass
-	
-	def authorize(self):
-		print "authorizing"
-		params = urllib.urlencode({"login" : self.username,
-								   "pass" : self.password})
-		try:
-			reply = self.opener.open(urllib2.Request('http://tv.team-dobrogea.ru/plugin.php?playlist', params)).readlines()
-		except Exception as e:
-			raise APIException(e)
-		self.readlines = reply
-					
-	def setTimezone(self):
-		pass
 	
 	def getPiconName(self, cid):
 		return "%s_%s" % (self.iName, self.channels[cid].name)
-	
-	def setChannelsList(self):
-		lines = self.readlines
-		self.parse_m3u(lines, self.iTitle)
 	
 	def getChannelsEpg(self, cids):
 		for cid in cids:
