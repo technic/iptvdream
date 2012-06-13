@@ -12,6 +12,7 @@
 #using external player by A. Latsch & Dr. Best (c)
 #substantially improved by technic(c) for KartinaTV/RodnoeTV compatibility and buffering possibility!!!
 import servicewebts
+SERVICE_LIST = [(1, "dmm ts"), (4097, "gstreamer"), (4112, "technic ts"), (4114, "partnerbox")]
 
 from Plugins.Plugin import PluginDescriptor
 from Screens.Screen import Screen
@@ -158,7 +159,7 @@ for afile in os_listdir(API_PREFIX + API_DIR):
 		config.iptvdream[aname].lastroot = ConfigText(default="[]")
 		config.iptvdream[aname].lastcid = ConfigInteger(0, (0,1000))
 		config.iptvdream[aname].favourites = ConfigText(default="[]")
-		config.iptvdream[aname].usesrvicets = ConfigYesNo(default=True)
+		config.iptvdream[aname].service = ConfigSelection(SERVICE_LIST, 4112)
 		if _api.MODE == MODE_STREAM:
 			config.iptvdream[aname].timeshift = ConfigInteger(0, (0,12) ) #FIXME: think about abstract...
 			config.iptvdream[aname].sortkey = ConfigSubDict()
@@ -339,10 +340,8 @@ if not os_path.exists(POSTER_PATH):
 	
 def setServ(): #FIXME: why this function is here?
 	global SERVICE_KARTINA
-	if cfg.usesrvicets.value:
-		SERVICE_KARTINA = 4112 #ServiceTS
-	else:
-		SERVICE_KARTINA = 4097 #Gstreamer
+	SERVICE_KARTINA = cfg.service.value
+	print "[KartinaTV] ooooo", cfg.service.value
 
 def fakeReference(cid):
 	sref = eServiceReference(4112, 0, '') #these are fake references;) #always 4112 because of parental control
@@ -880,9 +879,10 @@ class KartinaStreamPlayer(KartinaPlayer):
 		if not uri:
 			return 0
 		print "[KartinaTV] play", uri
+		setServ()
 		srv = SERVICE_KARTINA
-		if not uri.startswith('http://'):
-			srv = 4097
+#		if not uri.startswith('http://'):
+#			srv = 4097
 		if uri.startswith('mms://'):
 			print "[KartinaTV] Warning: mms:// protocol turned off"
 			self.session.open(MessageBox, _("mms:// protocol turned off"), type = MessageBox.TYPE_ERROR, timeout = 5)
@@ -2433,7 +2433,7 @@ class KartinaConfig(ConfigListScreen, Screen):
 			getConfigListEntry(_("login"), config.iptvdream[self.aprov].login),
 			getConfigListEntry(_("password"), config.iptvdream[self.aprov].password),
 			getConfigListEntry(_("Show in mainmenu"), config.iptvdream[aname].in_mainmenu), 
-			getConfigListEntry(_("Use servicets instead of Gstreamer"), config.iptvdream[aname].usesrvicets),
+			getConfigListEntry(_("Service (player) id"), config.iptvdream[aname].service),
 			getConfigListEntry(_("Buffering time, milliseconds"), config.plugins.KartinaTv.buftime)
 		]
 		if apis[aname][0].MODE == MODE_STREAM:
