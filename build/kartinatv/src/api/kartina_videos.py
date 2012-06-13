@@ -11,9 +11,9 @@
 from abstract_api import MODE_VIDEOS
 from kartina_api import KartinaAPI
 
-import urllib #TODO: optimize imports
+import urllib
 from xml.etree.cElementTree import fromstring
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, syncTime, Bouquet, Video, unescapeEntities
+from . import tdSec, secTd, syncTime, Bouquet, Video, unescapeEntities
 
 VIDEO_CACHING = True #TODO: cache...??
 
