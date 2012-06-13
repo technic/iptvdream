@@ -28,7 +28,8 @@ class Ktv(Kartina):
 
 	site = "http://sovok.tv"
 	
-	HAS_PIN = False
+	HAS_PIN = True
+	locked_cids = [163, 171, 172, 119]
 	
 	def authorize(self):
 		self.trace("Authorization started")
