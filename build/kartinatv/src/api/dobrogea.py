@@ -13,8 +13,8 @@ import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 from datetime import datetime
 from m3u_playlist import M3UReader
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, APIException
-from Plugins.Extensions.KartinaTV.jtvreader import read as jtv_read, current as jtv_current
+from . import tdSec, secTd, setSyncTime, syncTime, EpgEntry, Channel, APIException
+from jtvreader import read as jtv_read, current as jtv_current
 import os
 
 EPG_ZIP = '/tmp/jtv.zip'
