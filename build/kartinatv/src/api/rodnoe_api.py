@@ -204,18 +204,3 @@ class Ktv(RodnoeAPI, AbstractStream):
 			t_end = datetime.fromtimestamp(int(prog.findtext('end').encode('utf-8')))
 			epglist += [ EpgEntry(title, t_start, t_end) ]
 		self.channels[id].pushEpgSorted(epglist)
-
-if __name__ == "__main__":
-	import sys
-	ktv = Ktv(sys.argv[1], sys.argv[2])
-	#ktv.authorize()
-	ktv.start()
-#	ktv.setTimeShift(0)
-	ktv.setChannelsList()
-#	ktv.sortByName()
-#	ktv.sortByGroup()
-#	ktv.getChannelsEpg([1,2,3,4])
-	for x in ktv.channels.keys():
-		print "||%s||%s||" % (x, ktv.channels[x].name)#, ktv.channels[x].archive#, ktv.channels[x].epg.tstart, ktv.channels[x].epg.tend,  ktv.channels[x].epg.name
-	#print ktv.getDayEpg(x)[2][3]
-	print ktv.getStreamUrl(17)

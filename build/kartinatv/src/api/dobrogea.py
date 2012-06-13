@@ -122,14 +122,3 @@ class Ktv(M3UReader, AbstractAPI, AbstractStream):
 			return -1
 		lepg = [EpgEntry(x[1].encode('utf-8'), datetime.fromtimestamp(x[0]-deltat), None) for x in jtv]
 		self.channels[cid].pushEpgSorted(lepg)
-
-if __name__ == "__main__":
-	import sys
-	ktv = Ktv(sys.argv[1], sys.argv[2])
-	ktv.start()
-	ktv.setChannelsList()
-	print ktv.getStreamUrl(0)
-	ktv.getChannelsEpg(ktv.channels.keys())
-	for x in ktv.channels.keys():
-		y = ktv.channels[x]
-		print x, y.name, y.group, y.num, y.gid

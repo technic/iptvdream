@@ -13,7 +13,6 @@ from kartina_api import KartinaAPI
 
 import urllib #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
-import datetime
 from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, syncTime, Bouquet, Video, unescapeEntities
 
 VIDEO_CACHING = True #TODO: cache...??

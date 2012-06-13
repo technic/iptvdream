@@ -37,3 +37,4 @@ build/m4/ltversion.m4
 build/m4/lt~obsolete.m4
 py-compile
 stamp-h1
+enigma2-plugin-extensions-*
