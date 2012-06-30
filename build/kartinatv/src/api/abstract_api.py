@@ -29,7 +29,7 @@ class AbstractAPI:
 		self.packet_expire = None
 	
 	def getPiconName(self, cid):
-		return "%s_%s" % (self.iName, cid)
+		return "%s:%s:" % (self.iName, cid)
 	
 	def get_hashID(self):
 		return hash(self.iName)
@@ -37,6 +37,13 @@ class AbstractAPI:
 	
 	def start(self):
 		pass
+
+	def getSettings(self):
+		return []
+	
+	def pushSettings(self, sett):
+		pass
+
 	
 	def trace(self, msg):
 		if DEBUG:
