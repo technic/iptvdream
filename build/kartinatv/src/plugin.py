@@ -235,30 +235,38 @@ def menuOpen(aname, menuid):
 class RunManager():
 	def __init__(self):
 		self.session = None
+		#Timer to avoid modal open exceptions
 		self.timer = eTimer()
 		self.timer.callback.append(self._recursiveClose)
 		#Standby notifier!!
 		config.misc.standbyCounter.addNotifier(self.standbyCountChanged, initial_call = False)
-
+		self.aname = None
+		#started apis
+		self.started = {}
 	
+	#Player main gui instance
+	def _get_kartina_instance(self):
+		return KartinaPlayer.instance
+	instance = property(_get_kartina_instance)
+	
+	#Gui is running
 	def running(self):
-		return KartinaPlayer.instance != None
+		return self.instance != None
 	
+	#TODO: fix session staff
 	def init(self, session):
 		if not self.session:
 			self.session = session
 	
+	#Open gui
 	def run(self, aname):
+		if self.aname == aname:
+			print "[KartinaTV] %s already running" % aname
+			return
 		self.aname = aname
 		if self.running():
-			if Ktv.iName == aname:
-				print "[KartinaTV] %s already running" % aname
-				return 
 			print "[KartinaTV] try close recursive to KartinaPlayer"
 			self.startRecClose()
-#			if not res:
-#				print "[KartinaTV] recursiveClose failed!!"
-#				return
 		else:
 			self.open()
 	
@@ -274,16 +282,17 @@ class RunManager():
 		elif Ktv.MODE == MODE_VIDEOS:
 			self.session.open(KartinaVideoPlayer)
 	
+	#close all dialogs till KartinaPlayer
 	def startRecClose(self):
 		self.__run_open = False
 		assert self.running()
 		self._recursiveClose()		  	
 		
-	def _recursiveClose(self): #close all dialogs till KartinaPlayer
+	def _recursiveClose(self):
 		#This may crash if retval needed
 		if self.__run_open:
 			self.open()
-		elif self.session.current_dialog != KartinaPlayer.instance:
+		elif self.session.current_dialog != self.instance:
 			print "[KartinaTV] closing", self.session.in_exec, self.session.current_dialog 
 			try:
 				self.session.close(self.session.current_dialog)
@@ -292,7 +301,7 @@ class RunManager():
 				return
 			self.timer.start(1,1)		
 		else:
-			KartinaPlayer.instance.close()
+			self.instance.close()
 			self.__run_open = True
 			self.timer.start(1,1)
 
@@ -323,7 +332,7 @@ orig_fnc = TryQuitMainloop.close
 def edited_fnc(obj, value):
 	if value and runManager.running():
 		"[KartinaTV] shutting down... doExit()"
-		KartinaPlayer.instance.doExit()
+		runManager.instance.doExit()
 	orig_fnc(obj, value)
 TryQuitMainloop.close = edited_fnc
 
