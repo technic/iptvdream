@@ -12,7 +12,7 @@
 #using external player by A. Latsch & Dr. Best (c)
 #substantially improved by technic(c) for KartinaTV/RodnoeTV compatibility and buffering possibility!!!
 import servicewebts
-SERVICE_LIST = [(1, "dmm ts"), (4097, "gstreamer"), (4112, "technic ts"), (4114, "partnerbox")]
+SERVICE_LIST = [('1', "dmm ts (1)"), ('4097', "gstreamer (4097)"), ('4112', "technic ts (4112)"), ('4114', "partnerbox (4114)")]
 
 from Plugins.Plugin import PluginDescriptor
 from Screens.Screen import Screen
@@ -161,7 +161,7 @@ for afile in os_listdir(API_PREFIX + API_DIR):
 		config.iptvdream[aname].lastroot = ConfigText(default="[]")
 		config.iptvdream[aname].lastcid = ConfigInteger(0, (0,1000))
 		config.iptvdream[aname].favourites = ConfigText(default="[]")
-		config.iptvdream[aname].service = ConfigSelection(SERVICE_LIST, 4112)
+		config.iptvdream[aname].service = ConfigSelection(SERVICE_LIST, '4112')
 		if _api.MODE == MODE_STREAM:
 			config.iptvdream[aname].timeshift = ConfigInteger(0, (0,12) ) #FIXME: think about abstract...
 			config.iptvdream[aname].sortkey = ConfigSubDict()
