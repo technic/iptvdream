@@ -237,6 +237,9 @@ class RunManager():
 		self.session = None
 		self.timer = eTimer()
 		self.timer.callback.append(self._recursiveClose)
+		#Standby notifier!!
+		config.misc.standbyCounter.addNotifier(self.standbyCountChanged, initial_call = False)
+
 	
 	def running(self):
 		return KartinaPlayer.instance != None
@@ -292,6 +295,24 @@ class RunManager():
 			KartinaPlayer.instance.close()
 			self.__run_open = True
 			self.timer.start(1,1)
+
+
+
+	def standbyCountChanged(self, configElement):
+		from Screens.Standby import inStandby
+		#FIXME: this is hack!!!
+		self.inStandby_cached = inStandby #inStanby resets to None before our onClose :(
+		#TODO: think more when run.
+		print "[KaritinaTV] add standby callback"
+		inStandby.onClose.append(self.leaveStandby)
+
+	#you can use this function to handle standby events ;)
+	def leaveStandby(self):
+		#next calls of inStandby.close() should not try to run KartinaPlayer.play()
+		self.inStandby_cached.onClose.pop()
+		print "[KartinaTV] debug:", self.inStandby_cached.onClose
+		if self.instance:
+			self.instance.leaveStandby()
 
 global runManager
 runManager = RunManager()	
@@ -454,9 +475,6 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		self.oldService = self.session.nav.getCurrentlyPlayingServiceReference()
 		self.oldAspectRatio = (config.av.policy_169.value, config.av.policy_43.value)
 		
-		#Standby notifier!!
-		config.misc.standbyCounter.addNotifier(self.standbyCountChanged, initial_call = False)
-		
 		self.onClose.append(self.__onClose)
 		self.onShown.append(self.start)
 	
@@ -466,26 +484,13 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 	
 	def event_seek(self):
 		pass
-
-	#TODO: Standby should be out of Player class
-	def standbyCountChanged(self, configElement):
-		from Screens.Standby import inStandby
-		#FIXME: this is hack!!!
-		self.inStandby_cached = inStandby #inStanby resets to None before our onClose :(
-		#TODO: think more when run.
-		print "[KaritinaTV] add standby callback"
-		inStandby.onClose.append(self.leaveStandby)
 	
 	#you can use this function to handle standby events ;)
-	def leaveStandby(self):	
-		#next calls of inStandby.close() should not try to run KartinaPlayer.play() 
-		self.inStandby_cached.onClose.pop()
-		print "[KartinaTV] debug:", self.inStandby_cached.onClose
-		
+	def leaveStandby(self):
+		pass
 	
 	def __onClose(self):
 		print "[KartinaTV] closing"
-		config.misc.standbyCounter.notifiers.remove(self.standbyCountChanged)
 		KartinaPlayer.instance = None
 		print "[KartinaTV] set instance to None"
 		if MANUAL_ASPECT_RATIO:
