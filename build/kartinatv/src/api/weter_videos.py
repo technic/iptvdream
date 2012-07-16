@@ -9,22 +9,23 @@
 # version.
 
 from abstract_api import MODE_VIDEOS
-from kartina_api import KartinaAPI
+from weter_api import WeterAPI
 
-import urllib
+import urllib #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
+import datetime
 from . import tdSec, secTd, syncTime, Bouquet, Video, unescapeEntities
 
 VIDEO_CACHING = True #TODO: cache...??
 
-class Ktv(KartinaAPI):
+class Ktv(WeterAPI):
 	
 	MODE = MODE_VIDEOS
-	iName = "KartinaMovies"
-	NEXT_API = "KartinaTV"
+	iName = "WeterMovies"
+	NEXT_API = "weterTV"
 	
 	def __init__(self, username, password):
-		KartinaAPI.__init__(self, username, password)
+		WeterAPI.__init__(self, username, password)
 		
 		self.video_genres = []
 		self.videos = {}
@@ -111,7 +112,7 @@ class Ktv(KartinaAPI):
 	def getVideoUrl(self, fid):
 		params = {"fileid" : fid}
 		root = self.getData("/api/xml/vod_geturl?"+urllib.urlencode(params), "getting video url %s" % fid)
-		return root.find('url').text.encode('utf-8').split(' ')[0]
+		return root.find('url').text.encode('utf-8').split(' ')[0].replace('http/ts://', 'http://')
 	
 	def getVideoGenres(self):
 		root = self.getData("/api/xml/vod_genres?", "getting genres list")		

@@ -6,8 +6,8 @@ SECTION = "extra"
 
 PN="enigma2-plugin-extensions-kartinatv"
 
-PV="2.1.0"
-VVV = "r1"
+PV="2.1.2"
+VVV = "r0"
 PR = "${VVV}"
 
 SRC_URI = "file://${FILE_DIRNAME}/build"
@@ -35,9 +35,9 @@ pkg_postinst() {
 	F="/etc/iptvdream/playlist.m3u"
 	if ! test -f $F; then
 		echo """#EXTM3U
-		#EXTINF:0,example stream
-		rtsp://82.177.67.61/axis-media/media.amp
-		""" > $F
+#EXTINF:0,example stream
+rtsp://82.177.67.61/axis-media/media.amp
+""" > $F
 	fi
 }
 

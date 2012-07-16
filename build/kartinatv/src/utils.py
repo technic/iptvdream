@@ -84,8 +84,13 @@ class EpgEntry():
 			return self.tstart <= time and time < self.tend  
 		return None
 	
+	def get_time(self):
+		return self.tend or self.tstart
+	
+	time = property(get_time)
+	
 	def __str__(self):
-		return ("%s -- %s %s") % (self.tstart.__str__(), self.tend.__str__(), self.progName)
+		return ("%s--%s %s") % (self.tstart.__str__(), self.tend.__str__(), self.progName)
 	
 	def __repr__(self):
 		return self.__str__()
@@ -179,51 +184,45 @@ class Channel(object):
 		if (i < len(self.q)) and self.q[i].isValid():
 			return self.q[i]
 		return False
-	
-	def checkContinuity(self, a, b):
-		i = a
-		while i < b:
-		  if self.q[i+1].tstart != self.q[i].tend:
-			print "[KartinaTV] checkContinuity fail at", self.q[i].tstart
-			return False
-			i += 1
-		return True
-	
-	#A bit dirty here, but I hope service api feed us.
+
+	def overlap(self, a,b,c,d):
+		print "o", a, b, c, d
+		if c <= a and a <= d:
+			return min(b,d)-a
+		elif a <= c and c <= b:
+			return min(b,d)-c
+		return secTd(0)
+
 	def epgPeriod(self, start, end, duration):
-		print "epgPeriod", start, end, duration
+		if not self.q: return []
 		i = 0
-		while (i < len(self.q)) and self.q[i].tstart < start:
+		while (i < len(self.q)-1) and self.q[i].time < start:
 			i += 1
-		if i == len(self.q):
-			return []
 		a = i
+		maxoverlap = secTd(0)
+		maxoveridx = (a,a)
 		print "start at", self.q[a].tstart
 		while (i < len(self.q)) and self.q[i].tstart < end:
+			#print self.q[i]
+			if i+1 == len(self.q) or self.q[i+1].tstart >= end or self.q[i].tend != self.q[i+1].tstart:
+				print i
+				over = self.overlap(self.q[a].tstart, self.q[i].time, start, end)
+				if over > maxoverlap:
+					maxoverlap = over
+					maxoveridx = (a, i)
+				a = i+1
 			i += 1
-		if i == len(self.q):
-			return []
-		b = i-1
-		print "end at", self.q[b].tstart
-		end_t = self.q[b].tend or self.q[b].tstart
-		if self.checkContinuity(a, b) and (end_t - self.q[a].tstart) > duration:
-			print "found entries", b-a
-			return self.q[a:b]
+		if maxoverlap >= duration:
+			a,b = maxoveridx
+			print "length", maxoverlap
+			return self.q[a:b+1]
 		else:
 			return []
 
-	def epgDay(self, date, day_edge):
-		if day_edge:
-			day_edge = tupleTd(day_edge)
-		else:
-			day_edge = tupleTd((0,0))
+	def epgDay(self, date):
 		date = datetime.datetime(date.year, date.month, date.day)
+		return self.epgPeriod(date - secTd(6*60*60), date + secTd(30*60*60), secTd(18*60*60))
 		
-		if day_edge > secTd(12*60*60):
-			return self.epgPeriod(date + day_edge - secTd(24*60*60), date + day_edge, secTd(18*60*60))
-		else:
-			return self.epgPeriod(date + day_edge, date + day_edge + secTd(24*60*60), secTd(18*60*60))
-	
 	epg = property(fset = pushEpg)
 
 class Bouquet():

@@ -9,11 +9,10 @@
 # version.
 
 from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
-import cookielib, urllib, urllib2 #TODO: optimize imports
-from xml.etree.cElementTree import fromstring
-import datetime
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, APIException
+from . import tdSec, secTd, setSyncTime, syncTime, EpgEntry, Channel, APIException
 from os import listdir, path
+from jtvepg import JTVEpg
+import re
 
 DIRECTORY = '/etc/iptvdream/'
 
@@ -34,7 +33,6 @@ class Playlist(AbstractAPI, AbstractStream):
 	def setTimezone(self):
 		pass
 
-
 	def setChannelsList(self):
 		for fname in listdir(DIRECTORY):
 			if fname.endswith('.m3u'):
@@ -47,13 +45,20 @@ class Playlist(AbstractAPI, AbstractStream):
 
 class M3UReader():
 	def parse_m3u(self, lines, default_group):
+		if len(lines) == 0:
+			raise APIException("Empty M3U list")
+		BOM = u'\ufeff'.encode('utf-8')
+		if lines[0].find(BOM) > -1:
+			print 'remove BOM'
+			lines[0] = lines[0][3:]
 		linen = 0
-		if lines[linen].rstrip() != "#EXTM3U":
-			raise Exception("Wrong header. #EXTM3U expected")
+		if not lines[linen].rstrip().startswith("#EXTM3U"):
+			raise APIException("Wrong header. #EXTM3U expected")
 		linen += 1
 		cid = len(self.channels)
 		gid = len(self.groups)
 		needinfo = True
+		tvgregexp = re.compile('#EXTINF:.*tvg-name="(.*)"')
 		while linen < len(lines):
 			line = lines[linen]
 			if line == '':
@@ -62,7 +67,7 @@ class M3UReader():
 			if line.startswith('#EXTINF:'):
 				line = line.split('#')[1]
 				if not needinfo or not (line.find(',') > -1):
-					raise APIException("Error while parsing m3u file")
+					raise APIException("Error while parsing m3u file at line %s" % linen+1)
 				title = line.split(',')[1]
 				if title.find(' - ') > -1:
 					title = title.partition(' - ')
@@ -71,6 +76,11 @@ class M3UReader():
 				else:
 					name = title
 					group = default_group
+				epginfo = tvgregexp.match(line)
+				if epginfo:
+					epginfo = epginfo.group(1)
+				else:
+					epginfo = name
 				needinfo = False
 			elif line != '':
 				line = line.partition('#')[0]
@@ -83,6 +93,7 @@ class M3UReader():
 						gid += 1
 					self.channels[cid] = Channel(name, group, cid, self.groups[group])
 					self.channels[cid].stream_url = url
+					self.channels[cid].epg_name = epginfo
 					cid += 1
 					needinfo = True
 			linen += 1;
@@ -93,16 +104,10 @@ class M3UReader():
 	def getStreamUrl(self, id, pin, time = None):
 		return self.channels[id].stream_url
 
-class Ktv(M3UReader, Playlist):
-	pass
+class Ktv(M3UReader, JTVEpg, Playlist):
+	def __init__(self, username, password):
+		Playlist.__init__(self, username, password)
+		JTVEpg.__init__(self)
 
-if __name__ == "__main__":
-	import sys
-	ktv = Ktv(sys.argv[1], sys.argv[2])
-	ktv.start()
-	ktv.setChannelsList()
-	print ktv.getStreamUrl(39)	
-	ktv.getChannelsEpg(ktv.channels.keys())
-	for x in ktv.channels.keys():
-		y = ktv.channels[x]
-		print x, y.name, y.group, y.num, y.gid
+	def start(self):
+		self.load_epg()

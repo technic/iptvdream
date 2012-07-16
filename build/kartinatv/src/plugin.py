@@ -10,8 +10,9 @@
 # version.
 
 #using external player by A. Latsch & Dr. Best (c)
-#Hardly improved by technic(c) for KartinaTV/RodnoeTV compatibility and buffering possibility!!!
+#substantially improved by technic(c) for KartinaTV/RodnoeTV compatibility and buffering possibility!!!
 import servicewebts
+SERVICE_LIST = [(1, "dmm ts"), (4097, "gstreamer"), (4112, "technic ts"), (4114, "partnerbox")]
 
 from Plugins.Plugin import PluginDescriptor
 from Screens.Screen import Screen
@@ -32,7 +33,7 @@ from Screens.ChoiceBox import ChoiceBox
 from Screens.InputBox import PinInput, InputBox
 from Components.Input import Input
 from Components.SelectionList import SelectionList
-from Screens.VirtualKeyBoard import VirtualKeyBoard, VirtualKeyBoardList
+from Screens.VirtualKeyBoard import VirtualKeyBoard as VirtualKeyBoard_generic
 from Tools.BoundFunction import boundFunction
 from enigma import eServiceReference, iServiceInformation, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, gFont, eTimer, iPlayableServicePtr, iStreamedServicePtr, getDesktop, eLabel, eSize, ePoint, getPrevAsciiCode, iPlayableService, ePicLoad
 from Screens.Standby import TryQuitMainloop
@@ -160,13 +161,15 @@ for afile in os_listdir(API_PREFIX + API_DIR):
 		config.iptvdream[aname].lastroot = ConfigText(default="[]")
 		config.iptvdream[aname].lastcid = ConfigInteger(0, (0,1000))
 		config.iptvdream[aname].favourites = ConfigText(default="[]")
-		config.iptvdream[aname].usesrvicets = ConfigYesNo(default=True)
+		config.iptvdream[aname].service = ConfigSelection(SERVICE_LIST, 4112)
 		if _api.MODE == MODE_STREAM:
 			config.iptvdream[aname].timeshift = ConfigInteger(0, (0,12) ) #FIXME: think about abstract...
 			config.iptvdream[aname].sortkey = ConfigSubDict()
 			config.iptvdream[aname].sortkey["all"] = ConfigInteger(1, (1,2))
 			config.iptvdream[aname].sortkey["By group"] = ConfigInteger(1, (1,2))
 			config.iptvdream[aname].sortkey["in group"] = ConfigInteger(1,(1,2))
+		if _api.HAS_PIN == True:
+			config.iptvdream[aname].parental_code = ConfigNumberText(default="")
 		print "[KartinaTV] import api %s:%s" % (aprov, aname)
 
 #buftime is general
@@ -183,48 +186,47 @@ def Plugins(path, **kwargs):
 	res.append(PluginDescriptor(name="IPtvDream config", description="Configure all IPtvDream services", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = selectConfig, icon="iptvdream.png" ))
 	return res
 
-class VirtualKeyBoardRu(VirtualKeyBoard):
-	def __init__(self, session, title="", text=""):
-		Screen.__init__(self, session)
-		self.keys_list = []
-		self.shiftkeys_list = []
-		self.keys_list = [
-			[u"EXIT", u"1", u"2", u"3", u"4", u"5", u"6", u"7", u"8", u"9", u"0", u"BACKSPACE"],
-			[u"а", u"б", u"в", u"г", u"д", u"е", u"ж", u"з", u"и", u"й", u"к", u"л"],
-			[u"м", u"н", u"о", u"п", u"р", u"с", u"т", u"у", u"ф", u"х", u"ц", "ч"],
-			[u"ш", u"щ", u"ь", u"ы", u"ъ", u"э", u"ю", u"я", u"-", ".", u",", u"CLEAR"],
-			[u"SHIFT", u"SPACE", u"OK"]]
+class VirtualKeyBoard(VirtualKeyBoard_generic):
+
+	def setLang(self):
+		if self.lang == 'ru_RU':
+			self.keys_list = [
+				[u"EXIT", u"1", u"2", u"3", u"4", u"5", u"6", u"7", u"8", u"9", u"0", u"BACKSPACE"],
+				[u"а", u"б", u"в", u"г", u"д", u"е", u"ж", u"з", u"и", u"й", u"к", u"л"],
+				[u"м", u"н", u"о", u"п", u"р", u"с", u"т", u"у", u"ф", u"х", u"ц", "ч"],
+				[u"ш", u"щ", u"ь", u"ы", u"ъ", u"э", u"ю", u"я", u"-", ".", u",", u"CLEAR"],
+				[u"SHIFT", u"SPACE", u"OK"]]
 			
-		self.shiftkeys_list = [
-			[u"EXIT", u"!", u'"', u"§", u"$", u"%", u"&", u"/", u"(", u")", u"=", u"BACKSPACE"],
-			[u"Q", u"W", u"E", u"R", u"T", u"Z", u"U", u"I", u"O", u"P", u"*"],
-			[u"A", u"S", u"D", u"F", u"G", u"H", u"J", u"K", u"L", u"'", u"?"],
-			[u">", u"Y", u"X", u"C", u"V", u"B", u"N", u"M", u";", u":", u"_", u"CLEAR"],
-			[u"SHIFT", u"SPACE", u"OK"]]
-		
-		self.shiftMode = False
-		self.text = text
-		self.selectedKey = 0
-		
-		self["header"] = Label(title)
-		self["text"] = Label(self.text)
-		self["list"] = VirtualKeyBoardList([])
-		
-		self["actions"] = ActionMap(["OkCancelActions", "WizardActions", "ColorActions"],
-			{
-				"ok": self.okClicked,
-				"cancel": self.exit,
-				"left": self.left,
-				"right": self.right,
-				"up": self.up,
-				"down": self.down,
-				"red": self.backClicked,
-				"green": self.ok
-			}, -2)
-		
-		self.onLayoutFinish.append(self.buildVirtualKeyBoard)
-	
+			self.shiftkeys_list = [
+				[u"EXIT", u"!", u'"', u"№", u";", u"%", u":", u"?", u"*", u"(", u")", u"BACKSPACE"],
+				[u"А", u"Б", u"В", u"Г", u"Д", u"Е", u"Ж", u"З", u"И", u"Й", u"К", u"Л"],
+				[u"М", u"Н", u"О", u"П", u"Р", u"С", u"Т", u"У", u"Ф", u"Х", u"Ц", "Ч"],
+				[u"Ш", u"Щ", u"Ь", u"Ы", u"Ъ", u"Э", u"Ю", u"Я", u"ё", "\\", u"/", u"CLEAR"],
+				[u"SHIFT", u"SPACE", u"OK"]]
+			self.lang = 'ru_RU'
+			self.nextLang = 'en_EN'
+		else:
+			self.keys_list = [
+				[u"EXIT", u"1", u"2", u"3", u"4", u"5", u"6", u"7", u"8", u"9", u"0", u"BACKSPACE"],
+				[u"q", u"w", u"e", u"r", u"t", u"z", u"u", u"i", u"o", u"p", u"+", u"@"],
+				[u"a", u"s", u"d", u"f", u"g", u"h", u"j", u"k", u"l", u"#", u"\\"],
+				[u"<", u"y", u"x", u"c", u"v", u"b", u"n", u"m", u",", ".", u"-", u"CLEAR"],
+				[u"SHIFT", u"SPACE", u"OK"]]
+			self.shiftkeys_list = [
+				[u"EXIT", u"!", u'"', u"§", u"$", u"%", u"&", u"/", u"(", u")", u"=", u"BACKSPACE"],
+				[u"Q", u"W", u"E", u"R", u"T", u"Z", u"U", u"I", u"O", u"P", u"*"],
+				[u"A", u"S", u"D", u"F", u"G", u"H", u"J", u"K", u"L", u"'", u"?"],
+				[u">", u"Y", u"X", u"C", u"V", u"B", u"N", u"M", u";", u":", u"_", u"CLEAR"],
+				[u"SHIFT", u"SPACE", u"OK"]]
+			self.lang = 'en_EN'
+			self.nextLang = 'ru_RU'
+		self["country"].setText(self.lang)
 		self.max_key=47+len(self.keys_list[4])
+
+	def backClicked(self):
+		self.text = self["text"].getText().decode('utf-8')[:-1].encode('utf-8')
+		self["text"].setText(self.text)
+
 
 def menuOpen(aname, menuid):
 	if menuid == "mainmenu" and config.iptvdream[aname].in_mainmenu.value:
@@ -310,6 +312,12 @@ def AOpen(aname, session, **kwargs):
 	runManager.init(session)
 	runManager.run(aname)
 
+def atime():
+	if bouquet.aTime:
+		return syncTime() + secTd(bouquet.aTime)
+	else:
+		return None
+
 	
 rec_png = LoadPixmap(cached=True, path='/usr/share/enigma2/KartinaTV_skin/rec.png')
 EPG_UPDATE_INTERVAL = 60 #Seconds, in channel list.
@@ -335,10 +343,8 @@ if not os_path.exists(POSTER_PATH):
 	
 def setServ(): #FIXME: why this function is here?
 	global SERVICE_KARTINA
-	if cfg.usesrvicets.value:
-		SERVICE_KARTINA = 4112 #ServiceTS
-	else:
-		SERVICE_KARTINA = 4097 #Gstreamer
+	SERVICE_KARTINA = cfg.service.value
+	print "[KartinaTV] ooooo", cfg.service.value
 
 def fakeReference(cid):
 	sref = eServiceReference(4112, 0, '') #these are fake references;) #always 4112 because of parental control
@@ -573,27 +579,43 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 			return
 		self.session.nav.stopService()
 		
+		print "[KartinaTV] api has pin", ktv.HAS_PIN
 		if ktv.HAS_PIN and cid in ktv.locked_cids:
+			codeval = cfg.parental_code.value
+		else:
+			codeval = None
+		if codeval == '':
 			print "[KartinaTV] protected by api"
 			self.session.openWithCallback(self.pinEntered, InputBox, title=_("Enter protect password"),windowTitle = _("Channel Locked"), type=Input.PIN)
 			return
+		
 		#Use many hacks, because it's no possibility to change enigma :(
 		#fake reference has no path and used for parental control
 		fakeref = fakeReference(cid)
 		print fakeref.toCompareString()
 		if parentalControl.isServicePlayable(fakeref, boundFunction(self.startPlay)):
-			self.startPlay()
+			self.pinEntered(codeval)
 		else:
-			self["channelName"].setText(ktv.channels[cid].name)
-			self.epgEvent()	
+			self.playDenied()
+
 	def pinEntered(self, pin):
 		if self.startPlay(pin=pin) == 0:
 			#this means api access denied
 			self.session.openWithCallback(self.retryPlay, MessageBox, _("Access denied!\nTry again?"))
 	
 	def retryPlay(self, result):
-		if result: self.play()
+		if result:
+			self.play()
+		else:
+			self.playDenied()
+	
+	def playDenied(self):
+		# clear all infobar fields
+		pass
 
+	#return codes:
+	#-1 = error
+	# 0 = access denied
 	def startPlay(self, **kwargs): #TODO: think more..
 		print "[KartinaTV] play channel id=", self.current 
 		self.__audioSelected = False
@@ -851,7 +873,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 		
 		cid = self.current
 		try:
-			uri = ktv.getStreamUrl(cid, pin)
+			uri = ktv.getStreamUrl(cid, pin, atime())
 		except APIException:
 			print "[KartinaTV] Error: getting stream uri failed!"
 			#self.session.open(MessageBox, _("Error while getting stream uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
@@ -860,9 +882,10 @@ class KartinaStreamPlayer(KartinaPlayer):
 		if not uri:
 			return 0
 		print "[KartinaTV] play", uri
+		setServ()
 		srv = SERVICE_KARTINA
-		if not uri.startswith('http://'):
-			srv = 4097
+#		if not uri.startswith('http://'):
+#			srv = 4097
 		if uri.startswith('mms://'):
 			print "[KartinaTV] Warning: mms:// protocol turned off"
 			self.session.open(MessageBox, _("mms:// protocol turned off"), type = MessageBox.TYPE_ERROR, timeout = 5)
@@ -875,6 +898,12 @@ class KartinaStreamPlayer(KartinaPlayer):
 		self["KartinaPiconRef"].text = ktv.getPiconName(cid)
 		self["channelName"].setText(ktv.channels[cid].name)
 		self.epgEvent()
+	
+	def playDenied(self):
+		#show channel name infobar
+		self["channelName"].setText(ktv.channels[self.current].name)
+		self.epgEvent()
+
 
 	
 	def epgEvent(self):
@@ -1090,15 +1119,15 @@ class KartinaVideoPlayer(KartinaPlayer):
 		return 0
 	
 	def doExit(self):
-		if bouquet.current.type == Bouquet.TYPE_MENU:
-			return
-		fid = self.current
-		vid = bouquet.current.parent.name #Video is parent, episode is current		
-		play_pos = 0
-		if self.is_playing:
+		if bouquet.current.type == Bouquet.TYPE_MENU or self.is_playing == False:
+			last = (0, 0, 0)
+		elif self.is_playing:
+			fid = self.current
+			vid = bouquet.current.parent.name #Video is parent, episode is current
 			play_pos = self.ptsGetPosition()
-		print "[KartinaTV] save play position", play_pos
-		cfg.lastroot.value = str((vid, fid, play_pos))
+			last = (vid, fid, play_pos)
+		print "[KartinaTV] save play position", last[2]
+		cfg.lastroot.value = str(last)
 		cfg.lastroot.save()
 	
 	def doEofInternal(self, playing):
@@ -1160,6 +1189,7 @@ class ChannelList(MenuList):
 		
 		
 	def applySkin(self, desktop, parent):
+		attribs = [ ]
 		if self.skinAttributes is not None:
 			attribs = [ ]
 			for (attrib, value) in self.skinAttributes:
@@ -1232,7 +1262,7 @@ class ChannelList(MenuList):
 	
 	def calculateWidth(self, text, font):
 		self.fontCalc[font].setText(text)
-		return self.fontCalc[font].calculateSize().width()
+		return int(round(self.fontCalc[font].calculateSize().width()*1.1))
 	
 	
 	def buildChannelEntry(self, entry):
@@ -1372,7 +1402,7 @@ class KartinaChannelSelection(Screen):
 		timeout = not self.lastEpgUpdate or syncTime() - self.lastEpgUpdate > secTd(EPG_UPDATE_INTERVAL)
 		for x in ktv.channels.keys():
 			if isinstance(x, int):
-				if (not ktv.channels[x].epgCurrent()) and (not ktv.channels[x].lastUpdateFailed or timeout):
+				if (not ktv.channels[x].epgCurrent(syncTime())) and timeout:
 					uplist += [x]
 		if uplist: 
 			try:
@@ -1646,7 +1676,7 @@ class KartinaEpgList(Screen):
 		except APIException:
 			print "[KartinaTV] load day epg failed cid = ", self.current
 			return
-		epglist = ktv.channels[self.current].epgDay(d, ktv.epg_day_edge)
+		epglist = ktv.channels[self.current].epgDay(d)
 		self.list.setList(map(self.kartinaEpgEntry, epglist))
 		self.setTitle("EPG / %s / %s %s" % (ktv.channels[self.current].name, d.strftime("%d"), _(d.strftime("%b")) ))
 		x = 0
@@ -2253,7 +2283,7 @@ class KartinaVideoList(Screen, multiListHandler):
 		self.start()
 	
 	def search(self):
-		self.session.openWithCallback(self.searchCB, VirtualKeyBoardRu, _("Search films"))
+		self.session.openWithCallback(self.searchCB, VirtualKeyBoard, _("Search films"))
 	
 	def searchCB(self, text):
 		if text:
@@ -2406,11 +2436,13 @@ class KartinaConfig(ConfigListScreen, Screen):
 			getConfigListEntry(_("login"), config.iptvdream[self.aprov].login),
 			getConfigListEntry(_("password"), config.iptvdream[self.aprov].password),
 			getConfigListEntry(_("Show in mainmenu"), config.iptvdream[aname].in_mainmenu), 
-			getConfigListEntry(_("Use servicets instead of Gstreamer"), config.iptvdream[aname].usesrvicets),
+			getConfigListEntry(_("Service (player) id"), config.iptvdream[aname].service),
 			getConfigListEntry(_("Buffering time, milliseconds"), config.plugins.KartinaTv.buftime)
 		]
 		if apis[aname][0].MODE == MODE_STREAM:
 			cfglist.append(getConfigListEntry(_("Timeshift"), config.iptvdream[aname].timeshift))
+		if apis[aname][0].HAS_PIN == True:
+			cfglist.append(getConfigListEntry(_("Auto send parental code"), config.iptvdream[aname].parental_code))
 			
 		ConfigListScreen.__init__(self, cfglist, session)
 		self.setTitle(_("Configuration of ")+aname)

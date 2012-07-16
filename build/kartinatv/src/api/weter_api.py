@@ -18,18 +18,18 @@ from . import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, u
 
 			
 
-class KartinaAPI(AbstractAPI):
+class WeterAPI(AbstractAPI):
 	
-	iProvider = "kartinatv"
+	iProvider = "wetertv"
 	NUMBER_PASS = True
 	
-	site = "http://iptv.kartina.tv"
+	site = "http://weter.team-dobrogea.ru"
 	
 	def __init__(self, username, password):
 		AbstractAPI.__init__(self, username, password)
 
-		self.cookiejar = cookielib.CookieJar()
-		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
+#		self.cookiejar = cookielib.CookieJar()
+		self.opener = urllib2.build_opener()
 		self.opener.addheaders = [('User-Agent', 'Mozilla/5.0 technic-plugin-2.0')]
 	
 	def start(self):
@@ -38,58 +38,38 @@ class KartinaAPI(AbstractAPI):
 	def authorize(self):
 		self.trace("Authorization started")
 		self.trace("username = %s" % self.username)
-		self.cookiejar.clear()
+
 		params = urllib.urlencode({"login" : self.username,
 								  "pass" : self.password,
 								  "settings" : "all"})
-		reply = self.opener.open(self.site+'/api/xml/login?', params).read()
-		
-		#checking cookies
-		cookies = list(self.cookiejar)
-		cookiesdict = {}
-		hasSSID = False
-		deleted = False
+		reply = self.opener.open(self.site+'/api/xml/login?'+params).read()
+		print reply
 		
 		reply = fromstring(reply)
 		if reply.find("error"):
 			raise APIException(reply.find('error').findtext('message'))
+	
+		self.sidval = urllib.urlencode({"sid_name": reply.findtext('sid_name'),
+		                                "sid": reply.findtext('sid') })
 		
-		for cookie in cookies:
-			cookiesdict[cookie.name] = cookie.value
-			if (cookie.name.find('SSID') != -1):
-				hasSSID = True
-			if (cookie.value.find('deleted') != -1):
-				deleted = True
-		if (not hasSSID):
-			raise APIException(self.username+": Authorization of user failed!")
-		if (deleted):
-			raise APIException(self.username+": Wrong authorization request")
 		self.packet_expire = datetime.fromtimestamp(int(reply.find('account').findtext('packet_expire')))
 		
 		#Load settings here, because kartina api is't friendly
 		self.settings = []
 		sett = reply.find("settings")
-		for s in sett:
-			if s.tag == "http_caching": continue
-			value = s.findtext('value')
-			vallist = []
-			if s.tag == "stream_server":
-				for x in s.find('list'):
-					vallist += [(x.findtext('ip'), x.findtext('descr'))]
-			elif s.find('list'):
-				for x in s.find('list'):
-					vallist += [x.text]
-			self.settings += [SettEntry(s.tag, value, vallist)]
-		for x in self.settings:
-			self.trace(x)
 		
-		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
+		self.trace(self.sidval)
 		self.trace("Packet expire: %s" % self.packet_expire)
 		self.SID = True	
 	
 	def getData(self, url, name):
 		self.SID = False
+		
 		url = self.site + url
+		#if url.endswith('?'):
+			#url += self.sidval
+		#else:
+		url += "&" + self.sidval
 		
 		#self.trace("Getting %s" % (name))
 		self.trace("Getting %s (%s)" % (name, url))
@@ -97,17 +77,10 @@ class KartinaAPI(AbstractAPI):
 			reply = self.opener.open(url).read()
 		except:
 			reply = ""
-
-		if ((reply.find("code_login") != -1)and(reply.find("code_pass") != -1)or(reply.find("<error>") != -1)):
-			self.trace("Authorization missed or lost")
-			self.authorize()
-			self.trace("Second try to get %s (%s)" % (name, url))
-			reply = self.opener.open(url).read()
-			if ((reply.find("code_login") != -1)and(reply.find("code_pass") != -1)):
-				raise APIException("Failed to get %s:\n%s" % (name, reply))
+		print reply
 		
 		try:
-			root = fromstring(reply)
+			root = fromstring(reply.replace('&','&amp;') )
 		except:
 			raise APIException("Failed to parse xml response")
 		if root.find('error'):
@@ -117,9 +90,9 @@ class KartinaAPI(AbstractAPI):
 		self.SID = True
 		return root
 
-class Ktv(KartinaAPI, AbstractStream):
+class Ktv(WeterAPI, AbstractStream):
 	
-	iName = "KartinaTV"
+	iName = "WeterTV"
 	MODE = MODE_STREAM
 	NEXT_API = "KartinaMovies"
 	
@@ -127,7 +100,7 @@ class Ktv(KartinaAPI, AbstractStream):
 	HAS_PIN = True
 	
 	def __init__(self, username, password):
-		KartinaAPI.__init__(self, username, password)
+		WeterAPI.__init__(self, username, password)
 		AbstractStream.__init__(self)
 	
 	def setChannelsList(self):
@@ -157,11 +130,7 @@ class Ktv(KartinaAPI, AbstractStream):
 				else:
 					#print "[KartinaTV] there is no epg for id=%d on ktv-server" % id
 					pass
-	
-	def setTimeShift(self, timeShift):
-		params = {"var" : "timeshift",
-				  "val" : timeShift}
-		self.getData("/api/xml/settings_set?"+urllib.urlencode(params), "time shift new api %s" % timeShift) 
+
 
 	def getStreamUrl(self, cid, pin, time = None):
 		params = {"cid" : cid}

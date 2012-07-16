@@ -11,9 +11,9 @@
 from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
-import datetime
+from datetime import datetime
 from md5 import md5
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, setSyncTime, syncTime, Bouquet, BouquetManager, EpgEntry, Channel, Timezone
+from . import tdSec, secTd, setSyncTime, syncTime, EpgEntry, Channel, Timezone, APIException
 
 class RodnoeAPI(AbstractAPI):
 	
@@ -21,7 +21,7 @@ class RodnoeAPI(AbstractAPI):
 	NUMBER_PASS = False
 	
 	site = "http://file-teleport.com/iptv/api/v1/xml"
-	
+
 	def __init__(self, username, password):
 		AbstractAPI.__init__(self, username, password)
 		
@@ -45,11 +45,9 @@ class RodnoeAPI(AbstractAPI):
 				  'val': timeShift*60 }
 		return self.getData(self.site+"/set?"+urllib.urlencode(params), "setting time shift to %s" % timeShift)
 
-	
 	def authorize(self):
 		self.trace("Username is "+self.username)
 		self.cookiejar.clear()
-		#self.opener.addheaders += [("X-Requested-With", "XMLHttpRequest")]
 		params = urllib.urlencode({"login" : self.username,
 		                           "pass" : md5(md5(self.username).hexdigest()+md5(self.password).hexdigest()).hexdigest(),
 		                           "with_cfg" : ''})
@@ -60,7 +58,7 @@ class RodnoeAPI(AbstractAPI):
 		root = fromstring(httpstr)
 		if root.find('error'):
 			err = root.find('error')
-			raise Exception(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8')) 
+			raise APIException(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8')) 
 		self.sid = root.find('sid').text.encode('utf-8')
 		#checking cookies
 		cookies = list(self.cookiejar)
@@ -99,10 +97,10 @@ class RodnoeAPI(AbstractAPI):
 		try:
 			root = fromstring(reply)
 		except:
-			raise Exception("Failed to parse xml response")
+			raise APIException("Failed to parse xml response")
 		if root.find('error'):
 			err = root.find('error')
-			raise Exception(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8'))
+			raise APIException(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8'))
 		self.SID = True
 		return root
 
@@ -116,15 +114,13 @@ class Ktv(RodnoeAPI, AbstractStream):
 	
 	def __init__(self, username, password):
 		RodnoeAPI.__init__(self, username, password)
-		self.channels = {}
-		self.aTime = 0
-	
-		if not x: return groups
+		AbstractStream.__init__(self)
 	def setChannelsList(self):
-		root = self.getChannelsList()
+		params = {  }
+		root = self.getData(self.site+"/get_list_tv"+urllib.urlencode(params), "channels list")
 		t = int(root.findtext('servertime'))
-		self.trace('server time %s' % datetime.datetime.fromtimestamp(t))
-		setSyncTime(datetime.datetime.fromtimestamp(t))
+		self.trace('server time %s' % datetime.fromtimestamp(t))
+		setSyncTime(datetime.fromtimestamp(t))
 		
 		groups = root.find('groups')
 		for group in groups.findall('item'):
@@ -141,28 +137,24 @@ class Ktv(RodnoeAPI, AbstractStream):
 				if channel.findtext('epg_current_title') and channel.findtext('epg_current_start'):
 					prog = channel.findtext('epg_current_title').encode('utf-8') + '\n'
 					prog += channel.findtext('epg_current_info').encode('utf-8')
-					t_start = datetime.datetime.fromtimestamp(int(channel.findtext('epg_current_start')))
-					t_end = datetime.datetime.fromtimestamp(int(channel.findtext('epg_current_end').encode('utf-8')))
+					t_start = datetime.fromtimestamp(int(channel.findtext('epg_current_start')))
+					t_end = datetime.fromtimestamp(int(channel.findtext('epg_current_end').encode('utf-8')))
 					self.channels[id].epg = EpgEntry(prog, t_start, t_end)
 				if channel.findtext('epg_next_title') and channel.findtext('epg_next_start'):
 					prog = channel.findtext('epg_next_title').encode('utf-8') + '\n'
 					prog += channel.findtext('epg_next_info').encode('utf-8')
-					t_start = datetime.datetime.fromtimestamp(int(channel.findtext('epg_next_start').encode('utf-8')))
-					t_end = datetime.datetime.fromtimestamp(int(channel.findtext('epg_next_end').encode('utf-8')))
+					t_start = datetime.fromtimestamp(int(channel.findtext('epg_next_start').encode('utf-8')))
+					t_end = datetime.fromtimestamp(int(channel.findtext('epg_next_end').encode('utf-8')))
 					self.channels[id].nepg = EpgEntry(prog, t_start, t_end)
 				else:
 					#print "[RodnoeTV] there is no epg for id=%d on rtv-server" % id
 					pass
 
-	def getChannelsList(self):
-		params = {  }
-		return self.getData(self.site+"/get_list_tv"+urllib.urlencode(params), "channels list") 
-
-	def getStreamUrl(self, id, pin, time = None):
-		params = {"cid": id}
-		if self.channels[id].is_protected:
+	def getStreamUrl(self, cid, pin, time = None):
+		params = {"cid": cid}
+		if self.channels[cid].is_protected:
 			params["protect_code"] = self.protect_code
-		if self.aTime:
+		if time:
 			params["uts"] = time.strftime("%s")
 		root = self.getData(self.site+"/get_url_tv?"+urllib.urlencode(params), "stream url")
 		return root.findtext("url").encode("utf-8")
@@ -178,67 +170,36 @@ class Ktv(RodnoeAPI, AbstractStream):
 			if prog and prog.findtext('begin') and prog.findtext('title'):
 				title = prog.findtext('title').encode('utf-8') + '\n'
 				title += prog.findtext('info').encode('utf-8')
-				t_start = datetime.datetime.fromtimestamp(int(prog.findtext('begin').encode('utf-8')))
-				t_end = datetime.datetime.fromtimestamp(int(prog.findtext('end').encode('utf-8')))
+				t_start = datetime.fromtimestamp(int(prog.findtext('begin').encode('utf-8')))
+				t_end = datetime.fromtimestamp(int(prog.findtext('end').encode('utf-8')))
 				self.channels[id].epg = EpgEntry(title, t_start, t_end)
 			prog = channel.find('next')
 			if prog and prog.findtext('begin') and prog.findtext('title'):
 				title = prog.findtext('title').encode('utf-8') + '\n'
 				title += prog.findtext('info').encode('utf-8')
-				t_start = datetime.datetime.fromtimestamp(int(prog.findtext('begin').encode('utf-8')))
-				t_end = datetime.datetime.fromtimestamp(int(prog.findtext('end').encode('utf-8')))
-				self.channels[id].nepg = EpgEntry(title, t_start, t_end)
+				t_start = datetime.fromtimestamp(int(prog.findtext('begin').encode('utf-8')))
+				t_end = datetime.fromtimestamp(int(prog.findtext('end').encode('utf-8')))
+				self.channels[id].epg = EpgEntry(title, t_start, t_end)
 			else:
 				self.channels[id].lastUpdateFailed = True
 			#	print "[KartinaTV] INFO there is no epg for id=%d on ktv-server" % id
 				pass
 	
-	def epgNext(self, cid): #do Nothing
-		self.trace("NO epgNext in API!")
-		pass 
+	def getCurrentEpg(self, cid):
+		return self.getChannelsEpg([cid])
 	
 	def getDayEpg(self, id, date = None):
 		if not date:
 			date = syncTime()
-		print date
 		params = {"cid": id,
-				  "from_uts": datetime.datetime(date.year, date.month, date.day).strftime('%s'),
+				  "from_uts": datetime(date.year, date.month, date.day).strftime('%s'),
 				  "hours" : 24 }
 		root = self.getData(self.site+"/get_epg?"+urllib.urlencode(params), "EPG for channel %s" % id)
 		epglist = []
-		self.channels[id].lepg[date.strftime("%y%m%d")] = []
 		for prog in root.find('channels').find('item').find('epg'):
 			title = prog.findtext('title').encode('utf-8') + '\n'
 			title += prog.findtext('info').encode('utf-8')
-			t_start = datetime.datetime.fromtimestamp(int(prog.findtext('begin').encode('utf-8')))
-			t_end = datetime.datetime.fromtimestamp(int(prog.findtext('end').encode('utf-8')))
-			self.channels[id].lepg[date.strftime("%y%m%d")] += [EpgEntry(title, t_start, t_end)]
-			epglist += [(t_start, title.split('\n')[0], title.split('\n')[1])]
-		return epglist
-	
-	def getGmtEpg(self, cid):
-		t = syncTime() + secTd(self.aTime)
-		print self.channels[cid].lepg.has_key(t.strftime("%y%m%d"))
-		lepg = self.channels[cid].lepg[t.strftime("%y%m%d")]
-		self.trace("get gmt epg")
-		print t
-		for x in lepg:
-			print x.tend
-			if x.tend > t:
-				self.channels[cid].aepg = x
-				return
-
-if __name__ == "__main__":
-	import sys
-	ktv = Ktv(sys.argv[1], sys.argv[2])
-	#ktv.authorize()
-	ktv.start()
-#	ktv.setTimeShift(0)
-	ktv.setChannelsList()
-#	ktv.sortByName()
-#	ktv.sortByGroup()
-#	ktv.getChannelsEpg([1,2,3,4])
-	for x in ktv.channels.keys():
-		print "||%s||%s||" % (x, ktv.channels[x].name)#, ktv.channels[x].archive#, ktv.channels[x].epg.tstart, ktv.channels[x].epg.tend,  ktv.channels[x].epg.name
-	#print ktv.getDayEpg(x)[2][3]
-	print ktv.getStreamUrl(17)
+			t_start = datetime.fromtimestamp(int(prog.findtext('begin').encode('utf-8')))
+			t_end = datetime.fromtimestamp(int(prog.findtext('end').encode('utf-8')))
+			epglist += [ EpgEntry(title, t_start, t_end) ]
+		self.channels[id].pushEpgSorted(epglist)
