@@ -7,6 +7,7 @@
 *.swp
 *~
 *.pyc
+*.pyo
 *.mo
 Makefile.in
 Makefile
