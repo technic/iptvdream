@@ -145,7 +145,7 @@ for afile in os_listdir(API_PREFIX + API_DIR):
 		aname = _api.iName
 		if _api.iTitle is None:
 			_api.iTitle = _api.iName
-		apis[aname] = (_api, aprov)
+		apis[aname] = _api
 		if not aprov in api_providers:
 			api_providers += [aprov]
 		#create config
@@ -181,7 +181,7 @@ def Plugins(path, **kwargs):
 	res = []
 	for aname in apis.keys():
 		res += [
-		PluginDescriptor(name=apis[aname][0].iTitle, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = boundFunction(AOpen, aname), icon=aname+".png" ),
+		PluginDescriptor(name=apis[aname].iTitle, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = boundFunction(AOpen, aname), icon=aname+".png" ),
 		PluginDescriptor(name=aname, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_MENU, fnc = boundFunction(menuOpen, aname) )]
 	res.append(PluginDescriptor(name="IPtvDream config", description="Configure all IPtvDream services", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = selectConfig, icon="iptvdream.png" ))
 	return res
@@ -263,11 +263,11 @@ class RunManager():
 			self.open()
 	
 	def open(self):
-		aname = self.aname	
+		aname = self.aname
 		global Ktv, cfg, cfg_prov, favouritesList
-		Ktv = apis[aname][0]
+		Ktv = apis[aname]
 		cfg = config.iptvdream[aname]
-		cfg_prov = config.iptvdream[apis[aname][1]]
+		cfg_prov = config.iptvdream[apis[aname].iProvider]
 		favouritesList = eval(cfg.favourites.value)
 		if Ktv.MODE == MODE_STREAM:
 			self.session.open(KartinaStreamPlayer)
@@ -2373,7 +2373,7 @@ def startConifg(session, aname):
 def configEnded(session, aname, changed = False):
 	print "[KartinaTV] config ended for", aname
 	
-	if KartinaPlayer.instance and (Ktv.iName == aname or Ktv.iProvider == apis[aname][1]):
+	if KartinaPlayer.instance and (Ktv.iName == aname or Ktv.iProvider == apis[aname].iProvider):
 		#We are telling KartinaPlayer to restart if config changed
 		#If it fails, we are asking for next try.
 		if changed:
@@ -2422,7 +2422,7 @@ class KartinaConfig(ConfigListScreen, Screen):
 		}, -2)
 		
 		self.aname = aname
-		self.aprov = apis[aname][1]
+		self.aprov = apis[aname].iProvider
 
 		self["key_red"] = Button(_("Cancel"))
 		self["key_green"] = Button(_("OK"))
@@ -2434,9 +2434,9 @@ class KartinaConfig(ConfigListScreen, Screen):
 			getConfigListEntry(_("Service (player) id"), config.iptvdream[aname].service),
 			getConfigListEntry(_("Buffering time, milliseconds"), config.plugins.KartinaTv.buftime)
 		]
-		if apis[aname][0].MODE == MODE_STREAM:
+		if apis[aname].MODE == MODE_STREAM:
 			cfglist.append(getConfigListEntry(_("Timeshift"), config.iptvdream[aname].timeshift))
-		if apis[aname][0].HAS_PIN == True:
+		if apis[aname].HAS_PIN == True:
 			cfglist.append(getConfigListEntry(_("Auto send parental code"), config.iptvdream[aname].parental_code))
 			
 		ConfigListScreen.__init__(self, cfglist, session)
