@@ -39,8 +39,8 @@
 		<key id="KEY_DOWN" mapto="openServiceList" flags="mr" />
 		<key id="KEY_CHANNELUP" mapto="zapUp" flags="m" />
 		<key id="KEY_CHANNELDOWN" mapto="zapDown" flags="m" />
-		<key id="KEY_TV" mapto="stopVideo" flags="b" />
-		<key id="KEY_TV" mapto="closePlugin" flags="l" />
+		<key id="KEY_TV2" mapto="stopVideo" flags="b" />
+		<key id="KEY_TV2" mapto="closePlugin" flags="l" />
 		<key id="KEY_VIDEO" mapto="openTV" flags="m" />
 	</map>
 	

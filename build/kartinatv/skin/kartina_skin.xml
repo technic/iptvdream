@@ -28,6 +28,26 @@
       <widget backgroundColor="#00343c4f" font="Regular;22" foregroundColor="#00bbbbbb" halign="left" name="nextTime" position="165,95" size="66,26" transparent="1" />
       <widget backgroundColor="#00343c4f" font="Regular;25" foregroundColor="#00bbbbbb" halign="left" name="nextName" noWrap="1" position="243,94" size="663,30" transparent="1" zPosition="21" />
       <widget backgroundColor="#00343c4f" font="Regular;22" foregroundColor="#00bbbbbb" halign="right" name="nextDuration" position="919,95" size="106,26" transparent="1" />
+      <widget alphatest="blend" pixmap="KartinaTV_skin/ico_dolby_on.png" position="899,18" render="Pixmap" size="57,20" source="session.CurrentService" zPosition="2">
+  <convert type="ServiceInfo">IsMultichannel</convert>
+  <convert type="ConditionalShowHide" />
+</widget>
+      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/ico_dolby_off.png" position="898,18" size="57,20" zPosition="1" />
+      <ePixmap alphatest="blend" pixmap="KartinaTV_skin/ico_format_off.png" position="960,18" size="36,20" zPosition="1" />
+      <widget alphatest="blend" pixmap="KartinaTV_skin/ico_format_on.png" position="960,18" render="Pixmap" size="36,20" source="session.CurrentService" zPosition="2">
+  <convert type="ServiceInfo">IsWidescreen</convert>
+  <convert type="ConditionalShowHide" />
+</widget>
+      <widget alphatest="blend" pixmap="KartinaTV_skin/ico_hd_off.png" position="1000,18" render="Pixmap" size="29,20" source="session.CurrentService" zPosition="1">
+  <convert type="ServiceInfo">VideoWidth</convert>
+  <convert type="ValueRange">0,720</convert>
+  <convert type="ConditionalShowHide" />
+</widget>
+      <widget alphatest="blend" pixmap="KartinaTV_skin/ico_hd_on.png" position="1000,18" render="Pixmap" size="29,20" source="session.CurrentService" zPosition="2">
+  <convert type="ServiceInfo">VideoWidth</convert>
+  <convert type="ValueRange">721,1980</convert>
+  <convert type="ConditionalShowHide" />
+</widget>
     </screen>
     <screen backgroundColor="#ff000000" flags="wfNoBorder" name="KartinaVideoPlayer" position="center,540" size="1182,172" title="IPTV">
       <ePixmap alphatest="blend" pixmap="KartinaTV_skin/infobar.png" position="0,0" size="1182,172" zPosition="-5" />

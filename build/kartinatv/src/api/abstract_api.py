@@ -31,7 +31,7 @@ class AbstractAPI:
 		self.packet_expire = None
 	
 	def getPiconName(self, cid):
-		return "%s_%s" % (self.iName, cid)
+		return "%s:%s:" % (self.iName, cid)
 	
 
 	def start(self):
