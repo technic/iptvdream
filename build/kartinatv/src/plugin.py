@@ -317,7 +317,7 @@ def atime():
 	else:
 		return None
 
-	
+
 rec_png = LoadPixmap(cached=True, path='/usr/share/enigma2/KartinaTV_skin/rec.png')
 EPG_UPDATE_INTERVAL = 60 #Seconds, in channel list.
 PROGRESS_TIMER = 1000*60 #Update progress in infobar.
@@ -340,10 +340,6 @@ MANUAL_ASPECT_RATIO = None
 if not os_path.exists(POSTER_PATH):
 	os_mkdir(POSTER_PATH)
 	
-def setServ(): #FIXME: why this function is here?
-	global SERVICE_KARTINA
-	SERVICE_KARTINA = cfg.service.value
-	print "[KartinaTV] ooooo", cfg.service.value
 
 def fakeReference(cid):
 	sref = eServiceReference(4112, 0, '') #these are fake references;) #always 4112 because of parental control
@@ -515,10 +511,6 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		self.__running = False			
 		self.current = self.NOCURR
 		self.oldcid = None
-		
-		#TODO: think more..
-		setServ()
-		print "[KartinaTV] Using service:", SERVICE_KARTINA
 		
 		global ktv
 		ktv = Ktv(cfg_prov.login.value, cfg_prov.password.value)
@@ -881,8 +873,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 		if not uri:
 			return 0
 		print "[KartinaTV] play", uri
-		setServ()
-		srv = SERVICE_KARTINA
+		srv = int(cfg.service.value)
 #		if not uri.startswith('http://'):
 #			srv = 4097
 		if uri.startswith('mms://'):
