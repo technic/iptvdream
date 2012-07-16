@@ -36,9 +36,10 @@ from Components.SelectionList import SelectionList
 from Screens.VirtualKeyBoard import VirtualKeyBoard as VirtualKeyBoard_generic
 from Tools.BoundFunction import boundFunction
 from enigma import eServiceReference, iServiceInformation, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, gFont, eTimer, iPlayableServicePtr, iStreamedServicePtr, getDesktop, eLabel, eSize, ePoint, getPrevAsciiCode, iPlayableService, ePicLoad
+from enigma import eDVBDB
 from Screens.Standby import TryQuitMainloop
 from Components.AVSwitch import AVSwitch
-from urllib import urlretrieve
+from urllib import urlretrieve, quote
 from Components.ParentalControl import parentalControl
 from threading import Thread, Lock, Condition
 from enigma import ePythonMessagePump, eBackgroundFileEraser
@@ -163,6 +164,7 @@ for afile in os_listdir(API_PREFIX + API_DIR):
 		config.iptvdream[aname].favourites = ConfigText(default="[]")
 		config.iptvdream[aname].service = ConfigSelection(SERVICE_LIST, '4112')
 		if _api.MODE == MODE_STREAM:
+			config.iptvdream[aname].inbouquet = ConfigYesNo(default=False)
 			config.iptvdream[aname].timeshift = ConfigInteger(0, (0,12) ) #FIXME: think about abstract...
 			config.iptvdream[aname].sortkey = ConfigSubDict()
 			config.iptvdream[aname].sortkey["all"] = ConfigInteger(1, (1,2))
@@ -231,6 +233,34 @@ def menuOpen(aname, menuid):
 	if menuid == "mainmenu" and config.iptvdream[aname].in_mainmenu.value:
 		return [(aname, boundFunction(AOpen, aname), "iptvdream_"+aname, -4)]
 	return []
+	
+def switchBouquets():
+	import re
+	added = []
+	fname = ENIGMA_CONF_PATH + '/bouquets.tv'
+	try:
+		f = open(fname)
+	except IOError:
+		return
+	f = f.readlines()
+	reg = '#SERVICE 1:7:1:0:0:0:0:0:0:0:FROM BOUQUET \"userbouquet\.(.*)\.tv\" ORDER BY bouquet'
+	mask = '#SERVICE 1:7:1:0:0:0:0:0:0:0:FROM BOUQUET \"userbouquet.%s.tv\" ORDER BY bouquet\n'
+	newf = []
+	for x in f:
+		r = re.match(reg, x)
+		if r:
+			bname = r.group(1)
+			added += [bname]
+			if apis.has_key(bname) and not config.iptvdream[bname].inbouquet.value:
+				print "[KartinaTV] removing %s from bouquets" % bname
+				continue
+		newf += [x]
+	for aname in apis:
+		if apis[aname].MODE == MODE_STREAM and config.iptvdream[aname].inbouquet.value and not aname in added:
+			print "[KartinaTV] adding %s to bouquets" % aname
+			newf += [mask % aname]
+	f = open(fname, 'w')
+	f.writelines(newf)
 
 class RunManager():
 	def __init__(self):
@@ -304,8 +334,53 @@ class RunManager():
 			self.instance.close()
 			self.__run_open = True
 			self.timer.start(1,1)
+	
+	def apiStart(self, aname):
+		assert not aname in self.started.keys()
+		conf = config.iptvdream[apis[aname].iProvider]
+		api = apis[aname](conf.login.value, conf.password.value)
+		api.start()
+		if api.MODE == MODE_STREAM:
+			api.setChannelsList()
+			if config.iptvdream[aname].inbouquet.value:
+				f = open(ENIGMA_CONF_PATH + '/userbouquet.%s.tv' % aname, 'w')
+				f.write('#NAME %s (iptvdream)\n' % api.iTitle)
+				mask = '#SERVICE 1:0:1:%X:%X:%X:0:0:%X:%X:%s:%s\n'
+				for cid in api.channels:
+					url = quote('http://127.0.0.1:9000/%s/%s' % (aname, cid))
+					f.write(mask % (10301, 3, 112, api.hashID, cid, url,  api.channels[cid].name))
+				f.close()
+				db = eDVBDB.getInstance()
+				db.reloadServicelist()
+				db.reloadBouquets()
+		self.started[aname] = api
+		return api
+	
+	def apiGetInstance(self, aname):
+		if not aname in self.started.keys():
+			return self.apiStart(aname)
+		else:
+			return self.started[aname]
 
+	def apiFailed(self, aname):
+		del self.started[aname]
 
+	def getStream(self, aname, cid, *args):
+		if not apis[aname].MODE == MODE_STREAM:
+			return None
+		def do_getStream():
+			api = self.apiGetInstance(aname)
+			return api.getStreamUrl(cid, *args)
+		try:
+			url = do_getStream()
+		except APIException:
+			self.apiFailed(aname)
+			try:
+				url = do_getStream()
+			except APIException:
+				self.apiFailed(aname)
+				return None
+		return url
 
 	def standbyCountChanged(self, configElement):
 		from Screens.Standby import inStandby
@@ -323,8 +398,13 @@ class RunManager():
 		if self.instance:
 			self.instance.leaveStandby()
 
+#start api runManager
 global runManager
-runManager = RunManager()	
+runManager = RunManager()
+#start server
+import server
+#setup bouqet list
+switchBouquets()
 
 #We need to save settings before shutdown.
 #Small hack here, sorry no alternative
@@ -527,13 +607,11 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		self.oldcid = None
 		
 		global ktv
-		ktv = Ktv(cfg_prov.login.value, cfg_prov.password.value)
 		
 		global bouquet
 		bouquet = BouquetManager()
-		try: #TODO: handle different exceptions
-			#XXX: This is critical for api developers!!!
-			ktv.start()
+		try:
+			ktv = runManager.apiGetInstance(runManager.aname)
 			self.safeGo()
 		except APIException as e:
 			print "[KartinaTV] ERROR login/init failed!"
@@ -2445,6 +2523,7 @@ class KartinaConfig(ConfigListScreen, Screen):
 		]
 		if apis[aname].MODE == MODE_STREAM:
 			cfglist.append(getConfigListEntry(_("Timeshift"), config.iptvdream[aname].timeshift))
+			cfglist.append(getConfigListEntry(_("Show in bouquets"), config.iptvdream[aname].inbouquet))
 		if apis[aname].HAS_PIN == True:
 			cfglist.append(getConfigListEntry(_("Auto send parental code"), config.iptvdream[aname].parental_code))
 			
