@@ -25,7 +25,6 @@ SPARK7162 =
 
 target = sh4-linux
 appsdir = ./
-enigmadir = $(duckbox_path)/tdt/cvs/apps/enigma2-nightly
 hostprefix = $(duckbox_path)/tdt/tufsbox/host
 targetprefix = $(duckbox_path)/tdt/tufsbox/cdkroot
 driverdir = $(duckbox_path)/tdt/cvs/driver
@@ -34,8 +33,6 @@ buildprefix = $(duckbox_path)/tdt/cvs/cdk
 KERNEL_DIR = linux-sh4
 crossprefix = $(duckbox_path)/tdt/tufsbox/devkit/sh4
 
-#Add paths to enigma2 modules.
-CPPFLAGS += -I$(enigmadir) -I$(enigmadir)/include
 
 PATH := $(hostprefix)/ccache-bin:$(crossprefix)/bin:$(PATH):/usr/sbin
 
@@ -62,7 +59,8 @@ $(appsdir)/build/config.status:
 			STAGING_INCDIR=$(hostprefix)/usr/include \
 			STAGING_LIBDIR=$(hostprefix)/usr/lib \
 			PKG_CONFIG=$(hostprefix)/bin/pkg-config \
-			PKG_CONFIG_PATH=$(targetprefix)/usr/lib/pkgconfig \
+			PKG_CONFIG_SYSROOT_DIR=$(targetprefix) \
+			PKG_CONFIG_LIBDIR=$(targetprefix)/usr/lib/pkgconfig \
 			PY_PATH=$(targetprefix)/usr \
 			$(if $(CUBEREVO),CPPFLAGS="$(CPPFLAGS) -DPLATFORM_CUBEREVO -I$(driverdir)/include -I $(buildprefix)/$(KERNEL_DIR)/include" --enable-cuberevo) \
 			$(if $(CUBEREVO_MINI),CPPFLAGS="$(CPPFLAGS) -DPLATFORM_CUBEREVO_MINI -I$(driverdir)/include -I $(buildprefix)/$(KERNEL_DIR)/include" --enable-cuberevo) \
