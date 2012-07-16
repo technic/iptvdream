@@ -14,7 +14,7 @@ from weter_api import WeterAPI
 import urllib #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 import datetime
-from Plugins.Extensions.KartinaTV.utils import tdSec, secTd, syncTime, Bouquet, Video, unescapeEntities
+from . import tdSec, secTd, syncTime, Bouquet, Video, unescapeEntities
 
 VIDEO_CACHING = True #TODO: cache...??
 
@@ -112,7 +112,7 @@ class Ktv(WeterAPI):
 	def getVideoUrl(self, fid):
 		params = {"fileid" : fid}
 		root = self.getData("/api/xml/vod_geturl?"+urllib.urlencode(params), "getting video url %s" % fid)
-		return root.find('url').text.encode('utf-8').split(' ')[0]
+		return root.find('url').text.encode('utf-8').split(' ')[0].replace('http/ts://', 'http://')
 	
 	def getVideoGenres(self):
 		root = self.getData("/api/xml/vod_genres?", "getting genres list")		
@@ -124,7 +124,7 @@ class Ktv(WeterAPI):
 		if local:
 			return self.videos[vid].image.split('/')[-1]
 		else:	
-			return  'http://iptv.kartina.tv/'+self.videos[vid].image
+			return self.site+self.videos[vid].image
 		
 	
 	def buildVideoBouquet(self):
