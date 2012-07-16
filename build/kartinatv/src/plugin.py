@@ -53,7 +53,7 @@ def parseColor(str): #FIXME: copy-paste form skin source
 			raise SkinError("color '%s' must be #aarrggbb or valid named color" % (str))
 	return int(str[1:], 0x10)
 
-from Tools.Directories import resolveFilename, SCOPE_CURRENT_SKIN
+from Tools.Directories import resolveFilename, SCOPE_CURRENT_SKIN, SCOPE_SKIN, SCOPE_SYSETC, SCOPE_CURRENT_PLUGIN
 from Components.GUIComponent import GUIComponent
 from Components.Sources.Boolean import Boolean
 from Components.Sources.StaticText import StaticText
@@ -63,7 +63,9 @@ from utils import Bouquet, BouquetManager, tdSec, secTd, syncTime, APIException
 #for localized messages
 from . import _
 
-SKIN_PATH = '/usr/share/enigma2/KartinaTV_skin'
+SKIN_PATH = resolveFilename(SCOPE_SKIN, 'KartinaTV_skin')
+ENIGMA_CONF_PATH = resolveFilename(SCOPE_SYSETC, 'enigma2')
+
 try:
 	sz_w = getDesktop(0).size().width()
 	print "[KartinaTV] skin width = ", sz_w
@@ -117,7 +119,7 @@ from os import path as os_path, listdir as os_listdir, mkdir as os_mkdir
 from Tools.Import import my_import
 from api.abstract_api import MODE_VIDEOS, MODE_STREAM
 PLUGIN_PREFIX = 'Plugins.Extensions.KartinaTV'
-API_PREFIX = '/usr/lib/enigma2/python/Plugins/Extensions/KartinaTV/'
+API_PREFIX = resolveFilename(SCOPE_CURRENT_PLUGIN, 'Extensions/KartinaTV/')
 API_DIR = 'api'
 API_NAME = 'Ktv'
 apis = {}
