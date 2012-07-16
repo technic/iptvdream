@@ -19,13 +19,13 @@ using namespace std;
 
 #define WINUNIX_FACTOR 10000000
 #define WINUNIX_DIFF 11644473600LL
-#define MOSCOW_TIME 14400
 
 static PyObject *
 jtvread_curr(PyObject *self, PyObject *args)
 {
 	static char *fname;
-	if (!PyArg_ParseTuple(args, "s", &fname))
+	long int time_offset;
+	if (!PyArg_ParseTuple(args, "sl", &fname, &time_offset))
 		return NULL;
 
 	int f2,f3;
@@ -62,7 +62,7 @@ jtvread_curr(PyObject *self, PyObject *args)
 //     data->tm_isdst = 0;
 //     time_t t2 = mktime(data);
 //     int gmtoffset = (t1 - t2);
-	long now = t + MOSCOW_TIME;
+	long now = t + time_offset;
 //	printf("tz %d\n", gmtoffset);
 
 	int a = 0;
