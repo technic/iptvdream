@@ -50,11 +50,10 @@ $(appsdir)/build/config.status:
 			--target=$(target) \
 			--host=$(target) \
 			--without-libsdl \
-			--with-datadir=/usr/local/share \
+			--with-datadir=/usr/share \
 			--with-libdir=/usr/lib \
 			--with-plugindir=/usr/lib/tuxbox/plugins \
 			--prefix=/usr \
-			--datadir=/usr/local/share \
 			--sysconfdir=/etc \
 			STAGING_INCDIR=$(hostprefix)/usr/include \
 			STAGING_LIBDIR=$(hostprefix)/usr/lib \
