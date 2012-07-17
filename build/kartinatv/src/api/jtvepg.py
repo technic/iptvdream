@@ -11,7 +11,6 @@
 from datetime import datetime
 import urllib
 from . import tdSec, secTd, setSyncTime, syncTime, EpgEntry, Channel, APIException, jtvreader
-from jtvreader import read as jtv_read, current as jtv_current
 import os
 
 EPG_ZIP = '/tmp/jtv.zip'
@@ -30,23 +29,23 @@ class JTVEpg:
 		return "%s_%s" % (self.iName, self.channels[cid].name)
 	
 	def getChannelsEpg(self, cids):
-		for cid in cids:
-			self.getCurrentEpg(cid)
+		map(self.getCurrentEpg, cids)
 	
 	def getCurrentEpg(self, cid):
-		f = self.channels[cid].name
-		f = f.encode('CP866').replace(' ', '_')
+		f = self.channels[cid].epg_name
+#		print f
+		f = f.decode('utf-8').encode('CP866').replace(' ', '_')
 		fname = EPG_DIR + f
 		try:
-			jtv = jtv_current(fname)
+			jtv = jtvreader.current(fname, deltat)
 		except IOError as e:
 			if e[0] == 2:
-				self.trace('epg fail for %s (possible encoding problem)' % self.channels[cid].name)
+#				self.trace('epg fail for %s (possible encoding problem)' % self.channels[cid].epg_name)
 				return -1
 			else:
 				raise(e)
 		lepg = [EpgEntry(x[1].encode('utf-8'), datetime.fromtimestamp(x[0]-deltat), None) for x in jtv]
-		print jtv
+#		print jtv
 		if datetime.fromtimestamp(jtv[0][0]-deltat) > syncTime() and self.act_url == urlnew:
 			self.act_url = urlold
 			self.load_epg()
@@ -73,12 +72,12 @@ class JTVEpg:
 		os.system(cmd)
 		
 	def getDayEpg(self, cid, date):
-		f = self.channels[cid].name
+		f = self.channels[cid].epg_name
 		f = f.encode('CP866').replace(' ', '_')
 		fname = EPG_DIR + f
 		self.trace("epg for cid %s" % cid)
 		try:
-			jtv = jtv_read(fname)
+			jtv = jtvreader.read(fname, deltat)
 		except:
 			return -1
 		lepg = [EpgEntry(x[1].encode('utf-8'), datetime.fromtimestamp(x[0]-deltat), None) for x in jtv]
