@@ -12,7 +12,7 @@
 #using external player by A. Latsch & Dr. Best (c)
 #substantially improved by technic(c) for KartinaTV/RodnoeTV compatibility and buffering possibility!!!
 import servicewebts
-SERVICE_LIST = [(1, "dmm ts"), (4097, "gstreamer"), (4112, "technic ts"), (4114, "partnerbox")]
+SERVICE_LIST = [('1', "dmm ts (1)"), ('4097', "gstreamer (4097)"), ('4112', "technic ts (4112)"), ('4114', "partnerbox (4114)")]
 
 from Plugins.Plugin import PluginDescriptor
 from Screens.Screen import Screen
@@ -36,9 +36,10 @@ from Components.SelectionList import SelectionList
 from Screens.VirtualKeyBoard import VirtualKeyBoard as VirtualKeyBoard_generic
 from Tools.BoundFunction import boundFunction
 from enigma import eServiceReference, iServiceInformation, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, gFont, eTimer, iPlayableServicePtr, iStreamedServicePtr, getDesktop, eLabel, eSize, ePoint, getPrevAsciiCode, iPlayableService, ePicLoad
+from enigma import eDVBDB
 from Screens.Standby import TryQuitMainloop
 from Components.AVSwitch import AVSwitch
-from urllib import urlretrieve
+from urllib import urlretrieve, quote
 from Components.ParentalControl import parentalControl
 from threading import Thread, Lock, Condition
 from enigma import ePythonMessagePump, eBackgroundFileEraser
@@ -53,7 +54,7 @@ def parseColor(str): #FIXME: copy-paste form skin source
 			raise SkinError("color '%s' must be #aarrggbb or valid named color" % (str))
 	return int(str[1:], 0x10)
 
-from Tools.Directories import resolveFilename, SCOPE_CURRENT_SKIN
+from Tools.Directories import resolveFilename, SCOPE_CURRENT_SKIN, SCOPE_SKIN, SCOPE_SYSETC, SCOPE_CURRENT_PLUGIN
 from Components.GUIComponent import GUIComponent
 from Components.Sources.Boolean import Boolean
 from Components.Sources.StaticText import StaticText
@@ -63,7 +64,9 @@ from utils import Bouquet, BouquetManager, tdSec, secTd, syncTime, APIException
 #for localized messages
 from . import _
 
-SKIN_PATH = '/usr/share/enigma2/KartinaTV_skin'
+SKIN_PATH = resolveFilename(SCOPE_SKIN, 'KartinaTV_skin')
+ENIGMA_CONF_PATH = resolveFilename(SCOPE_SYSETC, 'enigma2')
+
 try:
 	sz_w = getDesktop(0).size().width()
 	print "[KartinaTV] skin width = ", sz_w
@@ -119,7 +122,7 @@ from os import path as os_path, listdir as os_listdir, mkdir as os_mkdir
 from Tools.Import import my_import
 from api.abstract_api import MODE_VIDEOS, MODE_STREAM
 PLUGIN_PREFIX = 'Plugins.Extensions.KartinaTV'
-API_PREFIX = '/usr/lib/enigma2/python/Plugins/Extensions/KartinaTV/'
+API_PREFIX = resolveFilename(SCOPE_CURRENT_PLUGIN, 'Extensions/KartinaTV/')
 API_DIR = 'api'
 API_NAME = 'Ktv'
 apis = {}
@@ -145,7 +148,7 @@ for afile in os_listdir(API_PREFIX + API_DIR):
 		aname = _api.iName
 		if _api.iTitle is None:
 			_api.iTitle = _api.iName
-		apis[aname] = (_api, aprov)
+		apis[aname] = _api
 		if not aprov in api_providers:
 			api_providers += [aprov]
 		#create config
@@ -161,8 +164,9 @@ for afile in os_listdir(API_PREFIX + API_DIR):
 		config.iptvdream[aname].lastroot = ConfigText(default="[]")
 		config.iptvdream[aname].lastcid = ConfigInteger(0, (0,1000))
 		config.iptvdream[aname].favourites = ConfigText(default="[]")
-		config.iptvdream[aname].service = ConfigSelection(SERVICE_LIST, 4112)
+		config.iptvdream[aname].service = ConfigSelection(SERVICE_LIST, '4112')
 		if _api.MODE == MODE_STREAM:
+			config.iptvdream[aname].inbouquet = ConfigYesNo(default=False)
 			config.iptvdream[aname].timeshift = ConfigInteger(0, (0,12) ) #FIXME: think about abstract...
 			config.iptvdream[aname].sortkey = ConfigSubDict()
 			config.iptvdream[aname].sortkey["all"] = ConfigInteger(1, (1,2))
@@ -181,7 +185,7 @@ def Plugins(path, **kwargs):
 	res = []
 	for aname in apis.keys():
 		res += [
-		PluginDescriptor(name=apis[aname][0].iTitle, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = boundFunction(AOpen, aname), icon=aname+".png" ),
+		PluginDescriptor(name=apis[aname].iTitle, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = boundFunction(AOpen, aname), icon=aname+".png" ),
 		PluginDescriptor(name=aname, description="IPtvDream plugin by technic", where = PluginDescriptor.WHERE_MENU, fnc = boundFunction(menuOpen, aname) )]
 	res.append(PluginDescriptor(name="IPtvDream config", description="Configure all IPtvDream services", where = PluginDescriptor.WHERE_PLUGINMENU, fnc = selectConfig, icon="iptvdream.png" ))
 	return res
@@ -232,56 +236,96 @@ def menuOpen(aname, menuid):
 	if menuid == "mainmenu" and config.iptvdream[aname].in_mainmenu.value:
 		return [(aname, boundFunction(AOpen, aname), "iptvdream_"+aname, -4)]
 	return []
+	
+def switchBouquets():
+	import re
+	added = []
+	fname = ENIGMA_CONF_PATH + '/bouquets.tv'
+	try:
+		f = open(fname)
+	except IOError:
+		return
+	f = f.readlines()
+	reg = '#SERVICE 1:7:1:0:0:0:0:0:0:0:FROM BOUQUET \"userbouquet\.(.*)\.tv\" ORDER BY bouquet'
+	mask = '#SERVICE 1:7:1:0:0:0:0:0:0:0:FROM BOUQUET \"userbouquet.%s.tv\" ORDER BY bouquet\n'
+	newf = []
+	for x in f:
+		r = re.match(reg, x)
+		if r:
+			bname = r.group(1)
+			added += [bname]
+			if apis.has_key(bname) and not config.iptvdream[bname].inbouquet.value:
+				print "[KartinaTV] removing %s from bouquets" % bname
+				continue
+		newf += [x]
+	for aname in apis:
+		if apis[aname].MODE == MODE_STREAM and config.iptvdream[aname].inbouquet.value and not aname in added:
+			print "[KartinaTV] adding %s to bouquets" % aname
+			newf += [mask % aname]
+	f = open(fname, 'w')
+	f.writelines(newf)
 
 class RunManager():
 	def __init__(self):
 		self.session = None
+		#Timer to avoid modal open exceptions
 		self.timer = eTimer()
 		self.timer.callback.append(self._recursiveClose)
+		#Standby notifier!!
+		config.misc.standbyCounter.addNotifier(self.standbyCountChanged, initial_call = False)
+		self.aname = None
+		#started apis
+		self.started = {}
 	
+	#Player main gui instance
+	def _get_kartina_instance(self):
+		return KartinaPlayer.instance
+	instance = property(_get_kartina_instance)
+	
+	#Gui is running
 	def running(self):
-		return KartinaPlayer.instance != None
+		return self.instance != None
 	
+	#TODO: fix session staff
 	def init(self, session):
 		if not self.session:
 			self.session = session
 	
+	#Open gui
 	def run(self, aname):
+		if self.aname == aname:
+			print "[KartinaTV] %s already running" % aname
+			return
 		self.aname = aname
 		if self.running():
-			if Ktv.iName == aname:
-				print "[KartinaTV] %s already running" % aname
-				return 
 			print "[KartinaTV] try close recursive to KartinaPlayer"
 			self.startRecClose()
-#			if not res:
-#				print "[KartinaTV] recursiveClose failed!!"
-#				return
 		else:
 			self.open()
 	
 	def open(self):
-		aname = self.aname	
+		aname = self.aname
 		global Ktv, cfg, cfg_prov, favouritesList
-		Ktv = apis[aname][0]
+		Ktv = apis[aname]
 		cfg = config.iptvdream[aname]
-		cfg_prov = config.iptvdream[apis[aname][1]]
+		cfg_prov = config.iptvdream[apis[aname].iProvider]
 		favouritesList = eval(cfg.favourites.value)
 		if Ktv.MODE == MODE_STREAM:
 			self.session.open(KartinaStreamPlayer)
 		elif Ktv.MODE == MODE_VIDEOS:
 			self.session.open(KartinaVideoPlayer)
 	
+	#close all dialogs till KartinaPlayer
 	def startRecClose(self):
 		self.__run_open = False
 		assert self.running()
 		self._recursiveClose()		  	
 		
-	def _recursiveClose(self): #close all dialogs till KartinaPlayer
+	def _recursiveClose(self):
 		#This may crash if retval needed
 		if self.__run_open:
 			self.open()
-		elif self.session.current_dialog != KartinaPlayer.instance:
+		elif self.session.current_dialog != self.instance:
 			print "[KartinaTV] closing", self.session.in_exec, self.session.current_dialog 
 			try:
 				self.session.close(self.session.current_dialog)
@@ -290,12 +334,80 @@ class RunManager():
 				return
 			self.timer.start(1,1)		
 		else:
-			KartinaPlayer.instance.close()
+			self.instance.close()
 			self.__run_open = True
 			self.timer.start(1,1)
+	
+	def apiStart(self, aname):
+		assert not aname in self.started.keys()
+		conf = config.iptvdream[apis[aname].iProvider]
+		api = apis[aname](conf.login.value, conf.password.value)
+		api.start()
+		if api.MODE == MODE_STREAM:
+			api.setChannelsList()
+			if config.iptvdream[aname].inbouquet.value:
+				f = open(ENIGMA_CONF_PATH + '/userbouquet.%s.tv' % aname, 'w')
+				f.write('#NAME %s (iptvdream)\n' % api.iTitle)
+				mask = '#SERVICE 1:0:1:%X:%X:%X:0:0:%X:%X:%s:%s\n'
+				for cid in api.channels:
+					url = quote('http://127.0.0.1:9000/%s/%s' % (aname, cid))
+					f.write(mask % (10301, 3, 112, api.hashID, cid, url,  api.channels[cid].name))
+				f.close()
+				db = eDVBDB.getInstance()
+				db.reloadServicelist()
+				db.reloadBouquets()
+		self.started[aname] = api
+		return api
+	
+	def apiGetInstance(self, aname):
+		if not aname in self.started.keys():
+			return self.apiStart(aname)
+		else:
+			return self.started[aname]
 
+	def apiFailed(self, aname):
+		del self.started[aname]
+
+	def getStream(self, aname, cid, *args):
+		if not apis[aname].MODE == MODE_STREAM:
+			return None
+		def do_getStream():
+			api = self.apiGetInstance(aname)
+			return api.getStreamUrl(cid, *args)
+		try:
+			url = do_getStream()
+		except APIException:
+			self.apiFailed(aname)
+			try:
+				url = do_getStream()
+			except APIException:
+				self.apiFailed(aname)
+				return None
+		return url
+
+	def standbyCountChanged(self, configElement):
+		from Screens.Standby import inStandby
+		#FIXME: this is hack!!!
+		self.inStandby_cached = inStandby #inStanby resets to None before our onClose :(
+		#TODO: think more when run.
+		print "[KaritinaTV] add standby callback"
+		inStandby.onClose.append(self.leaveStandby)
+
+	#you can use this function to handle standby events ;)
+	def leaveStandby(self):
+		#next calls of inStandby.close() should not try to run KartinaPlayer.play()
+		self.inStandby_cached.onClose.pop()
+		print "[KartinaTV] debug:", self.inStandby_cached.onClose
+		if self.instance:
+			self.instance.leaveStandby()
+
+#start api runManager
 global runManager
-runManager = RunManager()	
+runManager = RunManager()
+#start server
+import server
+#setup bouqet list
+switchBouquets()
 
 #We need to save settings before shutdown.
 #Small hack here, sorry no alternative
@@ -303,7 +415,7 @@ orig_fnc = TryQuitMainloop.close
 def edited_fnc(obj, value):
 	if value and runManager.running():
 		"[KartinaTV] shutting down... doExit()"
-		KartinaPlayer.instance.doExit()
+		runManager.instance.doExit()
 	orig_fnc(obj, value)
 TryQuitMainloop.close = edited_fnc
 
@@ -318,7 +430,7 @@ def atime():
 	else:
 		return None
 
-	
+
 rec_png = LoadPixmap(cached=True, path='/usr/share/enigma2/KartinaTV_skin/rec.png')
 EPG_UPDATE_INTERVAL = 60 #Seconds, in channel list.
 PROGRESS_TIMER = 1000*60 #Update progress in infobar.
@@ -341,10 +453,6 @@ MANUAL_ASPECT_RATIO = None
 if not os_path.exists(POSTER_PATH):
 	os_mkdir(POSTER_PATH)
 	
-def setServ(): #FIXME: why this function is here?
-	global SERVICE_KARTINA
-	SERVICE_KARTINA = cfg.service.value
-	print "[KartinaTV] ooooo", cfg.service.value
 
 def fakeReference(cid):
 	sref = eServiceReference(4112, 0, '') #these are fake references;) #always 4112 because of parental control
@@ -459,9 +567,6 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		self.oldService = self.session.nav.getCurrentlyPlayingServiceReference()
 		self.oldAspectRatio = (config.av.policy_169.value, config.av.policy_43.value)
 		
-		#Standby notifier!!
-		config.misc.standbyCounter.addNotifier(self.standbyCountChanged, initial_call = False)
-		
 		self.onClose.append(self.__onClose)
 		self.onShown.append(self.start)
 	
@@ -471,26 +576,13 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 	
 	def event_seek(self):
 		pass
-
-	#TODO: Standby should be out of Player class
-	def standbyCountChanged(self, configElement):
-		from Screens.Standby import inStandby
-		#FIXME: this is hack!!!
-		self.inStandby_cached = inStandby #inStanby resets to None before our onClose :(
-		#TODO: think more when run.
-		print "[KaritinaTV] add standby callback"
-		inStandby.onClose.append(self.leaveStandby)
 	
 	#you can use this function to handle standby events ;)
-	def leaveStandby(self):	
-		#next calls of inStandby.close() should not try to run KartinaPlayer.play() 
-		self.inStandby_cached.onClose.pop()
-		print "[KartinaTV] debug:", self.inStandby_cached.onClose
-		
+	def leaveStandby(self):
+		pass
 	
 	def __onClose(self):
 		print "[KartinaTV] closing"
-		config.misc.standbyCounter.notifiers.remove(self.standbyCountChanged)
 		KartinaPlayer.instance = None
 		print "[KartinaTV] set instance to None"
 		if MANUAL_ASPECT_RATIO:
@@ -517,18 +609,12 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		self.current = self.NOCURR
 		self.oldcid = None
 		
-		#TODO: think more..
-		setServ()
-		print "[KartinaTV] Using service:", SERVICE_KARTINA
-		
 		global ktv
-		ktv = Ktv(cfg_prov.login.value, cfg_prov.password.value)
 		
 		global bouquet
 		bouquet = BouquetManager()
-		try: #TODO: handle different exceptions
-			#XXX: This is critical for api developers!!!
-			ktv.start()
+		try:
+			ktv = runManager.apiGetInstance(runManager.aname)
 			self.safeGo()
 		except APIException as e:
 			print "[KartinaTV] ERROR login/init failed!"
@@ -882,8 +968,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 		if not uri:
 			return 0
 		print "[KartinaTV] play", uri
-		setServ()
-		srv = SERVICE_KARTINA
+		srv = int(cfg.service.value)
 #		if not uri.startswith('http://'):
 #			srv = 4097
 		if uri.startswith('mms://'):
@@ -2378,7 +2463,7 @@ def startConifg(session, aname):
 def configEnded(session, aname, changed = False):
 	print "[KartinaTV] config ended for", aname
 	
-	if KartinaPlayer.instance and (Ktv.iName == aname or Ktv.iProvider == apis[aname][1]):
+	if KartinaPlayer.instance and (Ktv.iName == aname or Ktv.iProvider == apis[aname].iProvider):
 		#We are telling KartinaPlayer to restart if config changed
 		#If it fails, we are asking for next try.
 		if changed:
@@ -2427,7 +2512,7 @@ class KartinaConfig(ConfigListScreen, Screen):
 		}, -2)
 		
 		self.aname = aname
-		self.aprov = apis[aname][1]
+		self.aprov = apis[aname].iProvider
 
 		self["key_red"] = Button(_("Cancel"))
 		self["key_green"] = Button(_("OK"))
@@ -2439,9 +2524,10 @@ class KartinaConfig(ConfigListScreen, Screen):
 			getConfigListEntry(_("Service (player) id"), config.iptvdream[aname].service),
 			getConfigListEntry(_("Buffering time, milliseconds"), config.plugins.KartinaTv.buftime)
 		]
-		if apis[aname][0].MODE == MODE_STREAM:
+		if apis[aname].MODE == MODE_STREAM:
 			cfglist.append(getConfigListEntry(_("Timeshift"), config.iptvdream[aname].timeshift))
-		if apis[aname][0].HAS_PIN == True:
+			cfglist.append(getConfigListEntry(_("Show in bouquets"), config.iptvdream[aname].inbouquet))
+		if apis[aname].HAS_PIN == True:
 			cfglist.append(getConfigListEntry(_("Auto send parental code"), config.iptvdream[aname].parental_code))
 			
 		ConfigListScreen.__init__(self, cfglist, session)
