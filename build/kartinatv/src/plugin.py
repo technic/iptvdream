@@ -345,7 +345,7 @@ class RunManager():
 			if config.iptvdream[aname].inbouquet.value:
 				f = open(ENIGMA_CONF_PATH + '/userbouquet.%s.tv' % aname, 'w')
 				f.write('#NAME %s (iptvdream)\n' % api.iTitle)
-				mask = '#SERVICE 1:0:1:%X:%X:%X:0:0:%X:%X:%s:%s\n'
+				mask = '#SERVICE 1:0:1:%X:%X:%X:0:%X:0:%X:%s:%s\n'
 				for cid in api.channels:
 					url = quote('http://127.0.0.1:9000/%s/%s' % (aname, cid))
 					f.write(mask % (10301, 3, 112, api.hashID, cid, url,  api.channels[cid].name))
