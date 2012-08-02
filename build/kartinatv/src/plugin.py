@@ -290,7 +290,7 @@ class RunManager():
 	
 	#Open gui
 	def run(self, aname):
-		if self.aname == aname:
+		if self.aname == aname and self.running():
 			print "[KartinaTV] %s already running" % aname
 			return
 		self.aname = aname
