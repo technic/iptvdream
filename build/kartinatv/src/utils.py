@@ -255,8 +255,8 @@ class Bouquet():
 			self.index -= 1
 	
 	def sortByKey(self, keyn):
-		print "[KartinaTV] sorting", self.name, keyn 
 		if keyn == self.sortedkey: return
+		print "[KartinaTV] sorting", self.name, keyn
 		if keyn == 1:
 			self.__content.sort(key= attrgetter('key1'))
 			self.sortedkey = keyn
