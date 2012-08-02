@@ -2490,12 +2490,12 @@ def editConfig(edit):
 
 class KartinaConfig(ConfigListScreen, Screen):
 	skin = """
-		<screen name="KartinaConfig" position="center,center" size="550,250" title="IPTV">
-			<widget name="config" position="20,10" size="520,150" scrollbarMode="showOnDemand" />
+		<screen name="KartinaConfig" position="center,center" size="550,280" title="IPTV">
+			<widget name="config" position="20,10" size="520,220" scrollbarMode="showOnDemand" />
 			<ePixmap name="red"	position="0,200" zPosition="4" size="140,40" pixmap="skin_default/buttons/red.png" transparent="1" alphatest="on" />
 			<ePixmap name="green" position="140,200" zPosition="4" size="140,40" pixmap="skin_default/buttons/green.png" transparent="1" alphatest="on" />
-			<widget name="key_red" position="0,200" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
-			<widget name="key_green" position="140,200" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
+			<widget name="key_red" position="0,230" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
+			<widget name="key_green" position="140,230" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
 		</screen>"""
 	
 	def __init__(self, session, aname):
