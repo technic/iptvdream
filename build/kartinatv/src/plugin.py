@@ -13,6 +13,7 @@
 #substantially improved by technic(c) for KartinaTV/RodnoeTV compatibility and buffering possibility!!!
 import servicewebts
 SERVICE_LIST = [('1', "dmm ts (1)"), ('4097', "gstreamer (4097)"), ('4112', "technic ts (4112)"), ('4114', "partnerbox (4114)")]
+SERVICE_DEFAULT = '4112'
 
 from Plugins.Plugin import PluginDescriptor
 from Screens.Screen import Screen
@@ -162,7 +163,7 @@ for afile in os_listdir(API_PREFIX + API_DIR):
 		config.iptvdream[aname].lastroot = ConfigText(default="[]")
 		config.iptvdream[aname].lastcid = ConfigInteger(0, (0,1000))
 		config.iptvdream[aname].favourites = ConfigText(default="[]")
-		config.iptvdream[aname].service = ConfigSelection(SERVICE_LIST, '4112')
+		config.iptvdream[aname].service = ConfigSelection(SERVICE_LIST, SERVICE_DEFAULT)
 		if _api.MODE == MODE_STREAM:
 			config.iptvdream[aname].inbouquet = ConfigYesNo(default=False)
 			config.iptvdream[aname].timeshift = ConfigInteger(0, (0,12) ) #FIXME: think about abstract...
@@ -2492,8 +2493,8 @@ class KartinaConfig(ConfigListScreen, Screen):
 	skin = """
 		<screen name="KartinaConfig" position="center,center" size="550,280" title="IPTV">
 			<widget name="config" position="20,10" size="520,220" scrollbarMode="showOnDemand" />
-			<ePixmap name="red"	position="0,200" zPosition="4" size="140,40" pixmap="skin_default/buttons/red.png" transparent="1" alphatest="on" />
-			<ePixmap name="green" position="140,200" zPosition="4" size="140,40" pixmap="skin_default/buttons/green.png" transparent="1" alphatest="on" />
+			<ePixmap name="red"	position="0,230" zPosition="4" size="140,40" pixmap="skin_default/buttons/red.png" transparent="1" alphatest="on" />
+			<ePixmap name="green" position="140,230" zPosition="4" size="140,40" pixmap="skin_default/buttons/green.png" transparent="1" alphatest="on" />
 			<widget name="key_red" position="0,230" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
 			<widget name="key_green" position="140,230" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
 		</screen>"""
