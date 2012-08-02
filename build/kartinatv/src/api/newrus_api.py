@@ -112,6 +112,7 @@ class API(AbstractAPI):
 			except:
 				raise APIException("Failed to parse json response")
 			if reply.has_key("error"):
+				err = reply["error"]
 				raise APIException(err['code'].encode('utf-8')+" "+err['message'].encode('utf-8'))
 		
 		self.SID = True
