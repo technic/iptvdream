@@ -28,14 +28,23 @@ class JTVEpg:
 	def getPiconName(self, cid):
 		return "%s_%s" % (self.iName, self.channels[cid].name)
 	
+	def getFname(self, cid):
+		f = self.channels[cid].epg_name
+		try:
+			if isinstance(f, unicode):
+				f = f.decode('utf-8')
+			f = f.encode('CP866')
+			f = EPG_DIR + f
+		except (UnicodeDecodeError, UnicodeEncodeError):
+			pass
+		return f
+
+	
 	def getChannelsEpg(self, cids):
 		map(self.getCurrentEpg, cids)
 	
 	def getCurrentEpg(self, cid):
-		f = self.channels[cid].epg_name
-#		print f
-		f = f.decode('utf-8').encode('CP866').replace(' ', '_')
-		fname = EPG_DIR + f
+		fname = self.getFname(cid)
 		try:
 			jtv = jtvreader.current(fname, deltat)
 		except IOError as e:
@@ -72,9 +81,7 @@ class JTVEpg:
 		os.system(cmd)
 		
 	def getDayEpg(self, cid, date):
-		f = self.channels[cid].epg_name
-		f = f.encode('CP866').replace(' ', '_')
-		fname = EPG_DIR + f
+		fname = self.getFname(cid)
 		self.trace("epg for cid %s" % cid)
 		try:
 			jtv = jtvreader.read(fname, deltat)
