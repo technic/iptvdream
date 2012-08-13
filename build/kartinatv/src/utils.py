@@ -480,11 +480,16 @@ class SettEntry():
 		self.name = name
 		if not len(vallist): vallist = None
 		try:
-			if not vallist: value = int(value)
+			if not vallist:
+				value = int(value)
+			else:
+				value = str(value)
 		except:
 			pass
 		self.value = value
 		i = 0
+		if vallist:
+			vallist = map(lambda x: isinstance(x, int) and str(x) or x, vallist)
 		self.vallist = vallist
 		self.limits = limits or (-9999, 9999)
 	
