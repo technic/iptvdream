@@ -166,7 +166,6 @@ for afile in os_listdir(API_PREFIX + API_DIR):
 		config.iptvdream[aname].service = ConfigSelection(SERVICE_LIST, SERVICE_DEFAULT)
 		if _api.MODE == MODE_STREAM:
 			config.iptvdream[aname].inbouquet = ConfigYesNo(default=False)
-			config.iptvdream[aname].timeshift = ConfigInteger(0, (0,12) ) #FIXME: think about abstract...
 			config.iptvdream[aname].sortkey = ConfigSubDict()
 			config.iptvdream[aname].sortkey["all"] = ConfigInteger(1, (1,2))
 			config.iptvdream[aname].sortkey["By group"] = ConfigInteger(1, (1,2))
@@ -860,10 +859,6 @@ class KartinaStreamPlayer(KartinaPlayer):
 		#TODO: think more about if check
 		if bouquet and KartinaPlayer.instance: #Don't run if plugin closed
 			self.play() #in standby stream stops, so we need reconnect..
-	
-	def safeGo(self):
-		ktv.setTimeShift(cfg.timeshift.value)
-		ktv.setChannelsList()
 	
 	def doGo(self):
 		#init bouquets
@@ -2529,7 +2524,6 @@ class KartinaConfig(ConfigListScreen, Screen):
 			getConfigListEntry(_("Buffering time, milliseconds"), config.plugins.KartinaTv.buftime)
 		]
 		if apis[aname].MODE == MODE_STREAM:
-			cfglist.append(getConfigListEntry(_("Timeshift"), config.iptvdream[aname].timeshift))
 			cfglist.append(getConfigListEntry(_("Show in bouquets"), config.iptvdream[aname].inbouquet))
 		if apis[aname].HAS_PIN == True:
 			cfglist.append(getConfigListEntry(_("Auto send parental code"), config.iptvdream[aname].parental_code))
@@ -2584,7 +2578,12 @@ class RemoteConfig(ConfigListScreen, Screen):
 			if x[1].isChanged():
 				print "[KartinaTV] setting to push:", x[0], x[1].value
 				topush.append((x[0], x[1].value))
-		ktv.pushSettings(topush)
+		try:
+			ktv.pushSettings(topush)
+		except APIException as e:
+				print "[KartinaTV] Error: push settings failed!"
+				self.session.open(MessageBox, _("Failed to save settings")+"\n"
+				+str(e), type = MessageBox.TYPE_ERROR, timeout = 5)
 		self.close()
 
 #gettext HACK:
