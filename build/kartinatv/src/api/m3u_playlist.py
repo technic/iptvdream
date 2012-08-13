@@ -34,6 +34,7 @@ class Playlist(AbstractAPI, AbstractStream):
 		pass
 
 	def setChannelsList(self):
+		self.channels = {}
 		for fname in listdir(DIRECTORY):
 			if fname.endswith('.m3u'):
 				self.loadFile(path.join(DIRECTORY, fname))
@@ -69,13 +70,9 @@ class M3UReader():
 				if not needinfo or not (line.find(',') > -1):
 					raise APIException("Error while parsing m3u file at line %s" % linen+1)
 				title = line.split(',')[1]
-				if title.find(' - ') > -1:
-					title = title.partition(' - ')
-					name = title[2]
-					group = title[0]
-				else:
-					name = title
-					group = default_group
+				name = title
+				group = default_group
+				name = name.strip()
 				epginfo = tvgregexp.match(line)
 				if epginfo:
 					epginfo = epginfo.group(1)

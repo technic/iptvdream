@@ -13,6 +13,7 @@
 #substantially improved by technic(c) for KartinaTV/RodnoeTV compatibility and buffering possibility!!!
 import servicewebts
 SERVICE_LIST = [('1', "dmm ts (1)"), ('4097', "gstreamer (4097)"), ('4112', "technic ts (4112)"), ('4114', "partnerbox (4114)")]
+SERVICE_DEFAULT = '4112'
 
 from Plugins.Plugin import PluginDescriptor
 from Screens.Screen import Screen
@@ -164,10 +165,9 @@ for afile in os_listdir(API_PREFIX + API_DIR):
 		config.iptvdream[aname].lastroot = ConfigText(default="[]")
 		config.iptvdream[aname].lastcid = ConfigInteger(0, (0,1000))
 		config.iptvdream[aname].favourites = ConfigText(default="[]")
-		config.iptvdream[aname].service = ConfigSelection(SERVICE_LIST, '4112')
+		config.iptvdream[aname].service = ConfigSelection(SERVICE_LIST, SERVICE_DEFAULT)
 		if _api.MODE == MODE_STREAM:
 			config.iptvdream[aname].inbouquet = ConfigYesNo(default=False)
-			config.iptvdream[aname].timeshift = ConfigInteger(0, (0,12) ) #FIXME: think about abstract...
 			config.iptvdream[aname].sortkey = ConfigSubDict()
 			config.iptvdream[aname].sortkey["all"] = ConfigInteger(1, (1,2))
 			config.iptvdream[aname].sortkey["By group"] = ConfigInteger(1, (1,2))
@@ -293,7 +293,7 @@ class RunManager():
 	
 	#Open gui
 	def run(self, aname):
-		if self.aname == aname:
+		if self.aname == aname and self.running():
 			print "[KartinaTV] %s already running" % aname
 			return
 		self.aname = aname
@@ -348,7 +348,7 @@ class RunManager():
 			if config.iptvdream[aname].inbouquet.value:
 				f = open(ENIGMA_CONF_PATH + '/userbouquet.%s.tv' % aname, 'w')
 				f.write('#NAME %s (iptvdream)\n' % api.iTitle)
-				mask = '#SERVICE 1:0:1:%X:%X:%X:0:0:%X:%X:%s:%s\n'
+				mask = '#SERVICE 1:0:1:%X:%X:%X:0:%X:0:%X:%s:%s\n'
 				for cid in api.channels:
 					url = quote('http://127.0.0.1:9000/%s/%s' % (aname, cid))
 					f.write(mask % (10301, 3, 112, api.hashID, cid, url,  api.channels[cid].name))
@@ -613,13 +613,19 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		
 		global bouquet
 		bouquet = BouquetManager()
+		
+		def processException():
+			print "[KartinaTV] ERROR login/init failed!"
+			self.last_error = str(e)
+			print e
 		try:
 			ktv = runManager.apiGetInstance(runManager.aname)
 			self.safeGo()
 		except APIException as e:
-			print "[KartinaTV] ERROR login/init failed!"
-			self.last_error = str(e)
-			print e
+			processException()
+			return False
+		except Exception as e:
+			processException()
 			return False
 		self.doGo()
 		self.__running = True
@@ -856,10 +862,6 @@ class KartinaStreamPlayer(KartinaPlayer):
 		#TODO: think more about if check
 		if bouquet and KartinaPlayer.instance: #Don't run if plugin closed
 			self.play() #in standby stream stops, so we need reconnect..
-	
-	def safeGo(self):
-		ktv.setTimeShift(cfg.timeshift.value)
-		ktv.setChannelsList()
 	
 	def doGo(self):
 		#init bouquets
@@ -2493,12 +2495,12 @@ def editConfig(edit):
 
 class KartinaConfig(ConfigListScreen, Screen):
 	skin = """
-		<screen name="KartinaConfig" position="center,center" size="550,250" title="IPTV">
-			<widget name="config" position="20,10" size="520,150" scrollbarMode="showOnDemand" />
-			<ePixmap name="red"	position="0,200" zPosition="4" size="140,40" pixmap="skin_default/buttons/red.png" transparent="1" alphatest="on" />
-			<ePixmap name="green" position="140,200" zPosition="4" size="140,40" pixmap="skin_default/buttons/green.png" transparent="1" alphatest="on" />
-			<widget name="key_red" position="0,200" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
-			<widget name="key_green" position="140,200" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
+		<screen name="KartinaConfig" position="center,center" size="550,280" title="IPTV">
+			<widget name="config" position="20,10" size="520,220" scrollbarMode="showOnDemand" />
+			<ePixmap name="red"	position="0,230" zPosition="4" size="140,40" pixmap="skin_default/buttons/red.png" transparent="1" alphatest="on" />
+			<ePixmap name="green" position="140,230" zPosition="4" size="140,40" pixmap="skin_default/buttons/green.png" transparent="1" alphatest="on" />
+			<widget name="key_red" position="0,230" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
+			<widget name="key_green" position="140,230" zPosition="5" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" foregroundColor="white" shadowColor="black" shadowOffset="-1,-1" />
 		</screen>"""
 	
 	def __init__(self, session, aname):
@@ -2525,7 +2527,6 @@ class KartinaConfig(ConfigListScreen, Screen):
 			getConfigListEntry(_("Buffering time, milliseconds"), config.plugins.KartinaTv.buftime)
 		]
 		if apis[aname].MODE == MODE_STREAM:
-			cfglist.append(getConfigListEntry(_("Timeshift"), config.iptvdream[aname].timeshift))
 			cfglist.append(getConfigListEntry(_("Show in bouquets"), config.iptvdream[aname].inbouquet))
 		if apis[aname].HAS_PIN == True:
 			cfglist.append(getConfigListEntry(_("Auto send parental code"), config.iptvdream[aname].parental_code))
@@ -2580,7 +2581,12 @@ class RemoteConfig(ConfigListScreen, Screen):
 			if x[1].isChanged():
 				print "[KartinaTV] setting to push:", x[0], x[1].value
 				topush.append((x[0], x[1].value))
-		ktv.pushSettings(topush)
+		try:
+			ktv.pushSettings(topush)
+		except APIException as e:
+				print "[KartinaTV] Error: push settings failed!"
+				self.session.open(MessageBox, _("Failed to save settings")+"\n"
+				+str(e), type = MessageBox.TYPE_ERROR, timeout = 5)
 		self.close()
 
 #gettext HACK:
