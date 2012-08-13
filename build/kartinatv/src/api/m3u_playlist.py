@@ -34,6 +34,7 @@ class Playlist(AbstractAPI, AbstractStream):
 		pass
 
 	def setChannelsList(self):
+		self.channels = {}
 		for fname in listdir(DIRECTORY):
 			if fname.endswith('.m3u'):
 				self.loadFile(path.join(DIRECTORY, fname))
