@@ -74,10 +74,10 @@ class API(AbstractAPI):
 			vallist = []
 			if tag == "stream_server":
 				for x in s['list']:
-					vallist += [(x['ip'], x['desc'])]
+					vallist += [(x['ip'].encode('utf-8'), x['desc'].encode('utf-8'))]
 			elif s.has_key('list'):
 				for x in s['list']:
-					vallist += [x]
+					vallist += [str(x)]
 			self.settings += [SettEntry(tag, value, vallist)]
 		for x in self.settings:
 			self.trace(x)
@@ -113,7 +113,7 @@ class API(AbstractAPI):
 				raise APIException("Failed to parse json response")
 			if reply.has_key("error"):
 				err = reply["error"]
-				raise APIException(err['code'].encode('utf-8')+" "+err['message'].encode('utf-8'))
+				raise APIException(err['message'].encode('utf-8'))
 		
 		self.SID = True
 		return reply
