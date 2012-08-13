@@ -611,13 +611,19 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		
 		global bouquet
 		bouquet = BouquetManager()
+		
+		def processException():
+			print "[KartinaTV] ERROR login/init failed!"
+			self.last_error = str(e)
+			print e
 		try:
 			ktv = runManager.apiGetInstance(runManager.aname)
 			self.safeGo()
 		except APIException as e:
-			print "[KartinaTV] ERROR login/init failed!"
-			self.last_error = str(e)
-			print e
+			processException()
+			return False
+		except Exception as e:
+			processException()
 			return False
 		self.doGo()
 		self.__running = True
