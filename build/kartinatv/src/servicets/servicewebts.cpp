@@ -285,27 +285,33 @@ RESULT eServiceTS::start()
 {
 	ePtr<eDVBResourceManager> rmgr;
 	eDVBResourceManager::getInstance(rmgr);
-	//eUsePtr<iDVBPVRChannel> dvbChannel;
+	ePtr<iDVBPVRChannel> dvbChannel;
 	//rmgr->allocatePVRChannel(dvbChannel);
 	//m_destfd = -1;
 	//if (dvbChannel->getDemux(m_decodedemux, 1) != 0) {
 	//	eDebug("Cannot allocate decode-demux");
 	//	return -1;
 	//}
-	m_decodedemux = new eDVBDemux(0, 0);
-	m_decodedemux->setSourcePVR(0);
+	ePtr<eDVBAllocatedDemux> alloc_demux;
+// 	eDVBChannelID chid;
+// 	m_reference.getChannelID(chid);
+	int cap;
+	rmgr->allocateDemux((eDVBRegisteredFrontend*)0, alloc_demux, cap);
+// 	dvbChannel->getDemux(m_decodedemux, 1);
+	m_decodedemux = (eDVBDemux*) *alloc_demux;
 	if (m_decodedemux->getMPEGDecoder(m_decoder, 1) != 0) {
 		eDebug("Cannot allocate MPEGDecoder");
 		return -1;
 	}
 	if (m_destfd == -1)
 	{
-		char dvrDev[128];
-		int dvrIndex = rmgr->m_adapter.begin()->getNumDemux() - 1;
-		dvrIndex = 0;
-		sprintf(dvrDev, "/dev/dvb/adapter0/dvr%d", dvrIndex);
-		m_destfd = open(dvrDev, O_WRONLY);
-		eDebug("open dvr device %s", dvrDev);
+		m_destfd = m_decodedemux->openDVR(O_WRONLY);
+// 		char dvrDev[128];
+// 		int dvrIndex = rmgr->m_adapter.begin()->getNumDemux() - 1;
+// 		dvrIndex = 0;
+// 		sprintf(dvrDev, "/dev/dvb/adapter0/dvr%d", dvrIndex);
+// 		m_destfd = open(dvrDev, O_WRONLY);
+// 		eDebug("open dvr device %s", dvrDev);
 	}
 
 	//m_decoder->setVideoPID(m_vpid, eDVBVideo::MPEG2);
