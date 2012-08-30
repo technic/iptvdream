@@ -30,7 +30,7 @@ class API(AbstractAPI):
 	iProvider = "newrustv"
 	NUMBER_PASS = True
 	
-	site = "http://iptv.new-rus.tv:8501"
+	site = "http://93.189.144.156:8501"
 	
 	def __init__(self, username, password):
 		AbstractAPI.__init__(self, username, password)
