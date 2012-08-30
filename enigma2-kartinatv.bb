@@ -6,7 +6,7 @@ SECTION = "extra"
 
 PN="enigma2-plugin-extensions-kartinatv"
 
-PV="2.3.3"
+PV="2.3.4"
 VVV = "r0"
 PR = "${VVV}"
 
