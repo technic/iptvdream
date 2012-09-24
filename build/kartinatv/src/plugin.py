@@ -530,7 +530,7 @@ class MyInfoBarShowHide:
 			self.startHideTimer()
 	
 
-class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExtensions, InfoBarAudioSelection, MyInfoBarShowHide, InfoBarSubtitleSupport, InfoBarNotifications, InfoBarSeek):
+class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExtensions, InfoBarAudioSelection, MyInfoBarShowHide, InfoBarNotifications, InfoBarSeek):
 	
 	subtitles_enabled = False
 	ALLOW_SUSPEND = True
@@ -547,7 +547,6 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		InfoBarExtensions.__init__(self)
 		InfoBarPlugins.__init__(self)
 		InfoBarAudioSelection.__init__(self)
-		InfoBarSubtitleSupport.__init__(self)
 		InfoBarNotifications.__init__(self)
 		MyInfoBarShowHide.__init__(self) #Use myInfoBar because image developers modify InfoBarGenerics
 		
