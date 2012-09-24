@@ -2,6 +2,9 @@ SUBDIRS = servicets api
 
 installdir = $(libdir)/enigma2/python/Plugins/Extensions/KartinaTV
 
+etcdir = $(sysconfdir)/iptvdream
+etc_DATA = default.epgmap
+
 install_PYTHON = utils.py plugin.py __init__.py htmlentitydefs.py server.py
 
 install_DATA = \

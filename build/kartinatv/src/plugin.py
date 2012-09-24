@@ -56,6 +56,7 @@ def parseColor(str): #FIXME: copy-paste form skin source
 	return int(str[1:], 0x10)
 
 from Tools.Directories import resolveFilename, SCOPE_CURRENT_SKIN, SCOPE_SKIN, SCOPE_SYSETC, SCOPE_CURRENT_PLUGIN
+import os
 from Components.GUIComponent import GUIComponent
 from Components.Sources.Boolean import Boolean
 from Components.Sources.StaticText import StaticText
@@ -67,6 +68,7 @@ from . import _
 
 SKIN_PATH = resolveFilename(SCOPE_SKIN, 'KartinaTV_skin')
 ENIGMA_CONF_PATH = resolveFilename(SCOPE_SYSETC, 'enigma2')
+EPGMAP_PATH = resolveFilename(SCOPE_SYSETC, 'iptvdream')
 
 try:
 	sz_w = getDesktop(0).size().width()
@@ -237,6 +239,38 @@ def menuOpen(aname, menuid):
 		return [(aname, boundFunction(AOpen, aname), "iptvdream_"+aname, -4)]
 	return []
 	
+def loadEpgMap():
+	global epgmap
+	epgmap = {}
+	f = None
+	for fn in os.listdir(EPGMAP_PATH):
+		if f: f.close()
+		if not fn.endswith('.epgmap'):
+			continue
+		print "[KartinaTV] read", fn
+		f = open(EPGMAP_PATH + '/' + fn)
+		while True:
+			l = f.readline()
+			if not l:
+				break
+			l = l.strip()
+			if l.startswith("#"):
+				continue
+			x = l.split()
+			if len(x) < 4:
+				print "[KartinaTV] Error in epgmap"
+				continue
+			x[3] = ' '.join(x[3:])
+			try:
+				epgmap[x[3]] = tuple([int(a, 16) for a in x[:3]])
+			except ValueError:
+				print "[KartinaTV] ValueError in epgmap"
+				continue
+			except Exception as e:
+				print "[KartinaTV] epgmap: %s" % e
+				continue
+		
+	
 def switchBouquets():
 	import re
 	added = []
@@ -348,10 +382,15 @@ class RunManager():
 			if config.iptvdream[aname].inbouquet.value:
 				f = open(ENIGMA_CONF_PATH + '/userbouquet.%s.tv' % aname, 'w')
 				f.write('#NAME %s (iptvdream)\n' % api.iTitle)
-				mask = '#SERVICE 1:0:1:%X:%X:%X:0:%X:0:%X:%s:%s\n'
+				mask = '#SERVICE 1:0:1:%X:%X:%X:5A0000:%X:0:%X:%s:%s\n'
 				for cid in api.channels:
+					try:
+						sidtuple = epgmap[api.channels[cid].name]
+					except KeyError:
+						sidtuple = (0,0,0)
 					url = quote('http://127.0.0.1:9000/%s/%s' % (aname, cid))
-					f.write(mask % (10301, 3, 112, api.hashID, cid, url,  api.channels[cid].name))
+					f.write(mask % (sidtuple + (api.hashID, cid, url,  api.channels[cid].name)))
+					f.write('#DESCRIPTION %s\n' % api.channels[cid].name)
 				f.close()
 				db = eDVBDB.getInstance()
 				db.reloadServicelist()
@@ -406,6 +445,8 @@ global runManager
 runManager = RunManager()
 #start server
 import server
+#read epgmap file
+loadEpgMap()
 #setup bouqet list
 switchBouquets()
 

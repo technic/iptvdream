@@ -6,7 +6,7 @@ SECTION = "extra"
 
 PN="enigma2-plugin-extensions-kartinatv"
 
-PV="2.3.4"
+PV="2.3.5"
 VVV = "r0"
 PR = "${VVV}"
 
@@ -21,7 +21,7 @@ EXTRA_OECONF = " \
 "
 EXTRA_OECONF += " --with-po "
 
-FILES_${PN} += " /usr/share/enigma2/KartinaTV_skin /usr/lib/enigma2/python/Plugins/Extensions/KartinaTV"
+FILES_${PN} += " /usr/share/enigma2/KartinaTV_skin /usr/lib/enigma2/python/Plugins/Extensions/KartinaTV /etc"
 
 FILES_${PN}-dbg = " /usr/lib/enigma2/python/Plugins/Extensions/KartinaTV/.debug "
 
