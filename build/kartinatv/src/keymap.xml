@@ -11,7 +11,7 @@
 		<key id="KEY_DOWN" mapto="openServiceList" flags="mr" />
 		<key id="KEY_CHANNELUP" mapto="openServiceList" flags="m" />
 		<key id="KEY_CHANNELDOWN" mapto="openServiceList" flags="m" />
-		<key id="KEY_INFO" mapto="showEPGList" flags="m" />
+		<key id="KEY_EPG" mapto="showEPGList" flags="m" />
 		<key id="KEY_PREVIOUS" mapto="historyBack" flags="mr" />
 		<key id="KEY_NEXT" mapto="historyNext" flags="mr" />
 		<key id="KEY_BACK" mapto="historyBack" flags="mr" />
@@ -27,7 +27,7 @@
 		<key id="KEY_DOWN" mapto="openServiceList" flags="mr" />
 		<key id="KEY_CHANNELUP" mapto="openServiceList" flags="m" />
 		<key id="KEY_CHANNELDOWN" mapto="openServiceList" flags="m" />
-		<key id="KEY_INFO" mapto="showEPGList" flags="m" />
+		<key id="KEY_EPG" mapto="showEPGList" flags="m" />
 		<key id="KEY_PREVIOUS" mapto="historyBack" flags="mr" />
 		<key id="KEY_NEXT" mapto="historyNext" flags="mr" />
 		<key id="KEY_BACK" mapto="historyBack" flags="mr" />
@@ -50,15 +50,15 @@
 		<key id="KEY_YELLOW" mapto="addFavourites" flags="m" />
 		<key id="KEY_BLUE" mapto="showFavourites" flags="m" />
 		<key id="KEY_MENU" mapto="contextMenu" flags="m" />
-		<key id="KEY_INFO" mapto="showEPGList" flags="m" />
-		<key id="KEY_CHANNELUP" mapto="nextBouquet" flags="m" />
-		<key id="KEY_CHANNELDOWN" mapto="prevBouquet" flags="m" />
+		<key id="KEY_EPG" mapto="showEPGList" flags="m" />
+		<key id="KEY_PAGEUP" mapto="nextBouquet" flags="m" />
+		<key id="KEY_PAGEDOWN" mapto="prevBouquet" flags="m" />
 	</map>
 	
 	<map context="IPdmEpgListActions">
 		<key id="KEY_RED" mapto="ok" flags="m" />
-		<key id="KEY_CHANNELUP" mapto="nextDay" flags="m" />
-		<key id="KEY_CHANNELDOWN" mapto="prevDay" flags="m" />
+		<key id="KEY_PAGEUP" mapto="nextDay" flags="m" />
+		<key id="KEY_PAGEDOWN" mapto="prevDay" flags="m" />
 	</map>
 	
 	<map context="IPdmVideoListActions">
@@ -66,8 +66,8 @@
 		<key id="KEY_GREEN" mapto="genres" flags="m" />
 		<key id="KEY_YELLOW" mapto="search" flags="m" />
 		<key id="KEY_BLUE" mapto="best" flags="m" />
-		<key id="KEY_INFO" mapto="showInfo" flags="m" />
-		<key id="KEY_CHANNELUP" mapto="nextPage" flags="m" />
-		<key id="KEY_CHANNELDOWN" mapto="prevPage" flags="m" />
+		<key id="KEY_EPG" mapto="showInfo" flags="m" />
+		<key id="KEY_PAGEUP" mapto="nextPage" flags="m" />
+		<key id="KEY_PAGEDOWN" mapto="prevPage" flags="m" />
 	</map>
 </keymap>
