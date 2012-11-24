@@ -385,7 +385,10 @@ class RunManager():
 						sidtuple = epgmap[api.channels[cid].name]
 					except KeyError:
 						sidtuple = (0,0,0)
-					url = quote('http://127.0.0.1:9000/%s/%s' % (aname, cid))
+					if api.URL_DYNAMIC:
+						url = quote('http://127.0.0.1:9000/%s/%s' % (aname, cid))
+					else:
+						url = api.getStreamUrl(cid, None).replace(":", "%3a")
 					f.write(mask % (sidtuple + (api.hashID, cid, url,  api.channels[cid].name)))
 					f.write('#DESCRIPTION %s\n' % api.channels[cid].name)
 				f.close()
