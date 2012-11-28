@@ -76,7 +76,7 @@ class Ktv(NewrusAPI):
 #		video.name_orig = v.findtext('name_orig').encode('utf-8')
 		video.descr = unescapeEntities(v.findtext('description')).encode('utf-8')
 		video.image = v.findtext('poster')
-		video.year = v.findtext('year') or ''.encode('utf-8')
+		video.year = v.findtext('year').encode('utf-8')
 #		video.rate_imdb = floatConvert(v.findtext('rate_imdb'))
 #		video.rate_kinopoisk = floatConvert(v.findtext('rate_kinopoisk'))
 #		video.rate_mpaa = v.findtext('rate_mpaa')
