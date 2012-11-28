@@ -442,7 +442,23 @@ class BouquetManager():
 class Video():
 	def __init__(self, name):
 		self.name = name
-		self.year = None
+		self.name_orig = ''
+		self.descr = ''
+		self.image = ''
+		self.year = ''
+		self.rate_imdb = 0
+		self.rate_kinopoisk = 0
+		self.rate_mpaa = 0
+		self.country = ''
+		self.genre = ''
+		self.length = 0
+		self.director = ''
+		self.scenario = ''
+		self.actors = ''
+		self.studio = ''
+		self.awards = ''
+		self.budget = ''
+		self.files = []
 		#TODO: set ALL fields!
 		return
 

@@ -14,7 +14,7 @@ from . import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, u
 class JsonWrapper(dict):
 	def find(self, key):
 		if isinstance(self[key], dict):
-			return JsonWrapper(self[key].values())
+			return JsonWrapper(self[key])
 		if isinstance(self[key], list):
 			return map(JsonWrapper, self[key])
 		else:
@@ -25,12 +25,12 @@ class JsonWrapper(dict):
 def loads(jsonstr):
 	return JsonWrapper(json_loads(jsonstr))
 
-class API(AbstractAPI):
+class NewrusAPI(AbstractAPI):
 	
 	iProvider = "newrustv"
 	NUMBER_PASS = True
 	
-	site = "http://93.189.144.156:8501"
+	site = "http://iptv.new-rus.tv:8501"
 	
 	def __init__(self, username, password):
 		AbstractAPI.__init__(self, username, password)
@@ -118,7 +118,7 @@ class API(AbstractAPI):
 		self.SID = True
 		return reply
 
-class Ktv(API, AbstractStream):
+class Ktv(NewrusAPI, AbstractStream):
 	
 	iName = "NewrusTV"
 	MODE = MODE_STREAM
@@ -126,11 +126,11 @@ class Ktv(API, AbstractStream):
 	HAS_PIN = True
 	
 	def __init__(self, username, password):
-		API.__init__(self, username, password)
+		NewrusAPI.__init__(self, username, password)
 		AbstractStream.__init__(self)
 	
 	def setChannelsList(self):
-	  	root = self.getData("/api/json/channel_list.php?", "channels list")
+	  	root = self.getData("/api/json/channel_list.php?have_sepg=1", "channels list")
 		lst = []
 		t_str = root.findtext("servertime").encode("utf-8")
 		t_cur = datetime.fromtimestamp(int(t_str))
@@ -205,20 +205,13 @@ class Ktv(API, AbstractStream):
 			epglist += [EpgEntry(progname, time, None)]
 		self.channels[cid].pushEpgSorted(epglist)
 
+	#FIXME: do we need to load so much data?
 	def getCurrentEpg(self, cid):
 		return self.getDayEpg(cid, syncTime())
 
 	def getNextEpg(self, cid):
-		params = {"cid": cid}
-		root = self.getData("/api/json/epg_next.php?"+urllib.urlencode(params), "EPG next for channel %s" % cid)
-		lst = []
-		for epg in root.find('epg'):
-			t = int(epg.findtext('ts').encode("utf-8"))
-			tstart = datetime.fromtimestamp(t)
-			title = epg.findtext('progname').encode('utf-8')
-			lst += [EpgEntry(title, tstart, None)]
-		self.channels[cid].pushEpgSorted(lst)
-
+		return self.getDayEpg(cid, syncTime())
+		
 	def getSettings(self):
 		return self.settings
 	

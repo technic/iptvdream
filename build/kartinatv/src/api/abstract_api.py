@@ -23,6 +23,7 @@ class AbstractAPI:
 	NEXT_API = None 
 	NUMBER_PASS = False
 	HAS_PIN = False
+	URL_DYNAMIC = True
 	
 	def __init__(self, username, password):
 		self.username = username

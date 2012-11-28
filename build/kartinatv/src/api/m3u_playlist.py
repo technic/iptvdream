@@ -20,6 +20,7 @@ class Playlist(AbstractAPI, AbstractStream):
 	
 	iName = "m3uPlaylist"		
 	locked_cids = []
+	URL_DYNAMIC = False
 	
 	def __init__(self, username, password):
 		AbstractAPI.__init__(self, username, password)
