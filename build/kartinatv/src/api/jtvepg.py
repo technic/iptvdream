@@ -84,8 +84,12 @@ class JTVEpg:
 		fname = self.getFname(cid)
 		self.trace("epg for cid %s" % cid)
 		try:
-			jtv = jtvreader.read(fname, deltat)
-		except:
-			return -1
+			jtv = jtvreader.read(fname)
+		except IOError as e:
+			if e[0] == 2:
+#				self.trace('epg fail for %s (possible encoding problem)' % self.channels[cid].epg_name)
+				return -1
+			else:
+				raise(e)
 		lepg = [EpgEntry(x[1].encode('utf-8'), datetime.fromtimestamp(x[0]-deltat), None) for x in jtv]
 		self.channels[cid].pushEpgSorted(lepg)

@@ -56,11 +56,15 @@ class M3UReader():
 		linen = 0
 		if not lines[linen].rstrip().startswith("#EXTM3U"):
 			raise APIException("Wrong header. #EXTM3U expected")
+		urlregexp = re.compile('#EXTM3U.*\surl-tvg=([^\s]*)').match(lines[linen])
+		if urlregexp:
+			self.act_url = urlregexp.group(1)
+		
 		linen += 1
 		cid = len(self.channels)
 		gid = len(self.groups)
 		needinfo = True
-		tvgregexp = re.compile('#EXTINF:.*tvg-name="(.*)"')
+		tvgregexp = re.compile('EXTINF:.*tvg-name="(.*)"')
 		while linen < len(lines):
 			line = lines[linen]
 			if line == '':
@@ -107,5 +111,6 @@ class Ktv(M3UReader, JTVEpg, Playlist):
 		Playlist.__init__(self, username, password)
 		JTVEpg.__init__(self)
 
-	def start(self):
+	def setChannelsList(self):
+		Playlist.setChannelsList(self)
 		self.load_epg()
