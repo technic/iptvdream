@@ -65,6 +65,7 @@ class Ktv(Kartina):
                         self.packet_expire = datetime.fromtimestamp(int(reply.find('account').findtext('packet_expire')))
                 except:
                         self.trace("Could not read packet_expire from reply: %s" % reply)
+                        self.packet_expire = 'Unknown'
 
 		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 		self.trace("Packet expire: %s" % self.packet_expire)
