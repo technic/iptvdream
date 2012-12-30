@@ -60,8 +60,12 @@ class Ktv(Kartina):
 			raise APIException(self.username+": Authorization of user failed!")
 		if (deleted):
 			raise APIException(self.username+": Wrong authorization request")
-		self.packet_expire = datetime.fromtimestamp(int(reply.find('account').findtext('packet_expire')))	
-		
+
+                try:
+                        self.packet_expire = datetime.fromtimestamp(int(reply.find('account').findtext('packet_expire')))
+                except:
+                        self.trace("Could not read packet_expire from reply: %s" % reply)
+
 		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 		self.trace("Packet expire: %s" % self.packet_expire)
 		self.SID = True
