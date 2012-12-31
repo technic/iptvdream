@@ -821,7 +821,7 @@ void eStreamThread::thread() {
 	//const int bufmask = bufsize -1;
 	const int blocksize = 188*348;
 	int rc, avail, put, get, size, x, scan_pos=0;
-	int predone = blocksize;
+	int predone = blocksize/4;
 	time_t next_scantime = 0;
 	fd_set wset;
 	bool sosSend = false;
