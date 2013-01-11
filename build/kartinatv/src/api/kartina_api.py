@@ -75,7 +75,7 @@ class KartinaAPI(AbstractAPI):
 		
 		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 		self.trace("Packet expire: %s" % self.packet_expire)
-		self.SID = True	
+		self.SID = True
 	
 	def getData(self, url, name):
 		self.SID = False
