@@ -47,12 +47,6 @@ class KartinaAPI(AbstractAPI):
 		except IOError as e:
 			raise APIException(e)
 		
-		#checking cookies
-		cookies = list(self.cookiejar)
-		cookiesdict = {}
-		hasSSID = False
-		deleted = False
-		
 		try:
 			reply = fromstring(reply)
 		except ParseError as e:
@@ -60,16 +54,6 @@ class KartinaAPI(AbstractAPI):
 		if reply.find("error"):
 			raise APIException(reply.find('error').findtext('message'))
 		
-		for cookie in cookies:
-			cookiesdict[cookie.name] = cookie.value
-			if (cookie.name.find('SSID') != -1):
-				hasSSID = True
-			if (cookie.value.find('deleted') != -1):
-				deleted = True
-		if (not hasSSID):
-			raise APIException(self.username+": Authorization of user failed!")
-		if (deleted):
-			raise APIException(self.username+": Wrong authorization request")
 		self.packet_expire = datetime.fromtimestamp(int(reply.find('account').findtext('packet_expire')))
 		
 		#Load settings here, because kartina api is't friendly
