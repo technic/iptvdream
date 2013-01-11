@@ -42,7 +42,10 @@ class KartinaAPI(AbstractAPI):
 		params = urllib.urlencode({"login" : self.username,
 								  "pass" : self.password,
 								  "settings" : "all"})
-		reply = self.opener.open(self.site+'/api/xml/login?', params).read()
+		try:
+			reply = self.opener.open(self.site+'/api/xml/login?', params).read()
+		except IOError as e:
+			raise APIException(e)
 		
 		#checking cookies
 		cookies = list(self.cookiejar)
@@ -50,7 +53,10 @@ class KartinaAPI(AbstractAPI):
 		hasSSID = False
 		deleted = False
 		
-		reply = fromstring(reply)
+		try:
+			reply = fromstring(reply)
+		except ParseError as e:
+			raise APIException(e)
 		if reply.find("error"):
 			raise APIException(reply.find('error').findtext('message'))
 		
@@ -90,32 +96,33 @@ class KartinaAPI(AbstractAPI):
 	def getData(self, url, name):
 		self.SID = False
 		url = self.site + url
-		
-		#self.trace("Getting %s" % (name))
-		self.trace("Getting %s (%s)" % (name, url))
-		try:
-			reply = self.opener.open(url).read()
-		except:
-			reply = ""
 
-		if ((reply.find("code_login") != -1)and(reply.find("code_pass") != -1)or(reply.find("<error>") != -1)):
-			self.trace("Authorization missed or lost")
-			self.authorize()
-			self.trace("Second try to get %s (%s)" % (name, url))
-			reply = self.opener.open(url).read()
-			if ((reply.find("code_login") != -1)and(reply.find("code_pass") != -1)):
-				raise APIException("Failed to get %s:\n%s" % (name, reply))
+		def doget():
+			self.trace("Getting %s" % (name))
+			#self.trace("Getting %s (%s)" % (name, url))
+			try:
+				reply = self.opener.open(url).read()
+				print reply
+			except IOError as e:
+				raise APIException(e)
+			try:
+				root = fromstring(reply)
+			except ParseError as e:
+				raise APIException(e)
+			if root.find("error"):
+				err = root.find("error")
+				raise APIException(err.findtext('code').encode('utf-8')+" "+err.findtext('message').encode('utf-8'))
+			self.SID = True
+			return root
 		
+		# First time error occures we retry, next time raise to plugin
 		try:
-			root = fromstring(reply)
-		except:
-			raise APIException("Failed to parse xml response")
-		if root.find('error'):
-			err = root.find('error')
-			raise APIException(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8'))
-		
-		self.SID = True
-		return root
+			return doget()
+		except APIException as e:
+			self.trace("Error %s, retry" % str(e))
+			# restart and try again
+			self.start()
+			return doget()
 
 class Ktv(KartinaAPI, AbstractStream):
 	
