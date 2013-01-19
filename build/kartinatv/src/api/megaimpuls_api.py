@@ -4,12 +4,14 @@
 #  web: http://techhost.dlinkddns.com/
 
 
-from newrus_api import Ktv as NewrusKtv
+from newrus_api import NewrusAPI, Ktv as NewrusKtv
 
-class Ktv(NewrusKtv):
+class MegaimpulsAPI(NewrusAPI):
 
 	iProvider = "megaimpuls"
 	site = "http://iptv.megaimpuls.com"
+
+class Ktv(MegaimpulsAPI, NewrusKtv):
 	
 	iName = "Megaimpuls"
 	iTitle = "Megaimpuls"

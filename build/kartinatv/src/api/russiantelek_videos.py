@@ -9,7 +9,8 @@
 # version.
 
 from abstract_api import MODE_VIDEOS
-from russiantelek_api import RussianTelekAPI, JsonWrapper
+from newrus_api import JsonWrapper
+from russiantelek_api import RussianTelekAPI
 
 import urllib
 from xml.etree.cElementTree import fromstring

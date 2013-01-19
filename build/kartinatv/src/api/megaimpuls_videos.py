@@ -9,7 +9,8 @@
 # version.
 
 from abstract_api import MODE_VIDEOS
-from megaimpuls_api import MegaimpulsAPI, JsonWrapper
+from newrus_api import JsonWrapper
+from megaimpuls_api import MegaimpulsAPI
 
 import urllib
 from xml.etree.cElementTree import fromstring
