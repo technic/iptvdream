@@ -10,7 +10,7 @@
 
 from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 import cookielib, urllib, urllib2 #TODO: optimize imports
-from xml.etree.cElementTree import fromstring
+from xml.etree.cElementTree import fromstring, ParseError
 from datetime import datetime
 from . import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities, Timezone, APIException, SettEntry
 
