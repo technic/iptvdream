@@ -66,7 +66,6 @@ class RodnoeAPI(AbstractAPI):
 			raise APIException(err.findtext('code').encode('utf-8')+" "+err.findtext('message').encode('utf-8'))
 		self.sid = root.find('sid').text.encode('utf-8')
 		self.packet_expire = None #XXX: no info in api..
-		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 		self.SID = True
 		
 		settings = root.find('settings')
