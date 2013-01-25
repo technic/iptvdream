@@ -665,9 +665,6 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		except APIException as e:
 			processException()
 			return False
-		except Exception as e:
-			processException()
-			return False
 		self.doGo()
 		self.__running = True
 		return True
