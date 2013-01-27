@@ -10,7 +10,7 @@
 
 from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 import cookielib, urllib, urllib2 #TODO: optimize imports
-from xml.etree.cElementTree import fromstring, ParseError
+from xml.etree.cElementTree import fromstring
 from datetime import datetime
 from . import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities, Timezone, APIException, SettEntry
 
@@ -49,7 +49,7 @@ class KartinaAPI(AbstractAPI):
 		
 		try:
 			reply = fromstring(reply)
-		except ParseError as e:
+		except SyntaxError as e:
 			raise APIException(e)
 		if reply.find("error"):
 			raise APIException(reply.find('error').findtext('message'))
@@ -90,7 +90,7 @@ class KartinaAPI(AbstractAPI):
 				raise APIException(e)
 			try:
 				root = fromstring(reply)
-			except ParseError as e:
+			except SyntaxError as e:
 				raise APIException(e)
 			if root.find("error"):
 				err = root.find("error")
