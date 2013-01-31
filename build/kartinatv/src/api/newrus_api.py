@@ -48,11 +48,17 @@ class NewrusAPI(AbstractAPI):
 		params = urllib.urlencode({"login" : self.username,
 								  "pass" : self.password,
 								  "settings" : "all"})
-		reply = self.opener.open(self.site+'/api/json/login.php?'+params).read()
-		
-		reply = loads(reply)
+		try:
+			reply = self.opener.open(self.site+'/api/json/login.php?'+params).read()
+		except IOError as e:
+			raise APIException(e)
+		try:
+			reply = loads(reply)
+		except ValueError as e:
+			raise APIException(e)
 		if reply.has_key("error"):
-			raise APIException(reply['error']['message'])
+			err = reply["error"]
+			raise APIException(err['message'].encode('utf-8'))
 	
 		self.sidval = urllib.urlencode({reply['sid_name']: reply['sid'] })
 		self.trace(self.sidval)
@@ -82,41 +88,40 @@ class NewrusAPI(AbstractAPI):
 		for x in self.settings:
 			self.trace(x)
 		
-		self.SID = True	
+		self.SID = True
 	
 	def getData(self, url, name):
 		self.SID = False
 		url = self.site + url + "&" + self.sidval
 		
-		self.trace("Getting %s" % (name))
-		#self.trace("Getting %s (%s)" % (name, url))
-		try:
-			reply = self.opener.open(url).read()
-		except:
-			reply = ""
-		#print reply
-		try:
+		def doget():
+			self.trace("Getting %s" % (name))
+			try:
+				reply = self.opener.open(url).read()
+				#print url
+				#print reply
+			except IOError as e:
+				raise APIException(e)
 			if reply.startswith('1234'):
 				reply = reply[4:]
-			reply = loads(reply)
-		except:
-			raise APIException("Failed to parse json response")
-
-		if reply.has_key("error"):
-			self.trace("Authorization missed or lost")
-			self.authorize()
-			self.trace("Second try to get %s (%s)" % (name, url))
-			reply = self.opener.open(url).read()
 			try:
 				reply = loads(reply)
-			except:
-				raise APIException("Failed to parse json response")
+			except ValueError as e:
+				raise APIException(e)
 			if reply.has_key("error"):
 				err = reply["error"]
 				raise APIException(err['message'].encode('utf-8'))
+			self.SID = True
+			return reply
 		
-		self.SID = True
-		return reply
+		# First time error occures we retry, next time raise to plugin
+		try:
+			return doget()
+		except APIException as e:
+			self.trace("Error %s, retry" % str(e))
+			# restart and try again
+			self.start()
+			return doget()
 
 class Ktv(NewrusAPI, AbstractStream):
 	
@@ -130,6 +135,7 @@ class Ktv(NewrusAPI, AbstractStream):
 		AbstractStream.__init__(self)
 	
 	def setChannelsList(self):
+		self.setTimeShift("0000")
 	  	root = self.getData("/api/json/channel_list.php?have_sepg=1", "channels list")
 		lst = []
 		t_str = root.findtext("servertime").encode("utf-8")
