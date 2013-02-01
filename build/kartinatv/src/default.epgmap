@@ -1,17 +1,4 @@
-1 1 2 Первый
-2 1 2 Россия 1
-5 1 2 6B2 Россия 2
-3 1 2 НТВ
-E 1 2 РенТВ
-10 1 2 ТНТ
-C 1 2 СТС
-7 1 2 5 канал
-8 1 2 Перец
-9 1 2 Карусель
-23 1 2 Бойцовский клуб
-A 1 2 ТВЦ
 1D5D 2134 6B2 Карусель
-38 1 2 Авто плюс
 A 1F40 6B2 Кинопоказ 1 HD
 50 1F40 6B2 Кинопоказ 2 HD
 45A 1 64 National Geographic HD
@@ -33,10 +20,7 @@ d52 15 56 Action1000
 46D 2 64 Русский иллюзион
 42D3 11 70 Иллюзион +
 484 2 64 XXI век
-F 1 2 Звезда
-41 1 2 Дом кино
 42D4 11 70 Eurokino
-1 1 B ТВ-3
 44F 1 64 Комедия ТВ
 389 9 FFFF Comedy TV
 1b8a 9 56 Viasat Explorer
@@ -49,3 +33,257 @@ A2E 1 FFFF Спорт 2
 38A 9 FFFF НТВ+ Спорт плюс
 478 2 64 Телеканал футбол
 283D 3 70 Ретро ТВ
+
+# ---- IPTV section ----
+4 1 2 Россия К
+6 1 2 Россия 24
+
+#is it equals?
+7 1 2 Пятый канал
+7 1 2 5 канал
+
+1 1 2 Первый
+2 1 2 Россия 1
+5 1 2 Россия 2
+3 1 2 НТВ
+
+#is it equals?
+E 1 2 РЕН ТВ
+E 1 2 РенТВ
+
+10 1 2 ТНТ
+C 1 2 СТС
+8 1 2 Перец
+9 1 2 Карусель
+23 1 2 Бойцовский клуб
+
+#is it equals?
+A 1 2 ТВЦ
+A 1 2 ТВ Центр
+
+#is it equals?
+B 1 2 TV-3
+B 1 2 ТВ 3
+1 1 B ТВ-3
+
+D 1 2 TV XXI
+F 1 2 Звезда
+11 1 2 Кинолюкс
+12 1 2 Disney
+13 1 2 Домашний
+14 1 2 AXN Sci-Fi
+15 1 2 Спорт 1
+16 1 2 Eurosport
+17 1 2 LNT
+18 1 2 Rytas.TV
+19 1 2 Animal Planet
+1A 1 2 Discovery
+1B 1 2 Discovery World
+1C 1 2 Discovery Science
+1D 1 2 National Geographic
+1E 1 2 Детский
+1F 1 2 Nickelodeon
+20 1 2 Спорт плюс
+21 1 2 Баскетбол
+22 1 2 Охотник и рыбалов
+23 1 2 Бойцовский клуб
+
+#is it equals?
+24 1 2 КХЛ ТВ
+24 1 2 КХЛ
+
+25 1 2 Загородная жизнь
+26 1 2 РБК
+27 1 2 2x2
+
+28 1 2 Fox Life
+29 1 2 Fox
+28 1 2 FOX Life
+29 1 2 FOX
+
+2A 1 2 Diva Universal
+2B 1 2 Nick Jr.
+
+#is it equals?
+2C 1 2 Ю ТВ
+2C 1 2 Ю
+
+2D 1 2 Дождь
+2E 1 2 МИР
+2F 1 2 Спорт
+30 1 2 РТР
+31 1 2 Кинохит
+32 1 2 Наука 2.0
+33 1 2 НТВ+ Спорт
+34 1 2 Еда
+
+#is it equals?
+35 1 2 MTV Россия
+35 1 2 MTV
+
+36 1 2 ОСТ ТВ
+37 1 2 24 Док
+38 1 2 Авто плюс
+
+39 1 2 НТВ+ футбол
+39 1 2 Футбол НТВ плюс
+
+3A 1 2 Eurosport 2
+3B 1 2 НТВ+ спорт союз
+3C 1 2 Боец
+3D 1 2 НТВ+ футбол 2
+3E 1 2 НТВ+ наш футбол
+3F 1 2 Наше новое кино
+40 1 2 Наше кино
+41 1 2 Дом кино
+42 1 2 НТВ+ теннис
+43 1 2 LTV7
+44 1 2 Tv5 Riga
+45 1 2 Премьера
+46 1 2 Viasat Sport Baltic
+47 1 2 TV3 Latvia
+49 1 2 LTV1 Latvia
+4A 1 2 TV 1 (Lithuania)
+4B 1 2 LNK
+4C 1 2 Baltijos TV BTV
+4D 1 2 TiJi
+4E 1 2 Gulli
+4F 1 2 JimJam
+50 1 2 Шансон
+51 1 2 Музыка первого
+52 1 2 24 техно
+53 1 2 Кухня
+54 1 2 Индия
+55 1 2 Da Vinci Learning
+1F4 1 2 ICTV
+1F5 1 2 Интер
+1F6 1 2 1+1
+1F7 1 2 СТБ
+1F8 1 2 Первый деловой
+1F9 1 2 Интер+
+258 1 2 HD Кино
+259 1 2 HD Кино 2
+25B 1 2 HD Спорт
+25D 1 2 HD Россия
+1 1 2  HD Первый
+
+# ---- Same with HQ ending. -----
+4 1 2 Россия К HQ
+6 1 2 Россия 24 HQ
+
+#is it equals?
+7 1 2 Пятый канал HQ
+7 1 2 5 канал HQ
+
+1 1 2 Первый HQ
+2 1 2 Россия 1 HQ
+5 1 2 Россия 2 HQ
+3 1 2 НТВ HQ
+E 1 2 РЕН ТВ HQ
+10 1 2 ТНТ HQ
+C 1 2 СТС HQ
+8 1 2 Перец HQ
+9 1 2 Карусель HQ
+23 1 2 Бойцовский клуб HQ
+
+#is it equals?
+A 1 2 ТВЦ HQ
+A 1 2 ТВ Центр HQ
+
+#is it equals?
+B 1 2 TV-3 HQ
+B 1 2 ТВ 3 HQ
+
+D 1 2 TV XXI HQ
+F 1 2 Звезда HQ
+11 1 2 Кинолюкс HQ
+12 1 2 Disney HQ
+13 1 2 Домашний HQ
+14 1 2 AXN Sci-Fi HQ
+15 1 2 Спорт 1 HQ
+16 1 2 Eurosport HQ
+17 1 2 LNT HQ
+18 1 2 Rytas.TV HQ
+19 1 2 Animal Planet HQ
+1A 1 2 Discovery HQ
+1B 1 2 Discovery World HQ
+1C 1 2 Discovery Science HQ
+1D 1 2 National Geographic HQ
+1E 1 2 Детский HQ
+1F 1 2 Nickelodeon HQ
+20 1 2 Спорт плюс HQ
+21 1 2 Баскетбол HQ
+22 1 2 Охотник и рыбалов HQ
+23 1 2 Бойцовский клуб HQ
+
+#is it equals?
+24 1 2 КХЛ ТВ HQ
+24 1 2 КХЛ HQ
+
+25 1 2 Загородная жизнь HQ
+26 1 2 РБК HQ
+27 1 2 2x2 HQ
+28 1 2 Fox Life HQ
+29 1 2 Fox HQ
+2A 1 2 Diva Universal HQ
+2B 1 2 Nick Jr. HQ
+
+#is it equals?
+2C 1 2 Ю ТВ HQ
+2C 1 2 Ю HQ
+
+2D 1 2 Дождь HQ
+2E 1 2 МИР HQ
+2F 1 2 Спорт HQ
+30 1 2 РТР HQ
+31 1 2 Кинохит HQ
+32 1 2 Наука 2.0 HQ
+33 1 2 НТВ+ Спорт HQ
+34 1 2 Еда HQ
+
+#is it equals?
+35 1 2 MTV Россия HQ
+35 1 2 MTV HQ
+
+36 1 2 ОСТ ТВ  HQ
+37 1 2 24 Док  HQ
+38 1 2 Авто плюс HQ
+39 1 2 НТВ+ футбол HQ
+3A 1 2 Eurosport 2 HQ
+3B 1 2 НТВ+ спорт союз HQ
+3C 1 2 Боец HQ
+3D 1 2 НТВ+ футбол 2 HQ
+3E 1 2 НТВ+ наш футбол HQ
+3F 1 2 Наше новое кино HQ
+40 1 2 Наше кино HQ
+41 1 2 Дом кино HQ
+42 1 2 НТВ+ теннис HQ
+43 1 2 LTV7 HQ
+44 1 2 Tv5 Riga HQ
+45 1 2 Премьера HQ
+46 1 2 Viasat Sport Baltic HQ
+47 1 2 TV3 Latvia HQ
+49 1 2 LTV1 Latvia HQ
+4A 1 2 TV 1 (Lithuania) HQ
+4B 1 2 LNK HQ
+4C 1 2 Baltijos TV BTV HQ
+4D 1 2 TiJi HQ
+4E 1 2 Gulli HQ
+4F 1 2 JimJam HQ
+50 1 2 Шансон HQ
+51 1 2 Музыка первого HQ
+52 1 2 24 техно HQ
+53 1 2 Кухня HQ
+54 1 2 Индия HQ
+55 1 2 Da Vinci Learning HQ
+1F4 1 2 ICTV HQ
+1F5 1 2 Интер HQ
+1F6 1 2 1+1 HQ
+1F7 1 2 СТБ HQ
+1F8 1 2 Первый деловой HQ
+1F9 1 2 Интер+ HQ
+258 1 2 HD Кино  HQ
+259 1 2 HD Кино 2 HQ
+25B 1 2 HD Спорт HQ
+25D 1 2 HD Россия HQ
+1 1 2  HD Первый HQ
