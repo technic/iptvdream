@@ -10,7 +10,7 @@
 
 from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 import cookielib, urllib, urllib2 #TODO: optimize imports
-from xml.etree.cElementTree import fromstring
+from xml.etree.cElementTree import fromstring, ParseError
 from datetime import datetime
 from . import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities, Timezone, APIException, SettEntry
 
@@ -73,9 +73,8 @@ class KartinaAPI(AbstractAPI):
 		for x in self.settings:
 			self.trace(x)
 		
-		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 		self.trace("Packet expire: %s" % self.packet_expire)
-		self.SID = True	
+		self.SID = True
 	
 	def getData(self, url, name):
 		self.SID = False

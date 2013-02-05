@@ -10,7 +10,7 @@
 
 from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 import cookielib, urllib, urllib2 #TODO: optimize imports
-from xml.etree.cElementTree import fromstring
+from xml.etree.cElementTree import fromstring, ParseError
 from datetime import datetime
 from md5 import md5
 from . import tdSec, secTd, setSyncTime, syncTime, EpgEntry, Channel, Timezone, APIException
@@ -66,7 +66,6 @@ class RodnoeAPI(AbstractAPI):
 			raise APIException(err.findtext('code').encode('utf-8')+" "+err.findtext('message').encode('utf-8'))
 		self.sid = root.find('sid').text.encode('utf-8')
 		self.packet_expire = None #XXX: no info in api..
-		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 		self.SID = True
 		
 		settings = root.find('settings')

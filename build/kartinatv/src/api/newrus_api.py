@@ -180,17 +180,21 @@ class Ktv(NewrusAPI, AbstractStream):
 		return url
 	
 	def getChannelsEpg(self, cids):
-		params = {"cids" : ",".join(map(str, cids))}
-		root = self.getData("/api/json/epg_current.php?"+urllib.urlencode(params), "getting epg of cids = %s" % cids)
-		for channel in root.find('epg'):
-			cid = int(channel.findtext("cid").encode("utf-8"))
-			e = channel.find("epg")
-			t = int(e.findtext('epg_start').encode("utf-8"))
-			t_start = datetime.fromtimestamp(t)
-			t = int(e.findtext('epg_end').encode("utf-8"))
-			t_end = datetime.fromtimestamp(t)
-			prog = e.findtext('epg_progname').encode('utf-8')
-			self.channels[cid].pushEpg( EpgEntry(prog, t_start, t_end) )
+		root = self.getData("/api/json/channel_list.php?have_sepg=1", "channels list epg")
+		for group in root.find("groups"):
+			for channel in group.find("channels"):
+				cid = int(channel.findtext("id").encode("utf-8"))
+				if channel.findtext("epg_progname") and channel.findtext("epg_end"):
+					prog = channel.findtext("epg_progname").encode("utf-8")
+					t_str = channel.findtext("epg_start").encode("utf-8")
+					t_start = datetime.fromtimestamp(int(t_str))
+					t_str = channel.findtext("epg_end").encode("utf-8")
+					t_end = datetime.fromtimestamp(int(t_str))
+					#print "[KartinaTV] updating epg for cid = ", id
+					self.channels[cid].epg = EpgEntry(prog, t_start, t_end)
+				else:
+					print "[KartinaTV] there is no epg for id=%d on ktv-server" % id
+					pass
 	
 	def getGmtEpg(self, cid, time):
 		self.getDayEpg(cid, time)

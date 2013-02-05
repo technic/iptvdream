@@ -14,7 +14,7 @@ DEBUG = True
 MODE_STREAM = 0
 MODE_VIDEOS = 1
 
-class AbstractAPI:
+class AbstractAPI(object):
 	
 	MODE = MODE_STREAM
 	iProvider = "free"
@@ -45,7 +45,7 @@ class AbstractAPI:
 		return hash(self.iName)
 	hashID = property(get_hashID)
 
-class AbstractStream(AbstractAPI):
+class AbstractStream(object):
 	
 	ACCESS_DENIED = 0
 	locked_cids = []
