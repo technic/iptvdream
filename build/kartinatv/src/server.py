@@ -13,7 +13,11 @@ class RedirectToStream(resource.Resource):
 		print "[KartinaTV] render"
 		req = request.path.split('/')
 		if len(req) == 3:
-			url = runManager.getStream(req[1], req[2], None)
+			try:
+				cid = int(req[2])
+			except ValueError:
+				return ErrorPage(404, 'wrong request format', '').render(request)
+			url = runManager.getStream(req[1], cid, None)
 			if url:
 				print '[KartinaTV] server redirecting'
 				return util.redirectTo(url, request)
