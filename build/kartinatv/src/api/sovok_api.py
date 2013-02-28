@@ -26,7 +26,8 @@ class Ktv(Kartina):
 	MODE = MODE_STREAM
 	NUMBER_PASS = False
 
-	site = "http://sovok.tv"
+	site = "http://api.sovok.tv"
+	apipath = "/v2.0"
 	
 	HAS_PIN = True
 	locked_cids = [163, 171, 172, 119]
@@ -38,7 +39,7 @@ class Ktv(Kartina):
 		params = urllib.urlencode({"login" : self.username,
 								  "pass" : self.password,
 								  "settings" : "all"})
-		reply = self.opener.open(self.site+'/api/xml/login?', params).read()
+		reply = self.opener.open(self.site+self.apipath+'/xml/login?', params).read()
 		
 		#checking cookies
 		cookies = list(self.cookiejar)
@@ -71,3 +72,20 @@ class Ktv(Kartina):
 	
 	def setTimeShift(self, timeShift):
 		pass
+
+	def getSettings(self):
+		try:
+			reply = self.opener.open(self.site+self.apipath+'/xml/settings').read()
+			self.trace("settings: " + reply)
+			reply = fromstring(reply)
+			streamer = reply.find("settings").findtext("streamer")
+
+			return [SettEntry("streamer", streamer, ["1", "2", "3"])]
+		except:
+			raise APIException("Error getting settings from the server")
+
+	def pushSettings(self, sett):
+		for x in sett:
+			if x[0] == "streamer":
+				self.opener.open(self.site+self.apipath+"/xml/settings_set?streamer="+x[1]).read()
+
