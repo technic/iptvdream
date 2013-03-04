@@ -56,7 +56,7 @@ class M3UReader():
 		linen = 0
 		if not lines[linen].rstrip().startswith("#EXTM3U"):
 			raise APIException("Wrong header. #EXTM3U expected")
-		urlregexp = re.compile('#EXTM3U.*\surl-tvg=([^\s]*)').match(lines[linen])
+		urlregexp = re.compile('#EXTM3U.*\surl-tvg="?([^\s^"]*)').match(lines[linen])
 		if urlregexp:
 			self.act_url = urlregexp.group(1)
 		

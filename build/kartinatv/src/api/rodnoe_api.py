@@ -10,7 +10,7 @@
 
 from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 import cookielib, urllib, urllib2 #TODO: optimize imports
-from xml.etree.cElementTree import fromstring
+from xml.etree.cElementTree import fromstring, ParseError
 from datetime import datetime
 from md5 import md5
 from . import tdSec, secTd, setSyncTime, syncTime, EpgEntry, Channel, Timezone, APIException
@@ -52,28 +52,20 @@ class RodnoeAPI(AbstractAPI):
 		                           "pass" : md5(md5(self.username).hexdigest()+md5(self.password).hexdigest()).hexdigest(),
 		                           "with_cfg" : ''})
 		self.trace("Authorization started (%s)" % (self.site+"/login?"+ params))
-		httpstr = self.opener.open(self.site+"/login?"+ params).read()
-		print httpstr
-		#handleError() #TODO!
-		root = fromstring(httpstr)
+		try:
+			httpstr = self.opener.open(self.site+"/login?"+ params).read()
+		except IOError as e:
+			raise APIException(e)
+		#print httpstr
+		try:
+			root = fromstring(httpstr)
+		except ParseError as e:
+			raise APIException(e)
 		if root.find('error'):
 			err = root.find('error')
-			raise APIException(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8')) 
+			raise APIException(err.findtext('code').encode('utf-8')+" "+err.findtext('message').encode('utf-8'))
 		self.sid = root.find('sid').text.encode('utf-8')
-		#checking cookies
-		cookies = list(self.cookiejar)
-		cookiesdict = {}
-		print cookies
-		hasSSID = False
-		deleted = False
-		for cookie in cookies:
-			cookiesdict[cookie.name] = cookie.value
-			if (cookie.name.find('sid') != -1):
-				hasSSID = True
-		#if (not hasSSID):
-		#	raise Exception(self.username+": Authorization of user failed!")
 		self.packet_expire = None #XXX: no info in api..
-		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 		self.SID = True
 		
 		settings = root.find('settings')
@@ -85,24 +77,32 @@ class RodnoeAPI(AbstractAPI):
 	 	return 0
 				
 	def getData(self, url, name):
-		if not self.SID:
-			self.authorize()
 		self.SID = False 
-		self.trace("Getting %s (%s)" % (name, url))
+		
+		def doget():
+			self.trace("Getting %s (%s)" % (name, url))
+			try:
+				reply = self.opener.open(url).read()
+			except IOError as e:
+				raise APIException(e)
+			try:
+				root = fromstring(reply)
+			except ParseError:
+				raise APIException(e)
+			if root.find('error'):
+				err = root.find('error')
+				raise APIException(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8'))
+			self.SID = True
+			return root
+		
+		# First time error occures we retry, next time raise to plugin
 		try:
-			reply = self.opener.open(url).read()
-		except:
-			reply = ""
-		#print reply
-		try:
-			root = fromstring(reply)
-		except:
-			raise APIException("Failed to parse xml response")
-		if root.find('error'):
-			err = root.find('error')
-			raise APIException(err.find('code').text.encode('utf-8')+" "+err.find('message').text.encode('utf-8'))
-		self.SID = True
-		return root
+			return doget()
+		except APIException as e:
+			self.trace("Error %s, retry" % str(e))
+			# restart and try again
+			self.start()
+			return doget()
 
 	
 class Ktv(RodnoeAPI, AbstractStream):
