@@ -111,3 +111,6 @@ buildpkg: buildpkg-clean install
 buildpkg-clean:
 	cd $(TOPDIR)
 	rm -rf staging
+
+version:
+	./version-bb.sh
