@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = "file://${FILE_DIRNAME}/build/COPYING;md5=d41d8cd98f00b204e98
 
 PN="enigma2-plugin-extensions-kartinatv"
 
-PV="2.3.5"
+PV="2.4.0"
 VVV = "r0"
 PR = "${VVV}"
 
