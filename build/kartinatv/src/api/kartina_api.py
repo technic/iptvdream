@@ -10,7 +10,7 @@
 
 from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 import cookielib, urllib, urllib2 #TODO: optimize imports
-from xml.etree.cElementTree import fromstring, ParseError
+from xml.etree.cElementTree import fromstring
 from datetime import datetime
 from . import tdSec, secTd, setSyncTime, syncTime, Bouquet, EpgEntry, Channel, unescapeEntities, Timezone, APIException, SettEntry
 
@@ -24,6 +24,7 @@ class KartinaAPI(AbstractAPI):
 	NUMBER_PASS = True
 	
 	site = "http://iptv.kartina.tv"
+	apipath = "/api"
 	
 	def __init__(self, username, password):
 		AbstractAPI.__init__(self, username, password)
@@ -43,13 +44,13 @@ class KartinaAPI(AbstractAPI):
 								  "pass" : self.password,
 								  "settings" : "all"})
 		try:
-			reply = self.opener.open(self.site+'/api/xml/login?', params).read()
+			reply = self.opener.open(self.site+self.apipath+'/xml/login?', params).read()
 		except IOError as e:
 			raise APIException(e)
 		
 		try:
 			reply = fromstring(reply)
-		except ParseError as e:
+		except SyntaxError as e:
 			raise APIException(e)
 		if reply.find("error"):
 			raise APIException(reply.find('error').findtext('message'))
@@ -90,7 +91,7 @@ class KartinaAPI(AbstractAPI):
 				raise APIException(e)
 			try:
 				root = fromstring(reply)
-			except ParseError as e:
+			except SyntaxError as e:
 				raise APIException(e)
 			if root.find("error"):
 				err = root.find("error")
@@ -121,7 +122,7 @@ class Ktv(KartinaAPI, AbstractStream):
 		AbstractStream.__init__(self)
 	
 	def setChannelsList(self):
-	  	root = self.getData("/api/xml/channel_list?", "channels list")
+	  	root = self.getData(self.apipath+"/xml/channel_list?", "channels list")
 		lst = []
 		t_str = root.findtext("servertime").encode("utf-8")
 		t_cur = datetime.fromtimestamp(int(t_str))
@@ -151,7 +152,7 @@ class Ktv(KartinaAPI, AbstractStream):
 	def setTimeShift(self, timeShift):
 		params = {"var" : "timeshift",
 				  "val" : timeShift}
-		self.getData("/api/xml/settings_set?"+urllib.urlencode(params), "time shift new api %s" % timeShift) 
+		self.getData(self.apipath+"/xml/settings_set?"+urllib.urlencode(params), "time shift new api %s" % timeShift) 
 
 	def getStreamUrl(self, cid, pin, time = None):
 		params = {"cid" : cid}
@@ -159,14 +160,14 @@ class Ktv(KartinaAPI, AbstractStream):
 			params["gmt"] = time.strftime("%s")
 		if pin:
 			params["protect_code"] = pin
-		root = self.getData("/api/xml/get_url?"+urllib.urlencode(params), "URL of stream %s" % cid)
+		root = self.getData(self.apipath+"/xml/get_url?"+urllib.urlencode(params), "URL of stream %s" % cid)
 		url = root.findtext("url").encode("utf-8").split(' ')[0].replace('http/ts://', 'http://')
 		if url == "protected": return self.ACCESS_DENIED
 		return url
 	
 	def getChannelsEpg(self, cids):
 		params = {"cids" : ",".join(map(str, cids))}
-		root = self.getData("/api/xml/epg_current?"+urllib.urlencode(params), "getting epg of cids = %s" % cids)
+		root = self.getData(self.apipath+"/xml/epg_current?"+urllib.urlencode(params), "getting epg of cids = %s" % cids)
 		for channel in root.find('epg'):
 			cid = int(channel.findtext("cid").encode("utf-8"))
 			e = channel.find("epg")
@@ -187,7 +188,7 @@ class Ktv(KartinaAPI, AbstractStream):
 	def getDayEpg(self, cid, date):
 		params = {"day" : date.strftime("%d%m%y"),
 		          "cid" : cid}
-		root = self.getData("/api/xml/epg?"+urllib.urlencode(params), "day EPG for channel %s" % cid)
+		root = self.getData(self.apipath+"/xml/epg?"+urllib.urlencode(params), "day EPG for channel %s" % cid)
 		epglist = []
 		for program in root.find('epg'):
 			t = int(program.findtext("ut_start").encode("utf-8"))
@@ -201,7 +202,7 @@ class Ktv(KartinaAPI, AbstractStream):
 
 	def getNextEpg(self, cid):
 		params = {"cid": cid}
-		root = self.getData("/api/xml/epg_next?"+urllib.urlencode(params), "EPG next for channel %s" % cid)
+		root = self.getData(self.apipath+"/xml/epg_next?"+urllib.urlencode(params), "EPG next for channel %s" % cid)
 		lst = []
 		for epg in root.find('epg'):
 			t = int(epg.findtext('ts').encode("utf-8"))
@@ -217,4 +218,4 @@ class Ktv(KartinaAPI, AbstractStream):
 		for x in sett:
 			params = {"var" : x[0],
 			          "val" : x[1]}
-			self.getData("/api/xml/settings_set?"+urllib.urlencode(params), "setting %s" % x[0])
+			self.getData(self.apipath+"/xml/settings_set?"+urllib.urlencode(params), "setting %s" % x[0])

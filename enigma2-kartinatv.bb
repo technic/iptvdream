@@ -3,10 +3,11 @@ MAINTAINER = "Alex Maystrenko <alexeytech@gmail.com>"
 HOMEPAGE = "http://code.google.com/p/kartinatv-dm/"
 LICENSE = "GNU GPLv2"
 SECTION = "extra"
+LIC_FILES_CHKSUM = "file://${FILE_DIRNAME}/build/COPYING;md5=d41d8cd98f00b204e9800998ecf8427e"
 
 PN="enigma2-plugin-extensions-kartinatv"
 
-PV="2.3.5"
+PV="2.4.0"
 VVV = "r0"
 PR = "${VVV}"
 
@@ -31,7 +32,7 @@ inherit autotools
 
 pkg_postinst() {
 	#!/bin/sh
-	mkdir -p /etc/iptvdream/ 
+	mkdir -p /etc/iptvdream/
 	F="/etc/iptvdream/playlist.m3u"
 	if ! test -f $F; then
 		echo """#EXTM3U
@@ -40,4 +41,3 @@ rtsp://82.177.67.61/axis-media/media.amp
 """ > $F
 	fi
 }
-
