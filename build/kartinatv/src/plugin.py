@@ -307,6 +307,16 @@ class RunManager():
 		self.aname = None
 		#started apis
 		self.started = {}
+		self.autostart()
+	
+	# Start inbouquet apis.
+	def autostart(self):
+		for aname in apis:
+			if apis[aname].MODE == MODE_STREAM and config.iptvdream[aname].inbouquet.value:
+				print "[KartinaTV] autostart of", aname
+				self.apiGetInstance(aname)
+		#setup bouqet list
+		switchBouquets()
 	
 	#Player main gui instance
 	def _get_kartina_instance(self):
@@ -370,6 +380,7 @@ class RunManager():
 			self.timer.start(1,1)
 	
 	def apiStart(self, aname):
+		print "[KartinaTV] starting", aname
 		assert not aname in self.started.keys()
 		conf = config.iptvdream[apis[aname].iProvider]
 		api = apis[aname](conf.login.value, conf.password.value)
@@ -380,7 +391,8 @@ class RunManager():
 				f = open(ENIGMA_CONF_PATH + '/userbouquet.%s.tv' % aname, 'w')
 				f.write('#NAME %s (iptvdream)\n' % api.iTitle)
 				mask = '#SERVICE 1:0:1:%X:%X:%X:5A0000:%X:0:%X:%s:%s\n'
-				for cid in api.channels:
+				for b in api.selectAll().content:
+					cid = b.name
 					try:
 						sidtuple = epgmap[api.channels[cid].name]
 					except KeyError:
@@ -412,7 +424,8 @@ class RunManager():
 			return None
 		def do_getStream():
 			api = self.apiGetInstance(aname)
-			return api.getStreamUrl(cid, *args)
+			pin = api.HAS_PIN and config.iptvdream[aname].parental_code.value
+			return api.getStreamUrl(cid, pin=pin)
 		try:
 			url = do_getStream()
 		except APIException:
@@ -440,15 +453,14 @@ class RunManager():
 		if self.instance:
 			self.instance.leaveStandby()
 
+
+#read epgmap file
+loadEpgMap()
 #start api runManager
 global runManager
 runManager = RunManager()
 #start server
 import server
-#read epgmap file
-loadEpgMap()
-#setup bouqet list
-switchBouquets()
 
 #We need to save settings before shutdown.
 #Small hack here, sorry no alternative
@@ -2599,15 +2611,16 @@ class RemoteConfig(ConfigListScreen, Screen):
 		self["key_red"] = Button(_("Cancel"))
 		self["key_green"] = Button(_("OK"))
 		
-		cfgs = ktv.getSettings()
+		self.cfgs = ktv.getSettings()
 		cfglist = []
-		for x in cfgs:
+		for key in self.cfgs:
+			x = self.cfgs[key]
 			if x.vallist is not None:
-				cfglist.append(getConfigListEntry(x.name, ConfigSelection(x.vallist, x.value) ))
+				cfglist.append(getConfigListEntry(key, ConfigSelection(x.vallist, x.value) ))
 			elif isinstance(x.value, int):
-				cfglist.append(getConfigListEntry(x.name, ConfigInteger(x.value, x.limits) ))
+				cfglist.append(getConfigListEntry(key, ConfigInteger(x.value, x.limits) ))
 			elif isinstance(x.value, str):
-				cfglist.append(getConfigListEntry(x.name, ConfigText(x.value, False) ))
+				cfglist.append(getConfigListEntry(key, ConfigText(x.value, False) ))
 		
 		ConfigListScreen.__init__(self, cfglist, session)
 		#sets = ktv.getSettings()
@@ -2617,8 +2630,9 @@ class RemoteConfig(ConfigListScreen, Screen):
 		topush = []
 		for x in self["config"].list:
 			if x[1].isChanged():
-				print "[KartinaTV] setting to push:", x[0], x[1].value
-				topush.append((x[0], x[1].value))
+				key = x[0]
+				print "[KartinaTV] setting to push:", self.cfgs[key].name, x[1].value
+				topush.append((self.cfgs[key].name, x[1].value))
 		try:
 			ktv.pushSettings(topush)
 		except APIException as e:
