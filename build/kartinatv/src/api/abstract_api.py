@@ -103,9 +103,13 @@ class AbstractStream(object):
 		pass
 	
 	def getSettings(self):
-		return []
+		"""Return dict of {"Name": SettEntry, ...}. "Name" is title that user see on screen,
+		   SettEntry defined in utils.py"""
+		return {}
 	
 	def pushSettings(self, sett):
+		"""<sett> is list of (key, value) tuples.
+		   There <key> is SettEntry.name and <value> is SettEntry.value"""
 		pass
 		
 	def getPiconName(self, cid):
