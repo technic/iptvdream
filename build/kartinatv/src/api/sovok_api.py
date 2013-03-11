@@ -80,7 +80,7 @@ class Ktv(Kartina):
 			reply = fromstring(reply)
 			streamer = reply.find("settings").findtext("streamer")
 
-			return [SettEntry("streamer", streamer, ["1", "2", "3"])]
+			return {"streamer": SettEntry("streamer", streamer, ["1", "2", "3"])}
 		except:
 			raise APIException("Error getting settings from the server")
 

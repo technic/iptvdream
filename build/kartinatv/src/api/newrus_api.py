@@ -72,7 +72,7 @@ class NewrusAPI(AbstractAPI):
 		self.trace("Packet expire: %s" % self.packet_expire)
 		
 		#Load settings here, because kartina api is't friendly
-		self.settings = []
+		self.settings = {}
 		sett = reply["settings"]
 		for (tag,s) in sett.items():
 			if tag == "http_caching": continue
@@ -84,8 +84,8 @@ class NewrusAPI(AbstractAPI):
 			elif s.has_key('list'):
 				for x in s['list']:
 					vallist += [str(x)]
-			self.settings += [SettEntry(tag, value, vallist)]
-		for x in self.settings:
+			self.settings[tag] = SettEntry(tag, value, vallist)
+		for x in self.settings.values():
 			self.trace(x)
 		
 		self.SID = True

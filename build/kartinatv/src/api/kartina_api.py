@@ -58,7 +58,7 @@ class KartinaAPI(AbstractAPI):
 		self.packet_expire = datetime.fromtimestamp(int(reply.find('account').findtext('packet_expire')))
 		
 		#Load settings here, because kartina api is't friendly
-		self.settings = []
+		self.settings = {}
 		sett = reply.find("settings")
 		for s in sett:
 			if s.tag == "http_caching": continue
@@ -70,8 +70,8 @@ class KartinaAPI(AbstractAPI):
 			elif s.find('list'):
 				for x in s.find('list'):
 					vallist += [x.text]
-			self.settings += [SettEntry(s.tag, value, vallist)]
-		for x in self.settings:
+			self.settings[s.tag] = SettEntry(s.tag, value, vallist)
+		for x in self.settings.values():
 			self.trace(x)
 		
 		self.trace("Packet expire: %s" % self.packet_expire)
