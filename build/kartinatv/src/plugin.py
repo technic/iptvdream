@@ -12,7 +12,7 @@
 #using external player by A. Latsch & Dr. Best (c)
 #substantially improved by technic(c) for KartinaTV/RodnoeTV compatibility and buffering possibility!!!
 import servicewebts
-SERVICE_LIST = [('1', "dmm ts (1)"), ('4097', "gstreamer (4097)"), ('4112', "technic ts (4112)"), ('4114', "partnerbox (4114)")]
+SERVICE_LIST = [('1', "enigma2 ts (1)"), ('4097', "gstreamer (4097)"), ('4112', "technic ts (4112)"), ('4114', "partnerbox (4114)")]
 SERVICE_DEFAULT = '4112'
 
 from Plugins.Plugin import PluginDescriptor
