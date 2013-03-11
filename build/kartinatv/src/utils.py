@@ -494,14 +494,7 @@ class APIException(Exception):
 class SettEntry():
 	def __init__(self, name, value, vallist = None, limits = None):
 		self.name = name
-		if not len(vallist): vallist = None
-		try:
-			if not vallist:
-				value = int(value)
-			else:
-				value = str(value)
-		except:
-			pass
+		if vallist and not len(vallist): vallist = None
 		self.value = value
 		i = 0
 		if vallist:
