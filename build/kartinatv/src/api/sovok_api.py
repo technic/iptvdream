@@ -62,10 +62,10 @@ class Ktv(Kartina):
 		if (deleted):
 			raise APIException(self.username+": Wrong authorization request")
 
-                try:
-                        self.packet_expire = datetime.fromtimestamp(int(reply.find('account').findtext('packet_expire')))
-                except:
-                        self.trace("Could not read packet_expire from reply: %s" % reply)
+		try:
+			self.packet_expire = datetime.fromtimestamp(int(reply.find('account').findtext('packet_expire')))
+		except:
+			self.trace("Could not read packet_expire from reply: %s" % reply)
 		
 		self.trace("Authorization returned: %s" % urllib.urlencode(cookiesdict))
 		self.trace("Packet expire: %s" % self.packet_expire)
@@ -81,7 +81,7 @@ class Ktv(Kartina):
 			reply = fromstring(reply)
 			streamer = reply.find("settings").findtext("streamer")
 
-			return [SettEntry("streamer", streamer, ["1", "2", "3"])]
+			return {"streamer": SettEntry("streamer", streamer, ["1", "2", "3"])}
 		except:
 			raise APIException("Error getting settings from the server")
 

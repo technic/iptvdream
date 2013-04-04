@@ -72,7 +72,7 @@ class NewrusAPI(AbstractAPI):
 		self.trace("Packet expire: %s" % self.packet_expire)
 		
 		#Load settings here, because kartina api is't friendly
-		self.settings = []
+		self.settings = {}
 		sett = reply["settings"]
 		for (tag,s) in sett.items():
 			if tag == "http_caching": continue
@@ -84,8 +84,8 @@ class NewrusAPI(AbstractAPI):
 			elif s.has_key('list'):
 				for x in s['list']:
 					vallist += [str(x)]
-			self.settings += [SettEntry(tag, value, vallist)]
-		for x in self.settings:
+			self.settings[tag] = SettEntry(tag, value, vallist)
+		for x in self.settings.values():
 			self.trace(x)
 		
 		self.SID = True
@@ -133,6 +133,7 @@ class Ktv(NewrusAPI, AbstractStream):
 	def __init__(self, username, password):
 		NewrusAPI.__init__(self, username, password)
 		AbstractStream.__init__(self)
+		self.locked_cids = []
 	
 	def setChannelsList(self):
 		self.setTimeShift("0000")
@@ -149,7 +150,7 @@ class Ktv(NewrusAPI, AbstractStream):
 				num += 1
 				name = channel.findtext("name").encode("utf-8")
 				id = int(channel.findtext("id").encode("utf-8"))
-				archive = channel.findtext("have_archive") or 0
+				archive = channel.findtext("have_archive") and channel.findtext("have_archive") == '1' or 0
 				self.channels[id] = Channel(name, title, num, gnum, archive)
 				if channel.findtext("epg_progname") and channel.findtext("epg_end"):
 					prog = channel.findtext("epg_progname").encode("utf-8")
@@ -162,6 +163,8 @@ class Ktv(NewrusAPI, AbstractStream):
 				else:
 					#print "[KartinaTV] there is no epg for id=%d on ktv-server" % id
 					pass
+				if channel.findtext("protected") and channel.findtext("protected") == '1':
+					self.locked_cids += [id]
 	
 	def setTimeShift(self, timeShift):
 		params = {"var" : "timeshift",

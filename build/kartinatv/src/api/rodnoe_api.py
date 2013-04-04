@@ -13,7 +13,7 @@ import cookielib, urllib, urllib2 #TODO: optimize imports
 from xml.etree.cElementTree import fromstring
 from datetime import datetime
 from md5 import md5
-from . import tdSec, secTd, setSyncTime, syncTime, EpgEntry, Channel, Timezone, APIException
+from . import tdSec, secTd, setSyncTime, syncTime, EpgEntry, Channel, Timezone, APIException, SettEntry
 
 class RodnoeAPI(AbstractAPI):
 	
@@ -203,3 +203,40 @@ class Ktv(RodnoeAPI, AbstractStream):
 			t_end = datetime.fromtimestamp(int(prog.findtext('end').encode('utf-8')))
 			epglist += [ EpgEntry(title, t_start, t_end) ]
 		self.channels[id].pushEpgSorted(epglist)
+	
+	def getSettings(self):
+		reply = self.getData(self.site+"/get_settings?", "Get settings")
+		return self.parseSettings(reply)
+		
+	def parseSettings(self, reply):
+		settings = {}
+		settings["time zone"] = SettEntry("time_zone", int(reply.findtext("time_zone")) / 60, range(-12,13))
+		settings["time shift"] = SettEntry("time_shift", int(reply.findtext("time_shift")), range(0,24))
+		self.protect_code = reply.findtext("parental_pass")
+		settings["parental pass"] = SettEntry("parental_pass", self.parental_pass)
+		mid = reply.findtext("media_server_id")
+		mlist = []
+		for s in reply.find("media_servers"):
+			mlist += [( s.findtext("id"), s.findtext("title").encode('utf-8') )]
+		settings["media server"] = SettEntry("media_server_id", mid, mlist)
+		
+		for x in settings.values():
+			self.trace(x)
+		return settings
+
+	def pushSettings(self, sett):
+		print sett
+		var = []
+		val = []
+		oldpass = self.protect_code
+		for x in sett:
+			var += [ x[0] ]
+			if x[0] == "time_zone":
+				val += [ str(int(x[1]) * 60) ]
+			else:
+				val += [ str(x[1]) ]
+			if x[0] == 'parental_pass':
+				self.protect_code = x[1]
+		var = ','.join(var)
+		val = ','.join(val)
+		self.getData(self.site+"/set?var=%s&val=%s&protect_code=%s" % (var, val, oldpass), "Set settings")
