@@ -1,9 +1,9 @@
 from twisted.internet import reactor
 from twisted.web.server import Site, NOT_DONE_YET
 try:
-	from twisted.web.error import ErrorPage
+	from twisted.web.resources import ErrorPage
 except ImportError:
-	from twisted.web.error import Error as ErrorPage
+	from twisted.web import ErrorPage
 from twisted.python import urlpath
 from twisted.web import resource, util
 
