@@ -136,7 +136,7 @@ class Ktv(NewrusAPI, AbstractStream):
 		self.locked_cids = []
 	
 	def setChannelsList(self):
-		self.setTimeShift("0000")
+		self.setTimeShift("0")
 	  	root = self.getData("/api/json/channel_list.php?have_sepg=1", "channels list")
 		lst = []
 		t_str = root.findtext("servertime").encode("utf-8")
