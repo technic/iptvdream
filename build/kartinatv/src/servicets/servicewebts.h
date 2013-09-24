@@ -142,7 +142,8 @@ private:
 	int m_vpid, m_apid;
 	int m_destfd;
 	int m_buffer_time;
-	ePtr<iDVBDemux> m_decodedemux;
+	int m_vfd, m_afd, m_vfd_demux, m_afd_demux;
+	ePtr<eDVBDemux> m_decodedemux;
 	ePtr<iTSMPEGDecoder> m_decoder;
 	ePtr<eStreamThread> m_streamthread;
 	ePtr<TSAudioInfoWeb> m_audioInfo;
@@ -153,6 +154,7 @@ private:
 	Signal2<void,iPlayableService*,int> m_event;
 	eFixedMessagePump<int> m_pump;
 	void recv_event(int evt);
+	int my_setState();
 	void setAudioPid(int pid, int type);
 	
 	ePtr<eConnection> m_video_event_connection;
@@ -167,6 +169,7 @@ public:
 	void start(int srcfd, int destfd, int buftime);
 	void stop();
 	bool running() { return m_running; }
+	void startdvr();
 
 	virtual void thread();
 	virtual void thread_finished();
@@ -179,8 +182,8 @@ private:
 	bool m_stop;
 	bool m_running;
 	int m_srcfd, m_destfd, m_buffer_time;
-	pthread_cond_t m_full;
-	pthread_mutex_t m_mutex;
+	pthread_cond_t m_full, m_startsig;
+	pthread_mutex_t m_mutex, m_startmut;
 	ePtr<TSAudioInfoWeb> m_audioInfo;
 	eFixedMessagePump<int> m_messagepump;
 	void recvEvent(const int &evt);

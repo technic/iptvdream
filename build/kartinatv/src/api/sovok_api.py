@@ -61,6 +61,7 @@ class Ktv(Kartina):
 			raise APIException(self.username+": Authorization of user failed!")
 		if (deleted):
 			raise APIException(self.username+": Wrong authorization request")
+
 		try:
 			self.packet_expire = datetime.fromtimestamp(int(reply.find('account').findtext('packet_expire')))
 		except:

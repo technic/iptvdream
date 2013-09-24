@@ -1,0 +1,9 @@
+#!/bin/sh
+mkdir -p /etc/iptvdream/ 
+F="/etc/iptvdream/playlist.m3u"
+if ! test -f $F; then
+	  cd /etc/iptvdream/
+	  wget http://iptv.root-host.pro/list/test.m3u
+	  mv test.m3u playlist.m3u
+fi
+

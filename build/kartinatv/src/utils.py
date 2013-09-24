@@ -494,11 +494,11 @@ class APIException(Exception):
 class SettEntry():
 	#TODO: Is it better to use enigma2 config classes directly ?
 	"""I assume that each config Entry is integer, string, or selection from list."""
+	"""<name> will be returned to pushSettings as an argument"""
+	"""<value> is of type int or str"""
+	"""<vallist> is an array or an array of tuples (value, description)"""
+	"""<limits> is for config entries of type int"""
 	def __init__(self, name, value, vallist = None, limits = None):
-	"""<name> will be returned to pushSettings as an argument
-	   <value> is of type int or str
-	   <vallist> is an array or an array of tuples (value, description)
-	   <limits> is for config entries of type int"""
 		self.name = name
 		if vallist and not len(vallist): vallist = None
 		self.value = value

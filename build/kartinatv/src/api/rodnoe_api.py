@@ -115,7 +115,6 @@ class Ktv(RodnoeAPI, AbstractStream):
 	def __init__(self, username, password):
 		RodnoeAPI.__init__(self, username, password)
 		AbstractStream.__init__(self)
-	
 	def setChannelsList(self):
 		params = {  }
 		root = self.getData(self.site+"/get_list_tv"+urllib.urlencode(params), "channels list")

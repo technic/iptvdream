@@ -154,7 +154,7 @@ $ac_distutils_result])
 		python_path=`$PYTHON -c "import distutils.sysconfig; \
 			print (distutils.sysconfig.get_python_inc ());"`
 		if test -n "${python_path}"; then
-			python_path="-I$python_path"
+			python_path="-I$PY_PATH/include/python$PYTHON_VERSION"
 		fi
 		PYTHON_CPPFLAGS=$python_path
 	fi
@@ -235,7 +235,8 @@ EOD`
 			  "from distutils.sysconfig import get_python_lib as f; \
 			  import os; \
 			  print (os.path.join(f(plat_specific=1, standard_lib=1), 'config'));"`
-			PYTHON_LDFLAGS="-L$ac_python_libdir -lpython$ac_python_version"
+			PYTHON_LDFLAGS="-L$PY_PATH/include/python$PYTHON_VERSION -lpython$ac_python_version"
+#			PYTHON_LDFLAGS="-L$ac_python_libdir -lpython$ac_python_version"
 		fi
 
 		if test -z "PYTHON_LDFLAGS"; then
@@ -253,8 +254,9 @@ EOD`
 	#
 	AC_MSG_CHECKING([for Python site-packages path])
 	if test -z "$PYTHON_SITE_PKG"; then
-		PYTHON_SITE_PKG=`$PYTHON -c "import distutils.sysconfig; \
-			print (distutils.sysconfig.get_python_lib(0,0));"`
+		PYTHON_SITE_PKG="$PY_PATH/lib/python$PYTHON_VERSION/site-packages"
+#		PYTHON_SITE_PKG=`$PYTHON -c "import distutils.sysconfig; \
+#			print (distutils.sysconfig.get_python_lib(0,0));"`
 	fi
 	AC_MSG_RESULT([$PYTHON_SITE_PKG])
 	AC_SUBST([PYTHON_SITE_PKG])

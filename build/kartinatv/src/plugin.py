@@ -18,7 +18,7 @@ SERVICE_DEFAULT = '4112'
 from Plugins.Plugin import PluginDescriptor
 from Screens.Screen import Screen
 from Components.ActionMap import ActionMap, NumberActionMap, HelpableActionMap
-from Components.config import config, ConfigSubsection, ConfigText, ConfigInteger, ConfigSelection, getConfigListEntry, ConfigYesNo, ConfigSubDict, ConfigElement, getKeyNumber, KEY_ASCII, KEY_NUMBERS
+from Components.config import config, ConfigSubsection, ConfigText, ConfigInteger, ConfigSelection, getConfigListEntry, ConfigYesNo, ConfigSubDict, getKeyNumber, KEY_ASCII, KEY_NUMBERS
 from Components.ConfigList import ConfigListScreen
 from Components.Label import Label
 from Components.Slider import Slider
@@ -115,7 +115,9 @@ class ConfigNumberText(ConfigText):
 	def onDeselect(self, session):
 		self.marked_pos = 0
 		self.offset = 0
-		ConfigElement.onDeselect(self, session)
+		if not self.last_value == self.value:
+			self.changedFinal()
+			self.last_value = self.value
 			
 config.iptvdream = ConfigSubDict()
 #Import apis
@@ -200,6 +202,7 @@ class VirtualKeyBoard(VirtualKeyBoard_generic):
 				[u"м", u"н", u"о", u"п", u"р", u"с", u"т", u"у", u"ф", u"х", u"ц", "ч"],
 				[u"ш", u"щ", u"ь", u"ы", u"ъ", u"э", u"ю", u"я", u"-", ".", u",", u"CLEAR"],
 				[u"SHIFT", u"SPACE", u"OK"]]
+			
 			self.shiftkeys_list = [
 				[u"EXIT", u"!", u'"', u"№", u";", u"%", u":", u"?", u"*", u"(", u")", u"BACKSPACE"],
 				[u"А", u"Б", u"В", u"Г", u"Д", u"Е", u"Ж", u"З", u"И", u"Й", u"К", u"Л"],
@@ -251,7 +254,7 @@ def loadEpgMap():
 			if not l:
 				break
 			l = l.strip()
-			if l.startswith("#"):
+			if l[0] == "#":
 				continue
 			x = l.split()
 			if len(x) < 4:
@@ -583,7 +586,7 @@ class MyInfoBarShowHide:
 			self.startHideTimer()
 	
 
-class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExtensions, InfoBarAudioSelection, MyInfoBarShowHide, InfoBarSubtitleSupport, InfoBarNotifications, InfoBarSeek):
+class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExtensions, InfoBarAudioSelection, MyInfoBarShowHide, InfoBarNotifications, InfoBarSeek):
 	
 	subtitles_enabled = False
 	ALLOW_SUSPEND = True
@@ -600,7 +603,6 @@ class KartinaPlayer(Screen, InfoBarBase, InfoBarMenu, InfoBarPlugins, InfoBarExt
 		InfoBarExtensions.__init__(self)
 		InfoBarPlugins.__init__(self)
 		InfoBarAudioSelection.__init__(self)
-		InfoBarSubtitleSupport.__init__(self)
 		InfoBarNotifications.__init__(self)
 		MyInfoBarShowHide.__init__(self) #Use myInfoBar because image developers modify InfoBarGenerics
 		
@@ -1023,7 +1025,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 		srv = int(cfg.service.value)
 #		if not uri.startswith('http://'):
 #			srv = 4097
-		if uri.startswith('mms://'):
+		if uri[:6]=='mms://':
 			print "[KartinaTV] Warning: mms:// protocol turned off"
 			self.session.open(MessageBox, _("mms:// protocol turned off"), type = MessageBox.TYPE_ERROR, timeout = 5)
 			return -1
@@ -1238,7 +1240,7 @@ class KartinaVideoPlayer(KartinaPlayer):
 			self.switchChannel()
 			#print "[KartinaTV] seek to saved", play_pos
 			#self.doSeekRelative(play_pos)
-	
+
 	def event_seek(self):
 		if self.play_pos == 0: return
 		x = self.ptsGetPosition()
