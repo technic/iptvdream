@@ -254,7 +254,7 @@ def loadEpgMap():
 			if not l:
 				break
 			l = l.strip()
-			if l.startswith("#"):
+			if l[0] == "#":
 				continue
 			x = l.split()
 			if len(x) < 4:
@@ -1025,7 +1025,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 		srv = int(cfg.service.value)
 #		if not uri.startswith('http://'):
 #			srv = 4097
-		if uri.startswith('mms://'):
+		if uri[:6]=='mms://':
 			print "[KartinaTV] Warning: mms:// protocol turned off"
 			self.session.open(MessageBox, _("mms:// protocol turned off"), type = MessageBox.TYPE_ERROR, timeout = 5)
 			return -1
