@@ -154,15 +154,10 @@ class Ktv(TeledromAPI, AbstractStream):
 			params["protect_code"] = self.protect_code
 		response = self.getData(self.site+"/get_url?"+urllib.urlencode(params), "stream url")
 		if not 'sstp' in response:
-			print response
 			raise APIException("Response does not conatin streamming url.")	
 		sstp = response['sstp']
-		#subprocess.Popen([self.ssclient, sstp['ip'], sstp['port'], sstp['login'], sstp['key']], close_fds=True)
-		#os.spawnv(os.P_NOWAIT, self.ssclient, [sstp['ip'], sstp['port'], sstp['login'], sstp['key']])
 		os.system(self.ssclient + ' ' + sstp['ip']+' '+sstp['port']+' '+sstp['login']+' '+sstp['key'])
-		#subprocess.Popen(['start-stop-daemon', '-S', '-x', self.ssclient, ' -- -i '+sstp['ip']+' -p '+sstp['port']+' -u '+sstp['login']+' -k '+ sstp['key']])
-		mtime.sleep(2)
-		return "http://127.0.0.1"
+		return "http://127.0.0.1:5000"
 	
 	def getChannelsEpg(self, cids):
 		pass

@@ -254,7 +254,7 @@ def loadEpgMap():
 			if not l:
 				break
 			l = l.strip()
-			if l[0] == "#":
+			if len(l)==0 or  l[0]=="#":
 				continue
 			x = l.split()
 			if len(x) < 4:
@@ -1062,7 +1062,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 			self["currentName"].setText(curr.name)
 			self["currentTime"].setText(curr.tstart.strftime("%H:%M"))
 			self["nextTime"].setText(curr.tend.strftime("%H:%M"))
-			self.epgTimer.start(curr.getTimeLeftmsec(time) +1000) #milliseconds
+			self.epgTimer.start(curr.getTimeLeft(time) +1000) #milliseconds
 			self["currentDuration"].setText("+%d min" % (curr.getTimeLeft(time) / 60) )
 			self["progressBar"].setValue(PROGRESS_SIZE * curr.getTimePass(time) / curr.duration)
 			self.epgProgressTimer.start(PROGRESS_TIMER)

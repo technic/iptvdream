@@ -17,13 +17,11 @@ Timezone = -time.timezone / 3600
 print "[KartinaTV] dreambox timezone is GMT", Timezone
 
 def tdSec(td):
-	return td.days * 86400 + td.seconds
-def tdmSec(td):
-	#Add +1. Timer should wait for next event until event happened exactly.
-	#Otherwise inaccuracy in round may lead to mistake.
-	return td.days * 86400*1000 + td.seconds * 1000 + td.microseconds/1000 +1
+	return td.total_seconds()
+
 def secTd(sec):
 	return datetime.timedelta(sec / 86400, sec % 86400)
+
 def tupleTd(tup):
 	return secTd(tup[0]*60*60 + tup[1]*60)
 	
@@ -44,19 +42,17 @@ class EpgEntry():
 		self.name = name #all available info
 		#no \n using in List
 		name_split = self.name.split('\n')
+		self.progDescr = ''
 		if name_split:
 			self.progName = name_split[0]
+			if len(name_split)>1:
+				self.progDescr = name_split[1]
 		else:
 			self.progName = name
-		if len(name_split)>1:
-			self.progDescr = name_split[1]
-		else:
-			self.progDescr = ''
-		#TODO: assertation checks for valid time
 		self.tstart = t_start
 		self.tend = t_end
 	
-	#EPG is valid only if bouth tstart and tend specified!!!
+	#EPG is valid only if both tstart and tend specified!!!
 	def isValid(self):
 		return self.tstart and self.tend
 	
@@ -68,20 +64,17 @@ class EpgEntry():
 
 	duration = property(getDuration)
 	
-	def getTimePass(self, time = None):
-		if not time: time = syncTime()
-		return tdSec(time-self.tstart)
+	def getTimePass(self, now = None):
+		if not now: now = syncTime() 
+		return tdSec(now-self.tstart)
 	
-	def getTimeLeft(self, time):
-		return tdSec(self.tend-time)
+	def getTimeLeft(self, now):
+		return int(tdSec(self.tend - now))
 	
-	def getTimeLeftmsec(self, time): #More accurancy, milliseconds
-		return tdmSec(self.tend-time)
-
 	#programm is now and tstart and tend defined
-	def isNow(self, time): 
+	def isNow(self, t): 
 		if self.isValid():
-			return self.tstart <= time and time < self.tend  
+			return self.tstart <= t and t < self.tend  
 		return None
 	
 	def get_time(self):
@@ -95,6 +88,12 @@ class EpgEntry():
 	def __repr__(self):
 		return self.__str__()
 
+	def __cmp__(self, other):
+		return int(tdSec(self.tstart - other.tstart))
+		
+	def __hash__(self):
+		return int(time.mktime(self.tstart.timetuple()))
+
 #TODO: some verification algoritm, if tend is None
 #TODO: thread safe @decorator for future backgroud epg loader ;)
 class Channel(object):
@@ -105,6 +104,7 @@ class Channel(object):
 		self.groupnum = groupnum
 		self.archive = archive
 		self.q = []
+		self.epgd = {} 
 		self.lastUpdateFailed = False
 	
 	#EPG is valid only if bouth tstart and tend specified!!!
@@ -117,50 +117,45 @@ class Channel(object):
 		self.pushEpgSorted([epg])
 	
 	def pushEpgSorted(self, epglist):
-		#Check epg validity
-		if len(epglist) == 0:
-		    return
-		#prepare list
-		if not epglist:
+		if not epglist or len(epglist)<1:
 			return
-		i = 0
-		while i < len(epglist)-1:
-			if epglist[i].tend is None:
-				epglist[i].tend = epglist[i+1].tstart
-			i += 1
-		#push
-		#print "--------------------------------------------------"
-		i = 0
-		l_start = epglist[0].tstart
-		l_end = epglist[-1].tstart
-		#print "+++", epglist, l_end
-		
-		while (i < len(self.q)) and (self.q[i].tstart < l_start):
-			i += 1
-		ins_start = i
-		
-		while (i < len(self.q)) and (self.q[i].tstart <= l_end):
-			i += 1
-		ins_end = i
-		
-		if ins_start == ins_end:
-			ins_end += 1
-		#print self.q
-		self.q = self.q[:ins_start] + epglist + self.q[ins_end:]
-		#print "==>", ins_start, ins_end
-		#print self.q
+
+		l = len(epglist)
+		for e in epglist:
+			if not e.tend:
+				index = epglist.index(e)
+				if index < (l-1):
+					e.tend = epglist[index+1].tstart
+		if not len(self.q):
+			self.q = epglist
+			return
+
+		s_org = set(self.q)
+		s_new = set(epglist)
+		# intersect existing with new
+		s_common = s_org & s_new
+		# substract common items from existing list
+		s_org_diff = s_org - s_common
+		# substract common items from the new list
+		s_new_diff = s_new - s_common
+		# build the new sorted list
+		self.q = []
+		if len(s_org_diff):
+			self.q = self.q + list(s_org_diff)
+		if len(s_common):
+			self.q = self.q + list(s_common)
+		if len(s_new_diff):
+			self.q = self.q + list(s_new_diff)
+		self.q.sort()
+
 	
 	#TODO: add Heuristik. continue search from last position
 	#TODO: And optimisations.. binary search
 	def findEpg(self, time):
-		i = 0
-		while (i < len(self.q)) and not self.q[i].isNow(time):
-			i += 1
-		if i == len(self.q):
-			#print "[KartinaTV] epg not found for", time
+		for e in self.q:
+			if e.isNow(time):
+				return e 
 			return None
-		else:
-			return i
 	
 	def findEpgFirst(self, start, end, stype):
 		"""stype=0 closer to start. stype=1 closer to end"""
@@ -168,22 +163,16 @@ class Channel(object):
 	
 	def epgCurrent(self, time = None):
 		if not time: time = syncTime()
-		res = self.findEpg(time)
-		if res is None:
-			return None
-		else:
-			return self.q[res].isValid() and self.q[res]
+		e = self.findEpg(time)
+		if e: return e.isValid() and e
 	
 	def epgNext(self, time = None):
 		if not time: time = syncTime()
-		i = self.findEpg(time)
-		if i is None:
-			return None
-		curr = self.q[i]
-		i += 1
-		if (i < len(self.q)) and self.q[i].isValid():
-			return self.q[i]
-		return False
+		e = self.findEpg(time)
+		if e:
+			index = self.q.index(e)
+			if index < (len(self.q) - 2): return self.q[index+1]
+		return None
 
 	def overlap(self, a,b,c,d):
 		print "o", a, b, c, d
@@ -195,9 +184,11 @@ class Channel(object):
 
 	def epgPeriod(self, start, end, duration):
 		if not self.q: return []
-		i = 0
-		while (i < len(self.q)-1) and self.q[i].time < start:
-			i += 1
+		i=0
+		for e in self.q:
+			if e.time >= start:
+				i = self.q.index(e)
+				break
 		a = i
 		maxoverlap = secTd(0)
 		maxoveridx = (a,a)
@@ -221,7 +212,12 @@ class Channel(object):
 
 	def epgDay(self, date):
 		date = datetime.datetime(date.year, date.month, date.day)
-		return self.epgPeriod(date - secTd(6*60*60), date + secTd(30*60*60), secTd(18*60*60))
+		dates = date.strftime("%d%m%y")
+		if dates in self.epgd:
+			return self.epgd[dates]
+		ed = self.epgPeriod(date - secTd(6*60*60), date + secTd(30*60*60), secTd(18*60*60))
+		self.epgd[dates] = ed
+		return ed
 		
 	epg = property(fset = pushEpg)
 
@@ -260,7 +256,7 @@ class Bouquet():
 		if keyn == 1:
 			self.__content.sort(key= attrgetter('key1'))
 			self.sortedkey = keyn
-		if keyn == 2:
+		elif keyn == 2:
 			self.__content.sort(key= attrgetter('key2'))
 			self.sortedkey = keyn
 		self.index = 0
