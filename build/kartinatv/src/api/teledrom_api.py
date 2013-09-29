@@ -11,7 +11,7 @@
 
 from abstract_api import MODE_STREAM, AbstractAPI, AbstractStream
 import cookielib, urllib, urllib2 #TODO: optimize imports
-import os, subprocess, signal
+import os
 import time as mtime
 from json import loads as json_loads
 from datetime import datetime
@@ -108,10 +108,10 @@ class Ktv(TeledromAPI, AbstractStream):
 	def __init__(self, username, password):
 		TeledromAPI.__init__(self, username, password)
 		AbstractStream.__init__(self)
-		self.ssclient = os.path.dirname( __file__ ) + '/play.sh' 
+		self.ssclient = os.path.dirname( __file__ ) + '/ssclient' 
 
 	def __del__(self):
-		subprocess.Popen(['killall', 'ssclient'])
+		os.system('start-stop-daemon -K -x '+self.ssclient)
 
 	def addChannelEpg(self, ch_epg, epg_info, epg_type):
 		ts_fix = 0
@@ -156,11 +156,13 @@ class Ktv(TeledromAPI, AbstractStream):
 		if not 'sstp' in response:
 			raise APIException("Response does not conatin streamming url.")	
 		sstp = response['sstp']
-		os.system(self.ssclient + ' ' + sstp['ip']+' '+sstp['port']+' '+sstp['login']+' '+sstp['key'])
+		os.system('start-stop-daemon -K -x '+self.ssclient)
+		os.system('start-stop-daemon -b -S -x '+self.ssclient + ' --  -P 5000 -i ' + sstp['ip']+' -p '+sstp['port']+' -u '+sstp['login']+' -k '+sstp['key']+' -d 2 -b 64')
 		return "http://127.0.0.1:5000"
 	
 	def getChannelsEpg(self, cids):
-		pass
+		for c  in cids:
+			self.getCurrentEpg(c)
 	
 	def getCurrentEpg(self, cid):
 		return self.getDayEpg(cid)
@@ -186,7 +188,5 @@ class Ktv(TeledromAPI, AbstractStream):
 				except:
 					pass
 				t_start = datetime.fromtimestamp(int(epg['ut_start'])+self.time_shift)
-				#if len(epglist):
-				#	epglist[len(epglist)-1].tend = t_start
 				epglist.append (EpgEntry(title, t_start, None))
 			self.channels[id].pushEpgSorted(epglist)
