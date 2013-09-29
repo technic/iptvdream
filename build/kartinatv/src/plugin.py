@@ -1014,17 +1014,15 @@ class KartinaStreamPlayer(KartinaPlayer):
 		cid = self.current
 		try:
 			uri = ktv.getStreamUrl(cid, pin, atime())
-		except APIException:
-			print "[KartinaTV] Error: getting stream uri failed!"
-			#self.session.open(MessageBox, _("Error while getting stream uri"), type = MessageBox.TYPE_ERROR, timeout = 5)
+		except APIException as e:
+			self.session.open(MessageBox, _("Error while getting stream url: %s" % e), type = MessageBox.TYPE_ERROR, timeout = 5)
 			return -1
 		
 		if not uri:
+			self.session.open(MessageBox, _("Empty responce while getting stream url: unknown error"), type = MessageBox.TYPE_ERROR, timeout = 5)
 			return 0
 		print "[KartinaTV] play", uri
 		srv = int(cfg.service.value)
-#		if not uri.startswith('http://'):
-#			srv = 4097
 		if uri[:6]=='mms://':
 			print "[KartinaTV] Warning: mms:// protocol turned off"
 			self.session.open(MessageBox, _("mms:// protocol turned off"), type = MessageBox.TYPE_ERROR, timeout = 5)
