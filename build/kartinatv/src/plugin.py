@@ -1816,12 +1816,11 @@ class KartinaEpgList(Screen):
 		epglist = ktv.channels[self.current].epgDay(d)
 		self.list.setList(map(self.kartinaEpgEntry, epglist))
 		self.setTitle("EPG / %s / %s %s" % (ktv.channels[self.current].name, d.strftime("%d"), _(d.strftime("%b")) ))
-		x = 0
-		for x in xrange(len(epglist)):
-			if epglist[x].tstart > d:
+		self.list.moveToIndex(0)
+		for e in epglist:
+			if e.tstart > d:
+				self.list.moveToIndex(x)
 				break
-		if x > 0: x-=1
-		self.list.moveToIndex(x)
 		self.epgDownloaded = True
 		#self.ok()
 	

@@ -74,8 +74,9 @@ class TeledromAPI(AbstractAPI):
 				self.time_shift = response['settings']['timeshift']
 			if 'timezone' in response['settings']:
 				self.time_zone = response['settings']['timezone']
-				
-		self.packet_expire = None #XXX: no info in api..
+
+		if 'account' in response and 'packet_expire' in response['account']:
+			self.packet_expire = datetime.fromtimestamp(int(response['account']['packet_expire']))
 	 	return 0
 				
 	def getData(self, url, name, fromauth=None):
@@ -158,7 +159,7 @@ class Ktv(TeledromAPI, AbstractStream):
 		sstp = response['sstp']
 		os.system('start-stop-daemon -K -x '+self.ssclient)
 		os.system('start-stop-daemon -b -S -x '+self.ssclient + ' --  -P 5000 -i ' + sstp['ip']+' -p '+sstp['port']+' -u '+sstp['login']+' -k '+sstp['key']+' -d 2 -b 64')
-		return "http://127.0.0.1:5000"
+		return "http://127.0.0.1:5000/"
 	
 	def getChannelsEpg(self, cids):
 		for c  in cids:

@@ -17,11 +17,13 @@ Timezone = -time.timezone / 3600
 print "[KartinaTV] dreambox timezone is GMT", Timezone
 
 def tdSec(td):
-	return td.total_seconds()
-
+	return int(td.total_seconds())
+def tdmSec(td):
+	#Add +1. Timer should wait for next event until event happened exactly.
+	#Otherwise inaccuracy in round may lead to mistake.
+	return int(tdSec(td) * 1000)+1
 def secTd(sec):
 	return datetime.timedelta(sec / 86400, sec % 86400)
-
 def tupleTd(tup):
 	return secTd(tup[0]*60*60 + tup[1]*60)
 	
@@ -69,8 +71,11 @@ class EpgEntry():
 		return tdSec(now-self.tstart)
 	
 	def getTimeLeft(self, now):
-		return int(tdSec(self.tend - now))
+		return tdSec(self.tend - now)
 	
+	def getTimeLeftmsec(self, time): #More accurancy, milliseconds
+		return tdmSec(self.tend-time)
+
 	#programm is now and tstart and tend defined
 	def isNow(self, t): 
 		if self.isValid():
@@ -104,7 +109,6 @@ class Channel(object):
 		self.groupnum = groupnum
 		self.archive = archive
 		self.q = []
-		self.epgd = {} 
 		self.lastUpdateFailed = False
 	
 	#EPG is valid only if bouth tstart and tend specified!!!
@@ -155,7 +159,7 @@ class Channel(object):
 		for e in self.q:
 			if e.isNow(time):
 				return e 
-			return None
+		return None
 	
 	def findEpgFirst(self, start, end, stype):
 		"""stype=0 closer to start. stype=1 closer to end"""
@@ -164,14 +168,15 @@ class Channel(object):
 	def epgCurrent(self, time = None):
 		if not time: time = syncTime()
 		e = self.findEpg(time)
-		if e: return e.isValid() and e
+		if e and e.isValid(): return e
 	
 	def epgNext(self, time = None):
 		if not time: time = syncTime()
 		e = self.findEpg(time)
 		if e:
-			index = self.q.index(e)
-			if index < (len(self.q) - 2): return self.q[index+1]
+			index = self.q.index(e) + 1
+			if index < len(self.q) and self.q[index].isValid():
+				return self.q[index]
 		return None
 
 	def overlap(self, a,b,c,d):
@@ -212,12 +217,7 @@ class Channel(object):
 
 	def epgDay(self, date):
 		date = datetime.datetime(date.year, date.month, date.day)
-		dates = date.strftime("%d%m%y")
-		if dates in self.epgd:
-			return self.epgd[dates]
-		ed = self.epgPeriod(date - secTd(6*60*60), date + secTd(30*60*60), secTd(18*60*60))
-		self.epgd[dates] = ed
-		return ed
+		return self.epgPeriod(date - secTd(6*60*60), date + secTd(30*60*60), secTd(18*60*60))
 		
 	epg = property(fset = pushEpg)
 
