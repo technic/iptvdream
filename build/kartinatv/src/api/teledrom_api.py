@@ -15,7 +15,7 @@ import os
 import time as mtime
 from json import loads as json_loads
 from datetime import datetime
-from . import tdSec, secTd, setSyncTime, syncTime, EpgEntry, Channel, Timezone, APIException
+from . import tdSec, secTd, setSyncTime, syncTime, EpgEntry, Channel, Timezone, APIException, SettEntry
 
 # hack !
 class JsonWrapper(dict):
@@ -46,6 +46,7 @@ class TeledromAPI(AbstractAPI):
 		self.time_zone = 0
 		self.protect_code = ''
 		self.sid = None
+		self.settings = {} 
 
 		self.cookiejar = cookielib.CookieJar()
 		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
@@ -58,25 +59,31 @@ class TeledromAPI(AbstractAPI):
 		self.authorize()
 	
 	def setTimeShift(self, timeShift): #in hours #sets timezone also
-		params = {'var': 'timeshift', 'val': timeShift*60 }
+		params = {'MWARE_SSID':self.sid, 'var': 'timeshift', 'val': timeShift*60 }
 		return self.getData(self.site+"/settings_set?"+urllib.urlencode(params), "setting time shift to %s" % timeShift)
 
 	def authorize(self):
 		self.cookiejar.clear()
-		params = urllib.urlencode({"login" : self.username, "pass" : self.password})
+		params = urllib.urlencode({'login' : self.username, 'pass' : self.password, 'tz':Timezone, 'settings':'all'})
 		response = self.getData(self.site+"/login?"+ params, "authorize", 1)
 		
 		if 'sid' in response:
 			self.sid = response['sid'].encode("utf-8")
-	
-		if 'settings' in response:
-			if 'timeshift' in response['settings']:
-				self.time_shift = response['settings']['timeshift']
-			if 'timezone' in response['settings']:
-				self.time_zone = response['settings']['timezone']
 
-		if 'account' in response and 'packet_expire' in response['account']:
-			self.packet_expire = datetime.fromtimestamp(int(response['account']['packet_expire']))
+		if 'settings' in response:
+			try:
+				self.parseSettings(response['settings'])
+			except:
+				self.settings={}
+			if 'timeshift' in response['settings']:
+				self.time_shift = int(response['settings']['timeshift']['value'])
+				
+		if 'account' in response:
+			if 'packet_expire' in response['account']:
+				self.packet_expire = datetime.fromtimestamp(int(response['account']['packet_expire']))
+			if 'pcode' in response['account']:
+				self.protect_code = response['account']['pcode']
+
 	 	return 0
 				
 	def getData(self, url, name, fromauth=None):
@@ -88,7 +95,6 @@ class TeledromAPI(AbstractAPI):
 		except:
 			reply = ""
 			self.sid = None
-		#print reply
 		try:
 			json = loads(reply)
 		except:
@@ -115,19 +121,16 @@ class Ktv(TeledromAPI, AbstractStream):
 		os.system('start-stop-daemon -K -x '+self.ssclient)
 
 	def addChannelEpg(self, ch_epg, epg_info, epg_type):
-		ts_fix = 0
-		if 'time_shift' in epg_info:
-			ts_fix = int(epg_info['time_shift'])
 		program = epg_info[etype]
 		txt = (prog['title']+'\n'+prog['info']).encode('utf-8')
-		start = datetime.fromtimestamp(int(program['begin'])+ts_fix)
-		end   = datetime.fromtimestamp(int(program['end'])+ts_fix)
+		start = datetime.fromtimestamp(int(program['begin'])+self.time_shift)
+		end   = datetime.fromtimestamp(int(program['end'])+self.time_shift)
 		ch_epg = EpgEntry(txt, start, end)
 
 	def addChannel(self, channel, groupname, gid):
 		id = channel['id']
 		name = channel['name'].encode('utf-8')
-		archive = ('has_archive' in channel) and (int(channel['has_archive']))
+		archive = ('have_archive' in channel) and (bool(channel['have_archive']))
 		ch = Channel(name, groupname, id, gid, archive)
 		ch.is_protected = ('protected' in channel) and (bool(channel['protected']))
 		self.channels[id] = ch
@@ -137,7 +140,7 @@ class Ktv(TeledromAPI, AbstractStream):
 			self.addChannelEpg(ch.nepg, channel['epg'], 'next')
 
 	def setChannelsList(self):
-		params = urllib.urlencode({"MWARE_SSID":self.sid}) 
+		params = urllib.urlencode({'MWARE_SSID':self.sid}) 
 		response = self.getData(self.site+"/channel_list?"+params, "channels list")
 		
 		for group in response['groups']['item']:
@@ -150,7 +153,7 @@ class Ktv(TeledromAPI, AbstractStream):
 				self.addChannel(group['channels']['item'], groupname, gid)
 
 	def getStreamUrl(self, cid, pin, time = None):
-		params = {"MWARE_SSID":self.sid,"cid": cid}
+		params = {'MWARE_SSID':self.sid,'cid': cid}
 		if self.channels[cid].is_protected:
 			params["protect_code"] = self.protect_code
 		response = self.getData(self.site+"/get_url?"+urllib.urlencode(params), "stream url")
@@ -159,7 +162,7 @@ class Ktv(TeledromAPI, AbstractStream):
 		sstp = response['sstp']
 		os.system('start-stop-daemon -K -x '+self.ssclient)
 		os.system('start-stop-daemon -b -S -x '+self.ssclient + ' --  -P 5000 -i ' + sstp['ip']+' -p '+sstp['port']+' -u '+sstp['login']+' -k '+sstp['key']+' -d 2 -b 64')
-		return "http://127.0.0.1:5000/"
+		return "http://127.0.0.1:5000"
 	
 	def getChannelsEpg(self, cids):
 		for c  in cids:
@@ -191,3 +194,36 @@ class Ktv(TeledromAPI, AbstractStream):
 				t_start = datetime.fromtimestamp(int(epg['ut_start'])+self.time_shift)
 				epglist.append (EpgEntry(title, t_start, None))
 			self.channels[id].pushEpgSorted(epglist)
+
+	def getSettings(self):
+		return self.settings
+
+	def parseSettings(self, rawsett):
+		self.settings['Language'] = SettEntry('lang', rawsett['lang']['value'], rawsett['lang']['list']['item'])
+		self.settings['HTTP caching'] = SettEntry('http_caching', rawsett['http_caching']['value'], rawsett['http_caching']['list']['item'])
+		self.settings['Bitrate'] = SettEntry('bitrate', rawsett['bitrate']['value'], rawsett['bitrate']['list']['item'])
+		self.settings['Timeshift'] = SettEntry('timeshift', int(rawsett['timeshift']['value']), range(0,24))
+		self.settings['HLS enabled']=SettEntry('hls_enabled', str(rawsett['hls_enabled']['value']),['yes','no'])
+		self.settings['Cache size(seconds)']=SettEntry('fwcaching', int(rawsett['fwcaching']['value']), rawsett['fwcaching']['list']['item'])
+		ar=[]
+		for a in rawsett['ar']['list']['item']:
+			ar += [(a['age'],a['descr'])]
+		self.settings['Archive']=SettEntry('ar', rawsett['ar']['descr'], ar)
+		if isinstance(rawsett['stream_server']['list']['item'], list):
+			ss=[]
+			for s in rawsett['stream_server']['list']['item']:
+				ss += [(s['ip'],s['descr'])]
+			self.settings['Stream server']=SettEntry('stream_server', rawsett['stream_server']['value'].encode('utf-8'), ss)
+
+	def pushSettings(self, sett):
+		keys=[]
+		values=[]
+		for s in sett:
+			keys+=[s[0]]
+			values+=[s[1]]
+			
+		var=','.join(keys)
+		val=','.join(values)
+
+		params = urllib.urlencode({'MWARE_SSID':self.sid,'var':var,'val':val,'code':self.protect_code})	
+		self.getData(self.site+"/settings_set?"+params, "Push new setting.")

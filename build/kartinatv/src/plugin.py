@@ -254,7 +254,7 @@ def loadEpgMap():
 			if not l:
 				break
 			l = l.strip()
-			if len(l)==0 or  l[0]=="#":
+			if len(l)==0 or l[0]=="#":
 				continue
 			x = l.split()
 			if len(x) < 4:
@@ -1049,7 +1049,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 		self.epgProgressTimer.stop()
 		cid = self.current
 		
-		#EPG is valid only if bouth tstart and tend specified!!! Check utils.
+		#EPG is valid only if both tstart and tend specified!!! Check utils.
 		time = syncTime() + secTd(bouquet.aTime)
 		def setEpgCurrent():
 			curr = ktv.channels[cid].epgCurrent(time)
@@ -1060,7 +1060,7 @@ class KartinaStreamPlayer(KartinaPlayer):
 			self["currentName"].setText(curr.name)
 			self["currentTime"].setText(curr.tstart.strftime("%H:%M"))
 			self["nextTime"].setText(curr.tend.strftime("%H:%M"))
-			self.epgTimer.start(curr.getTimeLeft(time) +1000) #milliseconds
+			self.epgTimer.start(curr.getTimeLeftmsec(time)+1000) #milliseconds
 			self["currentDuration"].setText("+%d min" % (curr.getTimeLeft(time) / 60) )
 			self["progressBar"].setValue(PROGRESS_SIZE * curr.getTimePass(time) / curr.duration)
 			self.epgProgressTimer.start(PROGRESS_TIMER)
@@ -1819,7 +1819,7 @@ class KartinaEpgList(Screen):
 		self.list.moveToIndex(0)
 		for e in epglist:
 			if e.tstart > d:
-				self.list.moveToIndex(x)
+				self.list.moveToIndex(epglist.index(e))
 				break
 		self.epgDownloaded = True
 		#self.ok()
