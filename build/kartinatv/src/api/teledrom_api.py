@@ -216,14 +216,9 @@ class Ktv(TeledromAPI, AbstractStream):
 			self.settings['Stream server']=SettEntry('stream_server', rawsett['stream_server']['value'].encode('utf-8'), ss)
 
 	def pushSettings(self, sett):
-		keys=[]
-		values=[]
 		for s in sett:
-			keys+=[s[0]]
-			values+=[s[1]]
-			
-		var=','.join(keys)
-		val=','.join(values)
-
-		params = urllib.urlencode({'MWARE_SSID':self.sid,'var':var,'val':val,'code':self.protect_code})	
-		self.getData(self.site+"/settings_set?"+params, "Push new setting.")
+			params = urllib.urlencode({'MWARE_SSID':self.sid,'var':s[0],'val':s[1]})
+			response = self.getData(self.site+"/settings_set?"+params, "Push setting [%s] new value." % s[0])
+			code = int(response['message']['code'])
+			if not (code in [2,3,4]): 
+				raise APIException('Setting %s value %s not saved, reason: %s, code %d' % (s[0], s[1], response['message']['text'], code))
