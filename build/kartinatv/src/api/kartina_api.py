@@ -114,7 +114,7 @@ class Ktv(KartinaAPI, AbstractStream):
 	MODE = MODE_STREAM
 	NEXT_API = "KartinaMovies"
 	
-	locked_cids = [155, 159, 161, 257, 311]
+	locked_cids = [155, 159, 161, 257, 311, 1061, 1059, 1057]
 	HAS_PIN = True
 	
 	def __init__(self, username, password):
